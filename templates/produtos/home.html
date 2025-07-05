@@ -1,0 +1,169 @@
+{% extends 'base.html' %}
+
+{% block title %}Dashboard - Sistema de Produtos{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <h1 class="h3 mb-4">
+            <i class="bi bi-speedometer2"></i> Dashboard
+        </h1>
+    </div>
+</div>
+
+<div class="row">
+    <!-- Cards de estatísticas -->
+    <div class="col-md-3 mb-4">
+        <div class="card bg-primary text-white">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <h5 class="card-title">Total de Produtos</h5>
+                        <h2 class="card-text">{{ total_produtos|default:0 }}</h2>
+                    </div>
+                    <div class="align-self-center">
+                        <i class="bi bi-box-seam fs-1"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-3 mb-4">
+        <div class="card bg-success text-white">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <h5 class="card-title">Tipos de Produtos</h5>
+                        <h2 class="card-text">{{ total_tipos|default:0 }}</h2>
+                    </div>
+                    <div class="align-self-center">
+                        <i class="bi bi-tags fs-1"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-3 mb-4">
+        <div class="card bg-info text-white">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <h5 class="card-title">Linhas</h5>
+                        <h2 class="card-text">{{ total_linhas|default:0 }}</h2>
+                    </div>
+                    <div class="align-self-center">
+                        <i class="bi bi-diagram-2 fs-1"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-3 mb-4">
+        <div class="card bg-warning text-dark">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <h5 class="card-title">Módulos</h5>
+                        <h2 class="card-text">{{ total_modulos|default:0 }}</h2>
+                    </div>
+                    <div class="align-self-center">
+                        <i class="bi bi-grid-3x3 fs-1"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">
+                    <i class="bi bi-clock-history"></i> Produtos Recentes
+                </h5>
+            </div>
+            <div class="card-body">
+                {% if produtos_recentes %}
+                <div class="table-responsive">
+                    <table class="table table-striped">
+                        <thead>
+                            <tr>
+                                <th>Produto</th>
+                                <th>Tipo</th>
+                                <th>Linha</th>
+                                <th>Criado em</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for produto in produtos_recentes %}
+                            <tr>
+                                <td>
+                                    <a href="{% url 'produto_detalhes' produto.id %}" class="text-decoration-none">
+                                        {{ produto.nome_produto }}
+                                    </a>
+                                </td>
+                                <td>{{ produto.id_tipo_produto.nome }}</td>
+                                <td>{{ produto.id_linha.nome }}</td>
+                                <td>{{ produto.created_at|date:"d/m/Y H:i" }}</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% else %}
+                <div class="text-center py-4">
+                    <i class="bi bi-inbox fs-1 text-muted"></i>
+                    <p class="text-muted mt-2">Nenhum produto cadastrado ainda</p>
+                    <a href="{% url 'produto_cadastro' %}" class="btn btn-primary">
+                        <i class="bi bi-plus-circle"></i> Cadastrar Primeiro Produto
+                    </a>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">
+                    <i class="bi bi-list-check"></i> Ações Rápidas
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="d-grid gap-2">
+                    <a href="{% url 'produto_cadastro' %}" class="btn btn-primary">
+                        <i class="bi bi-plus-circle"></i> Novo Produto
+                    </a>
+                    <a href="{% url 'produtos_lista' %}" class="btn btn-outline-primary">
+                        <i class="bi bi-list-ul"></i> Ver Todos os Produtos
+                    </a>
+                    <a href="/admin/" class="btn btn-outline-secondary" target="_blank">
+                        <i class="bi bi-gear"></i> Administração
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <div class="card mt-3">
+            <div class="card-header">
+                <h5 class="card-title mb-0">
+                    <i class="bi bi-info-circle"></i> Bem-vindo!
+                </h5>
+            </div>
+            <div class="card-body">
+                <p class="card-text">
+                    Olá, <strong>{{ user.get_full_name|default:user.email }}</strong>!
+                </p>
+                <p class="card-text text-muted">
+                    Este é o seu painel de controle. Aqui você pode gerenciar todos os produtos do sistema.
+                </p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

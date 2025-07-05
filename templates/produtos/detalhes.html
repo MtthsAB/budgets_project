@@ -1,0 +1,312 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ produto.ref_produto }} - Sistema de Produtos{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="d-flex justify-content-between align-items-center">
+            <h1 class="h2 mb-0">
+                <i class="bi bi-eye"></i> Detalhes do Produto
+            </h1>
+            <div>
+                <a href="{% url 'produto_editar' produto.id %}" class="btn btn-warning">
+                    <i class="bi bi-pencil"></i> Editar
+                </a>
+                <a href="{% url 'produtos_lista' %}" class="btn btn-outline-secondary">
+                    <i class="bi bi-arrow-left"></i> Voltar
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Informações Básicas -->
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="bi bi-info-circle"></i> Informações Básicas
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <table class="table table-borderless">
+                            <tr>
+                                <td><strong>Referência:</strong></td>
+                                <td>{{ produto.ref_produto }}</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Nome:</strong></td>
+                                <td>{{ produto.nome_produto }}</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Tipo:</strong></td>
+                                <td>
+                                    <span class="badge bg-secondary">{{ produto.id_tipo_produto.nome }}</span>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td><strong>Linha:</strong></td>
+                                <td>{{ produto.id_linha.nome }}</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Status:</strong></td>
+                                <td>
+                                    {% if produto.ativo %}
+                                        <span class="badge bg-success">Ativo</span>
+                                    {% else %}
+                                        <span class="badge bg-danger">Inativo</span>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                        </table>
+                    </div>
+                    <div class="col-md-6">
+                        <table class="table table-borderless">
+                            <tr>
+                                <td><strong>Tem Cor Tecido:</strong></td>
+                                <td>
+                                    {% if produto.tem_cor_tecido %}
+                                        <i class="bi bi-check-circle-fill text-success"></i> Sim
+                                    {% else %}
+                                        <i class="bi bi-x-circle-fill text-danger"></i> Não
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            <tr>
+                                <td><strong>Diferencia Lado Dir./Esq.:</strong></td>
+                                <td>
+                                    {% if produto.tem_difer_desenho_lado_dir_esq %}
+                                        <i class="bi bi-check-circle-fill text-success"></i> Sim
+                                    {% else %}
+                                        <i class="bi bi-x-circle-fill text-danger"></i> Não
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            <tr>
+                                <td><strong>Diferencia por Tamanho:</strong></td>
+                                <td>
+                                    {% if produto.tem_difer_desenho_tamanho %}
+                                        <i class="bi bi-check-circle-fill text-success"></i> Sim
+                                    {% else %}
+                                        <i class="bi bi-x-circle-fill text-danger"></i> Não
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            <tr>
+                                <td><strong>Criado em:</strong></td>
+                                <td>{{ produto.created_at|date:"d/m/Y H:i" }}</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Atualizado em:</strong></td>
+                                <td>{{ produto.updated_at|date:"d/m/Y H:i" }}</td>
+                            </tr>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Imagens do Produto -->
+{% if produto.imagem_principal or produto.imagem_secundaria %}
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="bi bi-images"></i> Imagens do Produto
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    {% if produto.imagem_principal %}
+                    <div class="col-md-6 text-center mb-3">
+                        <h6>Imagem Principal</h6>
+                        <img src="{{ produto.imagem_principal.url }}" 
+                             alt="Imagem Principal - {{ produto.nome_produto }}" 
+                             class="img-fluid rounded shadow-sm"
+                             style="max-height: 300px; object-fit: cover;">
+                    </div>
+                    {% endif %}
+                    {% if produto.imagem_secundaria %}
+                    <div class="col-md-6 text-center mb-3">
+                        <h6>Imagem Secundária</h6>
+                        <img src="{{ produto.imagem_secundaria.url }}" 
+                             alt="Imagem Secundária - {{ produto.nome_produto }}" 
+                             class="img-fluid rounded shadow-sm"
+                             style="max-height: 300px; object-fit: cover;">
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+<!-- Módulos -->
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="bi bi-grid-3x3"></i> Módulos ({{ modulos|length }})
+                </h5>
+            </div>
+            <div class="card-body">
+                {% if modulos %}
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Imagem</th>
+                                <th>Nome</th>
+                                <th>Largura Total (cm)</th>
+                                <th>Largura Assento (cm)</th>
+                                <th>Tecido (m)</th>
+                                <th>Volume (m³)</th>
+                                <th>Preço (R$)</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for modulo in modulos %}
+                            <tr>
+                                <td>
+                                    {% if modulo.imagem_principal %}
+                                        <img src="{{ modulo.imagem_principal.url }}" 
+                                             alt="Imagem - {{ modulo.nome }}" 
+                                             class="img-thumbnail"
+                                             style="width: 60px; height: 60px; object-fit: cover;">
+                                    {% else %}
+                                        <div class="bg-light rounded d-flex align-items-center justify-content-center" 
+                                             style="width: 60px; height: 60px;">
+                                            <i class="bi bi-image text-muted"></i>
+                                        </div>
+                                    {% endif %}
+                                </td>
+                                <td><strong>{{ modulo.nome }}</strong></td>
+                                <td>{{ modulo.largura_total }}</td>
+                                <td>{{ modulo.largura_assento }}</td>
+                                <td>{{ modulo.tecido_metros }}</td>
+                                <td>{{ modulo.volume_m3 }}</td>
+                                <td>R$ {{ modulo.preco|floatformat:2 }}</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                
+                <!-- Resumo dos Módulos -->
+                <div class="row mt-3">
+                    <div class="col-md-12">
+                        <div class="alert alert-info">
+                            <h6><i class="bi bi-calculator"></i> Resumo dos Módulos</h6>
+                            <div class="row">
+                                <div class="col-md-3">
+                                    <strong>Total de Módulos:</strong> {{ modulos|length }}
+                                </div>
+                                <div class="col-md-3">
+                                    <strong>Tecido Total:</strong> 
+                                    {% with total_tecido=0 %}
+                                        {% for modulo in modulos %}
+                                            {% if forloop.first %}
+                                                {{ modulo.tecido_metros }}
+                                            {% else %}
+                                                + {{ modulo.tecido_metros }}
+                                            {% endif %}
+                                        {% endfor %}
+                                    {% endwith %} metros
+                                </div>
+                                <div class="col-md-3">
+                                    <strong>Volume Total:</strong>
+                                    {% with total_volume=0 %}
+                                        {% for modulo in modulos %}
+                                            {% if forloop.first %}
+                                                {{ modulo.volume_m3 }}
+                                            {% else %}
+                                                + {{ modulo.volume_m3 }}
+                                            {% endif %}
+                                        {% endfor %}
+                                    {% endwith %} m³
+                                </div>
+                                <div class="col-md-3">
+                                    <strong>Preço Total:</strong>
+                                    R$ {% with total_preco=0 %}
+                                        {% for modulo in modulos %}
+                                            {% if forloop.first %}
+                                                {{ modulo.preco }}
+                                            {% else %}
+                                                + {{ modulo.preco }}
+                                            {% endif %}
+                                        {% endfor %}
+                                    {% endwith %}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                {% else %}
+                <div class="text-center py-4">
+                    <i class="bi bi-inbox fs-1 text-muted"></i>
+                    <h6 class="mt-3 text-muted">Nenhum módulo cadastrado</h6>
+                    <p class="text-muted">Este produto ainda não possui módulos.</p>
+                    <a href="{% url 'produto_editar' produto.id %}" class="btn btn-primary">
+                        <i class="bi bi-plus-circle"></i> Adicionar Módulos
+                    </a>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Ações -->
+<div class="row">
+    <div class="col-12">
+        <div class="d-flex gap-2">
+            <a href="{% url 'produto_editar' produto.id %}" class="btn btn-warning">
+                <i class="bi bi-pencil"></i> Editar Produto
+            </a>
+            <button type="button" class="btn btn-danger" data-bs-toggle="modal" data-bs-target="#deleteModal">
+                <i class="bi bi-trash"></i> Excluir Produto
+            </button>
+            <a href="{% url 'produtos_lista' %}" class="btn btn-outline-secondary">
+                <i class="bi bi-arrow-left"></i> Voltar para Lista
+            </a>
+        </div>
+    </div>
+</div>
+
+<!-- Modal de Confirmação de Exclusão -->
+<div class="modal fade" id="deleteModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Confirmar Exclusão</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p>Tem certeza que deseja excluir o produto:</p>
+                <strong>{{ produto.ref_produto }} - {{ produto.nome_produto }}</strong>
+                <p class="text-danger mt-2">Esta ação não pode ser desfeita e removerá todos os módulos associados!</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                    Cancelar
+                </button>
+                <form method="post" action="{% url 'produto_excluir' produto.id %}" class="d-inline">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-danger">
+                        <i class="bi bi-trash"></i> Excluir
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

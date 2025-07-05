@@ -1,0 +1,385 @@
+{% extends 'base.html' %}
+
+{% block title %}Editar Produto - Sistema de Produtos{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="d-flex justify-content-between align-items-center">
+            <h1 class="h2 mb-0">
+                <i class="bi bi-pencil"></i> Editar Produto
+            </h1>
+            <div>
+                <a href="{% url 'produto_detalhes' produto.id %}" class="btn btn-outline-info">
+                    <i class="bi bi-eye"></i> Ver Detalhes
+                </a>
+                <a href="{% url 'produtos_lista' %}" class="btn btn-outline-secondary">
+                    <i class="bi bi-arrow-left"></i> Voltar
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<form method="post" id="produtoForm">
+    {% csrf_token %}
+    
+    <!-- Dados Básicos -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h6 class="mb-0">
+                        <i class="bi bi-info-circle"></i> Dados Básicos
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="form-floating mb-3">
+                                <input type="text" class="form-control" id="ref_produto" name="ref_produto" 
+                                       value="{{ produto.ref_produto }}" placeholder="Referência" required>
+                                <label for="ref_produto">Referência do Produto *</label>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-floating mb-3">
+                                <input type="text" class="form-control" id="nome_produto" name="nome_produto" 
+                                       value="{{ produto.nome_produto }}" placeholder="Nome" required>
+                                <label for="nome_produto">Nome do Produto *</label>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="form-floating mb-3">
+                                <select class="form-select" id="tipo_produto" name="tipo_produto" required>
+                                    <option value="">Selecione o tipo</option>
+                                    {% for tipo in tipos %}
+                                        <option value="{{ tipo.id }}" 
+                                                {% if produto.id_tipo_produto.id == tipo.id %}selected{% endif %}>
+                                            {{ tipo.nome }}
+                                        </option>
+                                    {% endfor %}
+                                </select>
+                                <label for="tipo_produto">Tipo de Produto *</label>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-floating mb-3">
+                                <select class="form-select" id="linha" name="linha" required>
+                                    <option value="">Selecione a linha</option>
+                                    {% for linha in linhas %}
+                                        <option value="{{ linha.id }}" 
+                                                {% if produto.id_linha.id == linha.id %}selected{% endif %}>
+                                            {{ linha.nome }}
+                                        </option>
+                                    {% endfor %}
+                                </select>
+                                <label for="linha">Linha *</label>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Checkboxes -->
+                    <div class="row">
+                        <div class="col-md-3">
+                            <div class="form-check form-switch mb-3">
+                                <input class="form-check-input" type="checkbox" id="ativo" name="ativo" 
+                                       {% if produto.ativo %}checked{% endif %}>
+                                <label class="form-check-label" for="ativo">
+                                    Produto Ativo
+                                </label>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="form-check form-switch mb-3">
+                                <input class="form-check-input" type="checkbox" id="tem_cor_tecido" name="tem_cor_tecido"
+                                       {% if produto.tem_cor_tecido %}checked{% endif %}>
+                                <label class="form-check-label" for="tem_cor_tecido">
+                                    Tem Cor Tecido
+                                </label>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="form-check form-switch mb-3">
+                                <input class="form-check-input" type="checkbox" id="tem_difer_desenho_lado" name="tem_difer_desenho_lado"
+                                       {% if produto.tem_difer_desenho_lado_dir_esq %}checked{% endif %}>
+                                <label class="form-check-label" for="tem_difer_desenho_lado">
+                                    Diferencia Lado Dir./Esq.
+                                </label>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="form-check form-switch mb-3">
+                                <input class="form-check-input" type="checkbox" id="tem_difer_desenho_tamanho" name="tem_difer_desenho_tamanho"
+                                       {% if produto.tem_difer_desenho_tamanho %}checked{% endif %}>
+                                <label class="form-check-label" for="tem_difer_desenho_tamanho">
+                                    Diferencia por Tamanho
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Módulos -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <h6 class="mb-0">
+                            <i class="bi bi-grid-3x3"></i> Módulos
+                        </h6>
+                        <button type="button" class="btn btn-sm btn-success" onclick="adicionarModulo()">
+                            <i class="bi bi-plus"></i> Adicionar Módulo
+                        </button>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <div id="modulosContainer">
+                        <!-- Módulos existentes serão carregados via JavaScript -->
+                    </div>
+                    
+                    <div class="alert alert-info mb-0" id="noModulosAlert" style="display: none;">
+                        <i class="bi bi-info-circle"></i> 
+                        Nenhum módulo adicionado. Clique em "Adicionar Módulo" para começar.
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Botões de Ação -->
+    <div class="row">
+        <div class="col-12">
+            <div class="d-flex gap-2">
+                <button type="submit" class="btn btn-primary">
+                    <i class="bi bi-check-circle"></i> Salvar Alterações
+                </button>
+                <a href="{% url 'produto_detalhes' produto.id %}" class="btn btn-outline-info">
+                    <i class="bi bi-eye"></i> Ver Detalhes
+                </a>
+                <a href="{% url 'produtos_lista' %}" class="btn btn-outline-secondary">
+                    <i class="bi bi-x-circle"></i> Cancelar
+                </a>
+            </div>
+        </div>
+    </div>
+</form>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+let moduloCount = 0;
+
+function adicionarModulo() {
+    moduloCount++;
+    
+    const container = document.getElementById('modulosContainer');
+    const noModulosAlert = document.getElementById('noModulosAlert');
+    
+    const moduloHtml = `
+        <div class="modulo-item border rounded p-3 mb-3" id="modulo${moduloCount}">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <h6 class="mb-0">Módulo ${moduloCount}</h6>
+                <button type="button" class="btn btn-sm btn-outline-danger" onclick="removerModulo(${moduloCount})">
+                    <i class="bi bi-trash"></i> Remover
+                </button>
+            </div>
+            
+            <div class="row">
+            <div class="row">
+                <div class="col-md-12">
+                    <div class="form-floating mb-3">
+                        <input type="text" class="form-control" name="modulo_nome" placeholder="Nome do módulo" required>
+                        <label>Nome do Módulo *</label>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Seção de Tamanhos -->
+            <div class="mt-3">
+                <div class="d-flex justify-content-between align-items-center mb-2">
+                    <h6 class="mb-0 text-muted">
+                        <i class="bi bi-rulers"></i> Tamanhos Disponíveis
+                    </h6>
+                    <button type="button" class="btn btn-sm btn-outline-primary" onclick="adicionarTamanho(${moduloCount})">
+                        <i class="bi bi-plus"></i> Adicionar Tamanho
+                    </button>
+                </div>
+                <div class="tamanhos-container" id="tamanhosContainer${moduloCount}">
+                    <!-- Tamanhos serão adicionados aqui -->
+                </div>
+                <div class="alert alert-light mb-0" style="display: none;" id="noTamanhosAlert${moduloCount}">
+                    <small class="text-muted">
+                        <i class="bi bi-info-circle"></i> 
+                        Nenhum tamanho adicionado. Clique em "Adicionar Tamanho" para começar.
+                    </small>
+                </div>
+            </div>
+        </div>
+    `;
+    
+    container.insertAdjacentHTML('beforeend', moduloHtml);
+    noModulosAlert.style.display = 'none';
+}
+
+function removerModulo(id) {
+    const modulo = document.getElementById(`modulo${id}`);
+    modulo.remove();
+    
+    const container = document.getElementById('modulosContainer');
+    const noModulosAlert = document.getElementById('noModulosAlert');
+    
+    if (container.children.length === 0) {
+        noModulosAlert.style.display = 'block';
+    }
+}
+
+function adicionarTamanho(moduloId) {
+    const container = document.getElementById(`tamanhosContainer${moduloId}`);
+    const noTamanhosAlert = document.getElementById(`noTamanhosAlert${moduloId}`);
+    const tamanhoCount = container.children.length + 1;
+    
+    const tamanhoHtml = `
+        <div class="tamanho-item border rounded p-3 mb-3 bg-light" id="tamanho${moduloId}_${tamanhoCount}">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <h6 class="mb-0 text-primary">
+                    <i class="bi bi-resize"></i> Tamanho ${tamanhoCount}
+                </h6>
+                <button type="button" class="btn btn-sm btn-outline-danger" onclick="removerTamanho('${moduloId}_${tamanhoCount}')">
+                    <i class="bi bi-trash3"></i> Remover
+                </button>
+            </div>
+            
+            <div class="row">
+                <div class="col-md-4">
+                    <div class="form-floating mb-3">
+                        <input type="text" class="form-control" name="tamanho_nome_${moduloId}" placeholder="Nome" required>
+                        <label>Nome do Tamanho *</label>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="form-floating mb-3">
+                        <input type="number" step="0.01" class="form-control" name="tamanho_largura_total_${moduloId}" placeholder="Largura total">
+                        <label>Largura Total (cm)</label>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="form-floating mb-3">
+                        <input type="number" step="0.01" class="form-control" name="tamanho_largura_assento_${moduloId}" placeholder="Largura assento">
+                        <label>Largura Assento (cm)</label>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="row">
+                <div class="col-md-4">
+                    <div class="form-floating mb-3">
+                        <input type="number" step="0.01" class="form-control" name="tamanho_altura_${moduloId}" placeholder="Altura">
+                        <label>Altura (cm)</label>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="form-floating mb-3">
+                        <input type="number" step="0.01" class="form-control" name="tamanho_profundidade_${moduloId}" placeholder="Profundidade">
+                        <label>Profundidade (cm)</label>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="form-floating mb-3">
+                        <input type="number" step="0.01" class="form-control" name="tamanho_tecido_${moduloId}" placeholder="Tecido">
+                        <label>Tecido (metros)</label>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="row">
+                <div class="col-md-4">
+                    <div class="form-floating mb-3">
+                        <input type="number" step="0.001" class="form-control" name="tamanho_volume_${moduloId}" placeholder="Volume">
+                        <label>Volume (m³)</label>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="form-floating mb-3">
+                        <input type="number" step="0.01" class="form-control" name="tamanho_peso_${moduloId}" placeholder="Peso">
+                        <label>Peso (kg)</label>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="form-floating mb-3">
+                        <input type="number" step="0.01" class="form-control" name="tamanho_preco_${moduloId}" placeholder="Preço">
+                        <label>Preço (R$)</label>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="row">
+                <div class="col-12">
+                    <div class="form-floating">
+                        <textarea class="form-control" name="tamanho_descricao_${moduloId}" placeholder="Descrição" style="height: 60px;"></textarea>
+                        <label>Descrição (opcional)</label>
+                    </div>
+                </div>
+            </div>
+        </div>
+    `;
+    
+    container.insertAdjacentHTML('beforeend', tamanhoHtml);
+    noTamanhosAlert.style.display = 'none';
+}
+
+function removerTamanho(id) {
+    const tamanho = document.getElementById(`tamanho${id}`);
+    tamanho.remove();
+    
+    const moduloId = id.split('_')[0];
+    const container = document.getElementById(`tamanhosContainer${moduloId}`);
+    const noTamanhosAlert = document.getElementById(`noTamanhosAlert${moduloId}`);
+    
+    if (container.children.length === 0) {
+        noTamanhosAlert.style.display = 'block';
+    }
+}
+
+// Carregar módulos existentes
+document.addEventListener('DOMContentLoaded', function() {
+    // Carregar módulos existentes
+    {% for modulo in modulos %}
+        adicionarModulo();
+        const ultimoModulo = document.getElementById(`modulo${moduloCount}`);
+        
+        ultimoModulo.querySelector('input[name="modulo_nome"]').value = '{{ modulo.nome }}';
+        
+        // Carregar tamanhos existentes para este módulo
+        {% for tamanho in modulo.tamanhos_detalhados.all %}
+            adicionarTamanho(moduloCount);
+            const container = document.getElementById(`tamanhosContainer${moduloCount}`);
+            const ultimoTamanho = container.lastElementChild;
+            
+            ultimoTamanho.querySelector('input[name="tamanho_nome_' + moduloCount + '"]').value = '{{ tamanho.nome_tamanho }}';
+            ultimoTamanho.querySelector('input[name="tamanho_largura_total_' + moduloCount + '"]').value = '{{ tamanho.largura_total|default:"" }}';
+            ultimoTamanho.querySelector('input[name="tamanho_largura_assento_' + moduloCount + '"]').value = '{{ tamanho.largura_assento|default:"" }}';
+            ultimoTamanho.querySelector('input[name="tamanho_altura_' + moduloCount + '"]').value = '{{ tamanho.altura_cm|default:"" }}';
+            ultimoTamanho.querySelector('input[name="tamanho_profundidade_' + moduloCount + '"]').value = '{{ tamanho.profundidade_cm|default:"" }}';
+            ultimoTamanho.querySelector('input[name="tamanho_tecido_' + moduloCount + '"]').value = '{{ tamanho.tecido_metros|default:"" }}';
+            ultimoTamanho.querySelector('input[name="tamanho_volume_' + moduloCount + '"]').value = '{{ tamanho.volume_m3|default:"" }}';
+            ultimoTamanho.querySelector('input[name="tamanho_peso_' + moduloCount + '"]').value = '{{ tamanho.peso_kg|default:"" }}';
+            ultimoTamanho.querySelector('input[name="tamanho_preco_' + moduloCount + '"]').value = '{{ tamanho.preco|default:"" }}';
+            ultimoTamanho.querySelector('textarea[name="tamanho_descricao_' + moduloCount + '"]').value = '{{ tamanho.descricao|default:"" }}';
+        {% endfor %}
+    {% endfor %}
+    
+    // Se não há módulos, mostrar pelo menos um vazio
+    if (moduloCount === 0) {
+        adicionarModulo();
+    }
+});
+</script>
+{% endblock %}
