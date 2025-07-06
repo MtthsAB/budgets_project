@@ -2,6 +2,52 @@
 
 {% block title %}{{ produto.ref_produto }} - Sistema de Produtos{% endblock %}
 
+{% block extra_css %}
+<style>
+    .tamanho-card {
+        background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+        border: 1px solid #dee2e6 !important;
+        transition: all 0.3s ease;
+        position: relative;
+        overflow: hidden;
+    }
+    .tamanho-card:hover {
+        box-shadow: 0 6px 20px rgba(0,0,0,0.15);
+        transform: translateY(-3px);
+        border-color: #007bff !important;
+    }
+    .tamanho-card::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 3px;
+        background: linear-gradient(90deg, #007bff, #28a745);
+        opacity: 0;
+        transition: opacity 0.3s ease;
+    }
+    .tamanho-card:hover::before {
+        opacity: 1;
+    }
+    .tamanho-details small {
+        display: block;
+        line-height: 1.4;
+    }
+    .badge.bg-success {
+        font-size: 0.85rem;
+        padding: 0.4rem 0.6rem;
+    }
+    .card-header {
+        border-bottom: 2px solid #007bff;
+    }
+    .card-header h5 {
+        color: #495057;
+        font-weight: 600;
+    }
+</style>
+{% endblock %}
+
 {% block content %}
 <div class="row mb-4">
     <div class="col-12">
@@ -62,6 +108,7 @@
                     </div>
                     <div class="col-md-6">
                         <table class="table table-borderless">
+                            {% if not eh_acessorio %}
                             <tr>
                                 <td><strong>Tem Cor Tecido:</strong></td>
                                 <td>
@@ -92,6 +139,7 @@
                                     {% endif %}
                                 </td>
                             </tr>
+                            {% endif %}
                             <tr>
                                 <td><strong>Criado em:</strong></td>
                                 <td>{{ produto.created_at|date:"d/m/Y H:i" }}</td>
@@ -122,7 +170,7 @@
                 <div class="row">
                     {% if produto.imagem_principal %}
                     <div class="col-md-6 text-center mb-3">
-                        <h6>Imagem Principal</h6>
+                        <h6></h6>
                         <img src="{{ produto.imagem_principal.url }}" 
                              alt="Imagem Principal - {{ produto.nome_produto }}" 
                              class="img-fluid rounded shadow-sm"
@@ -146,6 +194,7 @@
 {% endif %}
 
 <!-- Módulos -->
+{% if not eh_acessorio %}
 <div class="row mb-4">
     <div class="col-12">
         <div class="card">
@@ -156,46 +205,111 @@
             </div>
             <div class="card-body">
                 {% if modulos %}
-                <div class="table-responsive">
-                    <table class="table table-hover">
-                        <thead class="table-light">
-                            <tr>
-                                <th>Imagem</th>
-                                <th>Nome</th>
-                                <th>Largura Total (cm)</th>
-                                <th>Largura Assento (cm)</th>
-                                <th>Tecido (m)</th>
-                                <th>Volume (m³)</th>
-                                <th>Preço (R$)</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {% for modulo in modulos %}
-                            <tr>
-                                <td>
-                                    {% if modulo.imagem_principal %}
-                                        <img src="{{ modulo.imagem_principal.url }}" 
-                                             alt="Imagem - {{ modulo.nome }}" 
-                                             class="img-thumbnail"
-                                             style="width: 60px; height: 60px; object-fit: cover;">
-                                    {% else %}
-                                        <div class="bg-light rounded d-flex align-items-center justify-content-center" 
-                                             style="width: 60px; height: 60px;">
-                                            <i class="bi bi-image text-muted"></i>
-                                        </div>
+                {% for modulo in modulos %}
+                <div class="card mb-4">
+                    <div class="card-header bg-light">
+                        <div class="row align-items-center">
+                            <div class="col-auto">
+                                {% if modulo.imagem_principal %}
+                                    <img src="{{ modulo.imagem_principal.url }}" 
+                                         alt="Imagem - {{ modulo.nome }}" 
+                                         class="img-thumbnail"
+                                         style="width: 80px; height: 80px; object-fit: cover;">
+                                {% else %}
+                                    <div class="bg-secondary rounded d-flex align-items-center justify-content-center" 
+                                         style="width: 80px; height: 80px;">
+                                        <i class="bi bi-image text-white"></i>
+                                    </div>
+                                {% endif %}
+                            </div>
+                            <div class="col">
+                                <h5 class="mb-1">
+                                    <i class="bi bi-puzzle"></i> {{ modulo.nome }}
+                                </h5>
+                                <div class="text-muted">
+                                    {% if modulo.profundidade %}
+                                        <small><i class="bi bi-arrows-vertical"></i> <strong>Prof:</strong> {{ modulo.profundidade }}cm</small>
                                     {% endif %}
-                                </td>
-                                <td><strong>{{ modulo.nome }}</strong></td>
-                                <td>{{ modulo.largura_total }}</td>
-                                <td>{{ modulo.largura_assento }}</td>
-                                <td>{{ modulo.tecido_metros }}</td>
-                                <td>{{ modulo.volume_m3 }}</td>
-                                <td>R$ {{ modulo.preco|floatformat:2 }}</td>
-                            </tr>
-                            {% endfor %}
-                        </tbody>
-                    </table>
+                                    {% if modulo.altura %}
+                                        <small class="ms-3"><i class="bi bi-arrows-vertical"></i> <strong>Alt:</strong> {{ modulo.altura }}cm</small>
+                                    {% endif %}
+                                    {% if modulo.braco %}
+                                        <small class="ms-3"><i class="bi bi-arrows-horizontal"></i> <strong>Braço:</strong> {{ modulo.braco }}cm</small>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="card-body">
+                        {% if modulo.tamanhos_detalhados.all %}
+                            <h6 class="mb-3">
+                                <i class="bi bi-rulers"></i> Tamanhos Disponíveis
+                                <span class="badge bg-primary ms-2">{{ modulo.tamanhos_detalhados.all|length }}</span>
+                            </h6>
+                            <div class="row">
+                                {% for tamanho in modulo.tamanhos_detalhados.all %}
+                                <div class="col-md-6 col-lg-4 mb-3">
+                                    <div class="border rounded p-3 h-100 tamanho-card">
+                                        <div class="d-flex justify-content-between align-items-start mb-2">
+                                            <h6 class="mb-0 text-primary">Tamanho #{{ forloop.counter }}</h6>
+                                            {% if tamanho.preco %}
+                                                <span class="badge bg-success">
+                                                    <i class="bi bi-currency-dollar"></i> R$ {{ tamanho.preco|floatformat:2 }}
+                                                </span>
+                                            {% else %}
+                                                <span class="badge bg-secondary">
+                                                    <i class="bi bi-dash-circle"></i> Sem preço
+                                                </span>
+                                            {% endif %}
+                                        </div>
+                                        <div class="tamanho-details">
+                                            {% if tamanho.largura_total %}
+                                                <div class="mb-1">
+                                                    <small><i class="bi bi-arrows-horizontal text-primary"></i> <strong>Largura Total:</strong> {{ tamanho.largura_total }}cm</small>
+                                                </div>
+                                            {% endif %}
+                                            {% if tamanho.largura_assento %}
+                                                <div class="mb-1">
+                                                    <small><i class="bi bi-arrows-horizontal text-info"></i> <strong>Largura Assento:</strong> {{ tamanho.largura_assento }}cm</small>
+                                                </div>
+                                            {% endif %}
+                                            {% if tamanho.tecido_metros %}
+                                                <div class="mb-1">
+                                                    <small><i class="bi bi-rulers text-warning"></i> <strong>Tecido:</strong> {{ tamanho.tecido_metros }}m</small>
+                                                </div>
+                                            {% endif %}
+                                            {% if tamanho.volume_m3 %}
+                                                <div class="mb-1">
+                                                    <small><i class="bi bi-box text-success"></i> <strong>Volume:</strong> {{ tamanho.volume_m3 }}m³</small>
+                                                </div>
+                                            {% endif %}
+                                            {% if tamanho.peso_kg %}
+                                                <div class="mb-1">
+                                                    <small><i class="bi bi-speedometer2 text-danger"></i> <strong>Peso:</strong> {{ tamanho.peso_kg }}kg</small>
+                                                </div>
+                                            {% endif %}
+                                        </div>
+                                        {% if tamanho.descricao %}
+                                            <div class="mt-2 pt-2 border-top">
+                                                <small class="text-muted">
+                                                    <i class="bi bi-info-circle"></i> {{ tamanho.descricao }}
+                                                </small>
+                                            </div>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                                {% endfor %}
+                            </div>
+                        {% else %}
+                            <div class="text-center text-muted py-4">
+                                <i class="bi bi-exclamation-triangle fs-2"></i>
+                                <h6 class="mt-2">Nenhum tamanho cadastrado</h6>
+                                <p class="small">Este módulo ainda não possui tamanhos definidos.</p>
+                            </div>
+                        {% endif %}
+                    </div>
                 </div>
+                {% endfor %}
                 
                 <!-- Resumo dos Módulos -->
                 <div class="row mt-3">
@@ -206,46 +320,25 @@
                                 <div class="col-md-3">
                                     <strong>Total de Módulos:</strong> {{ modulos|length }}
                                 </div>
-                                <div class="col-md-3">
-                                    <strong>Tecido Total:</strong> 
-                                    {% with total_tecido=0 %}
-                                        {% for modulo in modulos %}
-                                            {% if forloop.first %}
-                                                {{ modulo.tecido_metros }}
-                                            {% else %}
-                                                + {{ modulo.tecido_metros }}
-                                            {% endif %}
-                                        {% endfor %}
-                                    {% endwith %} metros
-                                </div>
-                                <div class="col-md-3">
-                                    <strong>Volume Total:</strong>
-                                    {% with total_volume=0 %}
-                                        {% for modulo in modulos %}
-                                            {% if forloop.first %}
-                                                {{ modulo.volume_m3 }}
-                                            {% else %}
-                                                + {{ modulo.volume_m3 }}
-                                            {% endif %}
-                                        {% endfor %}
-                                    {% endwith %} m³
-                                </div>
-                                <div class="col-md-3">
-                                    <strong>Preço Total:</strong>
-                                    R$ {% with total_preco=0 %}
-                                        {% for modulo in modulos %}
-                                            {% if forloop.first %}
-                                                {{ modulo.preco }}
-                                            {% else %}
-                                                + {{ modulo.preco }}
-                                            {% endif %}
-                                        {% endfor %}
-                                    {% endwith %}
+                                
+                                <div class="col-md-6">
+                                    <small class="text-muted">
+                                        <i class="bi bi-info-circle"></i> 
+                                        Os preços mostrados são por tamanho individual de cada módulo
+                                    </small>
                                 </div>
                             </div>
                         </div>
                     </div>
                 </div>
+                
+                <script>
+                // Calcular total de tamanhos
+                document.addEventListener('DOMContentLoaded', function() {
+                    const tamanhoCards = document.querySelectorAll('.tamanho-card');
+                    document.getElementById('total-tamanhos').textContent = tamanhoCards.length;
+                });
+                </script>
                 {% else %}
                 <div class="text-center py-4">
                     <i class="bi bi-inbox fs-1 text-muted"></i>
@@ -260,6 +353,71 @@
         </div>
     </div>
 </div>
+{% endif %}
+
+<!-- Acessórios Vinculados -->
+{% if not eh_acessorio and acessorios_vinculados %}
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="bi bi-puzzle"></i> Acessórios Disponíveis ({{ acessorios_vinculados|length }})
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    {% for acessorio in acessorios_vinculados %}
+                    <div class="col-md-6 col-lg-4 mb-3">
+                        <div class="card h-100" style="transition: all 0.3s ease;">
+                            <div class="card-body">
+                                <div class="row">
+                                    <div class="col-4">
+                                        {% if acessorio.imagem_principal %}
+                                            <img src="{{ acessorio.imagem_principal.url }}" 
+                                                 alt="{{ acessorio.nome }}" 
+                                                 class="img-fluid rounded"
+                                                 style="height: 60px; object-fit: cover;">
+                                        {% else %}
+                                            <div class="bg-light rounded d-flex align-items-center justify-content-center" 
+                                                 style="height: 60px;">
+                                                <i class="bi bi-image text-muted"></i>
+                                            </div>
+                                        {% endif %}
+                                    </div>
+                                    <div class="col-8">
+                                        <div class="d-flex justify-content-between align-items-start mb-1">
+                                            <span class="badge bg-info small">{{ acessorio.ref_acessorio }}</span>
+                                            {% if acessorio.ativo %}
+                                                <span class="badge bg-success small">Ativo</span>
+                                            {% else %}
+                                                <span class="badge bg-danger small">Inativo</span>
+                                            {% endif %}
+                                        </div>
+                                        <h6 class="card-title small mb-1">{{ acessorio.nome }}</h6>
+                                        {% if acessorio.preco %}
+                                            <div class="text-success small">
+                                                <strong>R$ {{ acessorio.preco|floatformat:2 }}</strong>
+                                            </div>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="card-footer bg-transparent py-2">
+                                <a href="{% url 'acessorio_detalhes' acessorio.id %}" class="btn btn-outline-primary btn-sm">
+                                    <i class="bi bi-eye"></i> Ver Detalhes
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+
 
 <!-- Ações -->
 <div class="row">

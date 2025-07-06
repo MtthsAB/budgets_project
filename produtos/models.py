@@ -27,7 +27,7 @@ class Linha(BaseModel):
         return self.nome
 
 class Item(BaseModel):
-    """Produto principal do sistema"""
+    """Produto principal do sistema - inclui sofás, acessórios e outros tipos"""
     ref_produto = models.CharField(max_length=50, unique=True, verbose_name="Referência do Produto")
     nome_produto = models.CharField(max_length=200, verbose_name="Nome do Produto")
     id_tipo_produto = models.ForeignKey(
@@ -36,6 +36,8 @@ class Item(BaseModel):
         verbose_name="Tipo de Produto"
     )
     ativo = models.BooleanField(default=True, verbose_name="Ativo")
+    
+    # Campos específicos para sofás e similares
     tem_cor_tecido = models.BooleanField(default=False, verbose_name="Tem Cor Tecido")
     tem_difer_desenho_lado_dir_esq = models.BooleanField(
         default=False, 
@@ -45,11 +47,44 @@ class Item(BaseModel):
         default=False, 
         verbose_name="Diferencia Desenho por Tamanho"
     )
+    
+    # Campos específicos para acessórios
+    preco_acessorio = models.DecimalField(
+        max_digits=10, 
+        decimal_places=2, 
+        verbose_name="Preço do Acessório (R$)",
+        blank=True,
+        null=True,
+        help_text="Apenas para produtos do tipo acessório"
+    )
+    descricao_acessorio = models.TextField(
+        blank=True, 
+        null=True, 
+        verbose_name="Descrição do Acessório",
+        help_text="Apenas para produtos do tipo acessório"
+    )
+    
+    # Imagens
     imagem_principal = models.ImageField(
         upload_to='produtos/itens/',
         blank=True,
         null=True,
         verbose_name="Imagem Principal"
+    )
+    imagem_secundaria = models.ImageField(
+        upload_to='produtos/itens/',
+        blank=True,
+        null=True,
+        verbose_name="Imagem Secundária"
+    )
+    
+    # Vinculação para acessórios (ManyToMany para si mesmo)
+    produtos_vinculados = models.ManyToManyField(
+        'self',
+        blank=True,
+        symmetrical=False,
+        verbose_name="Produtos Vinculados",
+        help_text="Para acessórios: produtos aos quais este acessório pode ser vinculado"
     )
     
     class Meta:
@@ -59,18 +94,68 @@ class Item(BaseModel):
     
     def __str__(self):
         return f"{self.ref_produto} - {self.nome_produto}"
+    
+    def eh_acessorio(self):
+        """Verifica se o item é um acessório"""
+        return self.id_tipo_produto.nome.lower() == 'acessórios'
+    
+    def clean(self):
+        """Validações customizadas do modelo"""
+        super().clean()
+        
+        if self.eh_acessorio():
+            # Para acessórios, forçar valores False nos campos específicos de sofás
+            self.tem_cor_tecido = False
+            self.tem_difer_desenho_lado_dir_esq = False
+            self.tem_difer_desenho_tamanho = False
+        else:
+            # Para não-acessórios, limpar campos específicos de acessórios
+            self.preco_acessorio = None
+            self.descricao_acessorio = None
+            # Limpar vinculações também
+            if self.pk:
+                self.produtos_vinculados.clear()
 
 class Acessorio(BaseModel):
     """Acessórios disponíveis"""
+    ref_acessorio = models.CharField(max_length=50, unique=True, verbose_name="Referência do Acessório")
     nome = models.CharField(max_length=100, verbose_name="Nome do Acessório")
+    ativo = models.BooleanField(default=True, verbose_name="Ativo")
+    preco = models.DecimalField(
+        max_digits=10, 
+        decimal_places=2, 
+        verbose_name="Preço (R$)",
+        blank=True,
+        null=True
+    )
+    imagem_principal = models.ImageField(
+        upload_to='produtos/acessorios/',
+        blank=True,
+        null=True,
+        verbose_name="Imagem Principal"
+    )
+    imagem_secundaria = models.ImageField(
+        upload_to='produtos/acessorios/',
+        blank=True,
+        null=True,
+        verbose_name="Imagem Adicional"
+    )
+    produtos_vinculados = models.ManyToManyField(
+        'Item',
+        blank=True,
+        verbose_name="Produtos Vinculados",
+        help_text="Produtos aos quais este acessório pode ser vinculado"
+    )
     descricao = models.TextField(blank=True, null=True, verbose_name="Descrição")
     
     class Meta:
         verbose_name = "Acessório"
         verbose_name_plural = "Acessórios"
-        ordering = ['nome']
+        ordering = ['ref_acessorio']
     
     def __str__(self):
+        if self.ref_acessorio:
+            return f"{self.ref_acessorio} - {self.nome}"
         return self.nome
 
 class Modulo(BaseModel):

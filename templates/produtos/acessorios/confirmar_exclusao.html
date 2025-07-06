@@ -1,0 +1,75 @@
+{% extends 'base.html' %}
+
+{% block title %}Excluir Acessório - Sistema de Produtos{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header bg-danger text-white">
+                <h5 class="mb-0">
+                    <i class="bi bi-exclamation-triangle"></i> Confirmar Exclusão
+                </h5>
+            </div>
+            <div class="card-body">
+                <p>Tem certeza que deseja excluir o acessório abaixo?</p>
+                
+                <div class="alert alert-warning">
+                    <div class="row">
+                        <div class="col-3">
+                            {% if acessorio.imagem_principal %}
+                                <img src="{{ acessorio.imagem_principal.url }}" 
+                                     alt="{{ acessorio.nome }}" 
+                                     class="img-fluid rounded"
+                                     style="max-height: 80px; object-fit: cover;">
+                            {% else %}
+                                <div class="bg-light rounded d-flex align-items-center justify-content-center" 
+                                     style="width: 80px; height: 80px;">
+                                    <i class="bi bi-image text-muted"></i>
+                                </div>
+                            {% endif %}
+                        </div>
+                        <div class="col-9">
+                            <strong>{{ acessorio.ref_acessorio }} - {{ acessorio.nome }}</strong><br>
+                            <small class="text-muted">
+                                Status: 
+                                {% if acessorio.ativo %}
+                                    <span class="badge bg-success">Ativo</span>
+                                {% else %}
+                                    <span class="badge bg-danger">Inativo</span>
+                                {% endif %}
+                            </small><br>
+                            {% if acessorio.preco %}
+                                <small class="text-muted">
+                                    Preço: <strong>R$ {{ acessorio.preco|floatformat:2 }}</strong>
+                                </small><br>
+                            {% endif %}
+                            <small class="text-muted">
+                                Produtos vinculados: <strong>{{ acessorio.produtos_vinculados.count }}</strong>
+                            </small>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="alert alert-danger">
+                    <i class="bi bi-exclamation-triangle"></i>
+                    <strong>Atenção!</strong> Esta ação não pode ser desfeita.
+                </div>
+            </div>
+            <div class="card-footer">
+                <div class="d-flex justify-content-between">
+                    <a href="{% url 'acessorio_detalhes' acessorio.id %}" class="btn btn-secondary">
+                        <i class="bi bi-x-circle"></i> Cancelar
+                    </a>
+                    <form method="post" style="display: inline;">
+                        {% csrf_token %}
+                        <button type="submit" class="btn btn-danger">
+                            <i class="bi bi-trash"></i> Confirmar Exclusão
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

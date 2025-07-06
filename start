@@ -1,0 +1,62 @@
+#!/bin/bash
+
+# Script para iniciar o servidor Django de forma prática
+# Autor: Sistema de Produtos
+# Data: $(date +%Y-%m-%d)
+
+echo "🚀 Iniciando Sistema de Produtos..."
+echo "=================================="
+
+# Verificar se estamos no diretório correto
+if [ ! -f "manage.py" ]; then
+    echo "❌ Erro: manage.py não encontrado!"
+    echo "   Execute este script a partir do diretório raiz do projeto."
+    exit 1
+fi
+
+# Verificar se o ambiente virtual está ativo
+if [ -z "$VIRTUAL_ENV" ]; then
+    echo "⚠️  Aviso: Nenhum ambiente virtual detectado."
+    echo "   Recomenda-se usar um ambiente virtual."
+    echo ""
+fi
+
+# Executar migrações
+echo "📦 Aplicando migrações..."
+python manage.py migrate
+
+if [ $? -eq 0 ]; then
+    echo "✅ Migrações aplicadas com sucesso!"
+else
+    echo "❌ Erro ao aplicar migrações. Verifique o banco de dados."
+    exit 1
+fi
+
+echo ""
+
+# Coletar arquivos estáticos (se necessário)
+echo "📁 Coletando arquivos estáticos..."
+python manage.py collectstatic --noinput --verbosity 0
+
+echo ""
+
+# Verificar se existem dependências não instaladas
+echo "📋 Verificando dependências..."
+if [ -f "requirements.txt" ]; then
+    pip install -r requirements.txt --quiet
+    echo "✅ Dependências verificadas!"
+else
+    echo "⚠️  Arquivo requirements.txt não encontrado."
+fi
+
+echo ""
+
+# Iniciar o servidor
+echo "🌐 Iniciando servidor de desenvolvimento..."
+echo "   Acesse: http://127.0.0.1:8000"
+echo "   Para parar o servidor: Ctrl+C"
+echo ""
+echo "=================================="
+
+# Iniciar o servidor Django
+python manage.py runserver 0.0.0.0:8000

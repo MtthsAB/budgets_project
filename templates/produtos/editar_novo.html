@@ -2,6 +2,43 @@
 
 {% block title %}Editar Produto - Sistema de Produtos{% endblock %}
 
+{% block extra_css %}
+<style>
+.btn-add-image {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 2px solid #0d6efd;
+    background: #fff;
+    color: #0d6efd;
+    transition: all 0.3s ease;
+    position: relative;
+}
+
+.btn-add-image:hover {
+    background: #0d6efd;
+    color: #fff;
+    transform: scale(1.1);
+}
+
+.btn-add-image .bi-camera-fill {
+    font-size: 14px;
+}
+
+.btn-add-image .bi-plus-circle-fill {
+    position: absolute;
+    top: -2px;
+    right: -2px;
+    background: #fff;
+    border-radius: 50%;
+    color: #28a745;
+}
+</style>
+{% endblock %}
+
 {% block content %}
 <div class="row mb-4">
     <div class="col-12">
@@ -122,11 +159,6 @@
                     </h5>
                 </div>
                 <div class="card-body">
-                    <div class="alert alert-info">
-                        <i class="bi bi-info-circle"></i> 
-                        <strong>Editar imagens:</strong> Selecione novos arquivos para substituir as imagens atuais.
-                    </div>
-                    
                     <div class="row">
                         <!-- Imagem Principal -->
                         <div class="col-md-8">
@@ -143,7 +175,7 @@
                                 {% endif %}
                                 <input type="file" class="form-control form-control-lg" id="imagem_principal" name="imagem_principal" 
                                        accept="image/*" onchange="previewImage(this, 'preview_principal')">
-                                <div class="form-text">Formatos aceitos: JPG, PNG, GIF (máx. 5MB)</div>
+                                <div class="form-text">JPG, PNG, GIF (máx. 5MB)</div>
                                 <div id="preview_principal" class="mt-3" style="display: none;">
                                     <small class="text-muted">Nova imagem:</small><br>
                                     <img id="img_preview_principal" src="" alt="Preview" 
@@ -155,17 +187,24 @@
                             </div>
                         </div>
                         
-                        <!-- Botão para Segunda Imagem -->
+                        <!-- Segunda Imagem - Botão Compacto -->
                         <div class="col-md-4">
                             <div class="mb-3">
-                                <label class="form-label fw-bold">
-                                    <i class="bi bi-plus-circle"></i> Segunda Imagem (Opcional)
-                                </label>
+                                {% if produto.imagem_secundaria %}
+                                <div class="mb-2">
+                                    <small class="text-muted">Segunda imagem atual:</small><br>
+                                    <img src="{{ produto.imagem_secundaria.url }}" alt="Segunda Imagem Atual" 
+                                         class="img-thumbnail border border-primary" style="max-width: 150px; max-height: 150px;">
+                                </div>
+                                {% endif %}
                                 <div id="segunda_imagem_area" style="display: none;">
+                                    <label for="imagem_secundaria" class="form-label fw-bold">
+                                        <i class="bi bi-image"></i> Nova Segunda Imagem
+                                    </label>
                                     <input type="file" class="form-control" id="imagem_secundaria" name="imagem_secundaria" 
                                            accept="image/*" onchange="previewImage(this, 'preview_secundaria')">
-                                    <div class="form-text">Formatos aceitos: JPG, PNG, GIF (máx. 5MB)</div>
                                     <div id="preview_secundaria" class="mt-3" style="display: none;">
+                                        <small class="text-muted">Nova segunda imagem:</small><br>
                                         <img id="img_preview_secundaria" src="" alt="Preview" 
                                              class="img-thumbnail border border-primary" style="max-width: 200px; max-height: 200px;">
                                         <button type="button" class="btn btn-sm btn-danger mt-2" onclick="removeImage('preview_secundaria', 'imagem_secundaria')">
@@ -173,9 +212,14 @@
                                         </button>
                                     </div>
                                 </div>
-                                <button type="button" class="btn btn-outline-primary btn-sm" id="btn_adicionar_segunda_imagem" onclick="mostrarSegundaImagem()">
-                                    <i class="bi bi-plus"></i> Adicionar Segunda Imagem
-                                </button>
+                                <div class="text-end mt-3">
+                                    <button type="button" class="btn btn-outline-primary btn-sm btn-add-image" 
+                                            id="btn_adicionar_segunda_imagem" 
+                                            onclick="mostrarSegundaImagem()" 
+                                            title="{% if produto.imagem_secundaria %}Alterar segunda imagem{% else %}Adicionar outra imagem{% endif %}">
+                                        <i class="bi bi-camera-fill"></i><i class="bi bi-plus-circle-fill" style="font-size: 0.7em; margin-left: -3px;"></i>
+                                    </button>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -282,17 +326,22 @@ function adicionarModulo() {
     const moduloHTML = `
         <div class="card mb-3" id="modulo_${moduloCount}">
             <div class="card-header d-flex justify-content-between align-items-center">
-                <h6 class="mb-0">Módulo ${moduloCount}</h6>
+                <div class="d-flex align-items-center">
+                    <button type="button" class="btn btn-sm btn-outline-secondary me-2" onclick="toggleModulo(${moduloCount})" id="toggleBtn_${moduloCount}">
+                        <i class="bi bi-dash-lg"></i>
+                    </button>
+                    <h6 class="mb-0" id="moduloTitle_${moduloCount}">Módulo ${moduloCount}</h6>
+                </div>
                 <button type="button" class="btn btn-sm btn-danger" onclick="removerModulo(${moduloCount})">
                     <i class="bi bi-trash"></i> Remover
                 </button>
             </div>
-            <div class="card-body">
+            <div class="card-body" id="moduloBody_${moduloCount}">
                 <!-- Nome do Módulo -->
                 <div class="row mb-3">
                     <div class="col-md-6">
                         <div class="form-floating">
-                            <input type="text" class="form-control" id="modulo_nome_${moduloCount}" name="modulo_nome" placeholder="Nome">
+                            <input type="text" class="form-control" id="modulo_nome_${moduloCount}" name="modulo_nome" placeholder="Nome" oninput="atualizarTituloModulo(${moduloCount}, this.value)" onchange="atualizarTituloModulo(${moduloCount}, this.value)">
                             <label for="modulo_nome_${moduloCount}">Nome do Módulo</label>
                         </div>
                     </div>
@@ -344,10 +393,10 @@ function adicionarModulo() {
                     </div>
                     
                     <div class="col-md-4">
-                        <label class="form-label fw-bold">
-                            <i class="bi bi-plus-circle"></i> Segunda Imagem (Opcional)
-                        </label>
                         <div id="modulo_segunda_imagem_area_${moduloCount}" style="display: none;">
+                            <label for="modulo_imagem_secundaria_${moduloCount}" class="form-label fw-bold">
+                                <i class="bi bi-image"></i> Segunda Imagem
+                            </label>
                             <input type="file" class="form-control" id="modulo_imagem_secundaria_${moduloCount}" name="modulo_imagem_secundaria_${moduloCount}" 
                                    accept="image/*" onchange="previewImage(this, 'preview_modulo_secundaria_${moduloCount}')">
                             <div id="preview_modulo_secundaria_${moduloCount}" class="mt-3" style="display: none;">
@@ -358,9 +407,14 @@ function adicionarModulo() {
                                 </button>
                             </div>
                         </div>
-                        <button type="button" class="btn btn-outline-primary btn-sm" id="btn_modulo_segunda_imagem_${moduloCount}" onclick="mostrarModuloSegundaImagem(${moduloCount})">
-                            <i class="bi bi-plus"></i> Adicionar Segunda Imagem
-                        </button>
+                        <div class="text-end mt-3">
+                            <button type="button" class="btn btn-outline-primary btn-sm btn-add-image" 
+                                    id="btn_modulo_segunda_imagem_${moduloCount}" 
+                                    onclick="mostrarModuloSegundaImagem(${moduloCount})"
+                                    title="Adicionar outra imagem">
+                                <i class="bi bi-camera-fill"></i><i class="bi bi-plus-circle-fill" style="font-size: 0.7em; margin-left: -3px;"></i>
+                            </button>
+                        </div>
                     </div>
                 </div>
                 
@@ -396,6 +450,83 @@ function removerModulo(moduloId) {
         const noModulosAlert = document.getElementById('noModulosAlert');
         if (noModulosAlert) {
             noModulosAlert.style.display = 'block';
+        }
+    }
+}
+
+// Função para expandir/recolher módulo
+function toggleModulo(moduloId) {
+    const body = document.getElementById(`moduloBody_${moduloId}`);
+    const toggleBtn = document.getElementById(`toggleBtn_${moduloId}`);
+    const card = document.getElementById(`modulo_${moduloId}`);
+    const icon = toggleBtn.querySelector('i');
+    
+    if (body.style.display === 'none') {
+        // Expandir
+        body.style.display = 'block';
+        icon.className = 'bi bi-dash-lg';
+        toggleBtn.title = 'Recolher módulo';
+        card.classList.remove('modulo-recolhido');
+        card.classList.add('modulo-expandido');
+        
+        // Animação suave de expansão
+        body.style.opacity = '0';
+        body.style.transform = 'translateY(-10px)';
+        setTimeout(() => {
+            body.style.transition = 'opacity 0.3s ease-in-out, transform 0.3s ease-in-out';
+            body.style.opacity = '1';
+            body.style.transform = 'translateY(0)';
+        }, 10);
+    } else {
+        // Recolher
+        body.style.transition = 'opacity 0.2s ease-in-out, transform 0.2s ease-in-out';
+        body.style.opacity = '0';
+        body.style.transform = 'translateY(-10px)';
+        
+        setTimeout(() => {
+            body.style.display = 'none';
+            body.style.transition = '';
+        }, 200);
+        
+        icon.className = 'bi bi-plus-lg';
+        toggleBtn.title = 'Expandir módulo';
+        card.classList.remove('modulo-expandido');
+        card.classList.add('modulo-recolhido');
+    }
+}
+
+// Função para atualizar o título do módulo dinamicamente
+function atualizarTituloModulo(moduloId, nomeModulo) {
+    const titulo = document.getElementById(`moduloTitle_${moduloId}`);
+    const card = document.getElementById(`modulo_${moduloId}`);
+    
+    // Adicionar classe de animação temporária
+    titulo.classList.add('animando');
+    setTimeout(() => {
+        titulo.classList.remove('animando');
+    }, 100);
+    
+    if (nomeModulo && nomeModulo.trim() !== '') {
+        titulo.textContent = nomeModulo.trim();
+        titulo.classList.add('nome-preenchido');
+        
+        // Adicionar indicador visual de que o módulo tem nome
+        let indicator = titulo.parentElement.querySelector('.modulo-status-indicator');
+        if (!indicator) {
+            indicator = document.createElement('div');
+            indicator.className = 'modulo-status-indicator';
+            titulo.parentElement.style.position = 'relative';
+            titulo.parentElement.appendChild(indicator);
+        }
+        indicator.classList.add('ativo');
+    } else {
+        titulo.textContent = `Módulo ${moduloId}`;
+        titulo.classList.remove('nome-preenchido');
+        
+        // Remover indicador visual
+        let indicator = titulo.parentElement.querySelector('.modulo-status-indicator');
+        if (indicator) {
+            indicator.classList.remove('ativo');
         }
     }
 }
@@ -502,6 +633,13 @@ document.addEventListener('DOMContentLoaded', function() {
         
         ultimoModulo.querySelector('input[name="modulo_nome"]').value = '{{ modulo.nome }}';
         
+        // Atualizar o título do módulo com o nome carregado
+        atualizarTituloModulo(moduloCount, '{{ modulo.nome }}');
+        
+        // Adicionar evento de input para atualização dinâmica do título
+        const nomeInput = ultimoModulo.querySelector('input[name="modulo_nome"]');
+        nomeInput.oninput = function() { atualizarTituloModulo(moduloCount, this.value); };
+        
         // Preencher novos campos
         {% if modulo.profundidade %}
         ultimoModulo.querySelector('input[name="modulo_profundidade_' + moduloCount + '"]').value = '{{ modulo.profundidade }}';
@@ -575,4 +713,94 @@ document.getElementById('produtoForm').addEventListener('submit', function(e) {
     }
 });
 </script>
+
+<style>
+/* Estilos para os botões de expandir/recolher módulos */
+.card-header .btn-outline-secondary {
+    border: 1px solid #dee2e6;
+    color: #6c757d;
+    transition: all 0.2s ease-in-out;
+    width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+}
+
+.card-header .btn-outline-secondary:hover {
+    background-color: #f8f9fa;
+    border-color: #adb5bd;
+    color: #495057;
+    transform: scale(1.05);
+}
+
+.card-header .btn-outline-secondary:focus {
+    box-shadow: 0 0 0 0.2rem rgba(108, 117, 125, 0.25);
+}
+
+.card-header .btn-outline-secondary i {
+    font-size: 14px;
+    font-weight: bold;
+}
+
+/* Animação suave para expandir/recolher */
+.card-body {
+    transition: all 0.3s ease-in-out;
+    overflow: hidden;
+}
+
+/* Destaque do nome do módulo */
+.card-header h6 {
+    color: #495057;
+    font-weight: 500;
+    transition: all 0.2s ease-in-out;
+    margin: 0;
+    padding: 0;
+}
+
+/* Estado quando o nome está preenchido */
+.card-header h6.nome-preenchido {
+    color: #0d6efd !important;
+    font-weight: 600 !important;
+}
+
+/* Animação ao alterar o título */
+.card-header h6.animando {
+    transform: scale(1.02);
+    transition: transform 0.1s ease-in-out;
+}
+
+/* Estilo para módulo expandido/recolhido */
+.card.modulo-recolhido {
+    box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+}
+
+.card.modulo-expandido {
+    box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
+    border-color: #0d6efd;
+}
+
+/* Indicador visual de status do módulo */
+.modulo-header-container {
+    position: relative;
+}
+
+.modulo-status-indicator {
+    width: 8px;
+    height: 8px;
+    background-color: #28a745;
+    border-radius: 50%;
+    position: absolute;
+    right: -4px;
+    top: 50%;
+    transform: translateY(-50%);
+    opacity: 0;
+    transition: opacity 0.2s ease-in-out;
+}
+
+.modulo-status-indicator.ativo {
+    opacity: 1;
+}
+</style>
 {% endblock %}

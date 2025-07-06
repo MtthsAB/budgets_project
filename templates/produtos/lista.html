@@ -30,7 +30,7 @@
                     <div class="col-md-3">
                         <label for="busca" class="form-label">Buscar</label>
                         <input type="text" class="form-control" id="busca" name="busca" 
-                               value="{{ filtros.busca }}" placeholder="Nome ou referência">
+                               value="{{ filtros.busca|default:'' }}" placeholder="Nome ou referência">
                     </div>
                     <div class="col-md-2">
                         <label for="tipo" class="form-label">Tipo</label>

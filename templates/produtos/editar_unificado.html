@@ -1,0 +1,1224 @@
+{% extends 'base.html' %}
+
+{% block title %}Editar Produto - Sistema de Produtos{% endblock %}
+
+{% block extra_css %}
+<style>
+.btn-add-image {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 2px solid #0d6efd;
+    background: #fff;
+    color: #0d6efd;
+    transition: all 0.3s ease;
+    position: relative;
+}
+
+.btn-add-image:hover {
+    background: #0d6efd;
+    color: #fff;
+    transform: scale(1.1);
+}
+
+.btn-add-image .bi-camera-fill {
+    font-size: 14px;
+}
+
+.btn-add-image .bi-plus-circle-fill {
+    position: absolute;
+    top: -2px;
+    right: -2px;
+    background: #fff;
+    border-radius: 50%;
+    color: #28a745;
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="d-flex justify-content-between align-items-center">
+            <h1 class="h2 mb-0">
+                <i class="bi bi-pencil"></i> Editar Produto
+            </h1>
+            <div>
+                <a href="{% url 'produto_detalhes' produto.id %}" class="btn btn-outline-info">
+                    <i class="bi bi-eye"></i> Ver Detalhes
+                </a>
+                <a href="{% url 'produtos_lista' %}" class="btn btn-outline-secondary">
+                    <i class="bi bi-arrow-left"></i> Voltar
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<form method="post" enctype="multipart/form-data" id="produtoForm">
+    {% csrf_token %}
+    
+    <!-- Dados Básicos -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h6 class="mb-0">
+                        <i class="bi bi-info-circle"></i> Dados Básicos
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="form-floating mb-3">
+                                <input type="text" class="form-control" id="ref_produto" name="ref_produto" 
+                                       value="{{ produto.ref_produto }}" placeholder="Referência" required>
+                                <label for="ref_produto">Referência do Produto *</label>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-floating mb-3">
+                                <input type="text" class="form-control" id="nome_produto" name="nome_produto" 
+                                       value="{{ produto.nome_produto }}" placeholder="Nome" required>
+                                <label for="nome_produto">Nome do Produto *</label>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="form-floating mb-3">
+                                <select class="form-select" id="tipo_produto" name="tipo_produto" required onchange="toggleCamposPorTipo()">
+                                    <option value="">Selecione o tipo</option>
+                                    {% for tipo in tipos %}
+                                        <option value="{{ tipo.id }}" data-nome="{{ tipo.nome }}"
+                                                {% if produto.id_tipo_produto.id == tipo.id %}selected{% endif %}>
+                                            {{ tipo.nome }}
+                                        </option>
+                                    {% endfor %}
+                                </select>
+                                <label for="tipo_produto">Tipo de Produto *</label>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Checkboxes específicos para Sofás -->
+                    <div class="row" id="campos-sofa" style="display: none;">
+                        <div class="col-md-3">
+                            <div class="form-check form-switch mb-3">
+                                <input class="form-check-input" type="checkbox" id="ativo" name="ativo" 
+                                       {% if produto.ativo %}checked{% endif %}>
+                                <label class="form-check-label" for="ativo">
+                                    Produto Ativo
+                                </label>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="form-check form-switch mb-3">
+                                <input class="form-check-input" type="checkbox" id="tem_cor_tecido" name="tem_cor_tecido"
+                                       {% if produto.tem_cor_tecido %}checked{% endif %}>
+                                <label class="form-check-label" for="tem_cor_tecido">
+                                    Tem Cor Tecido
+                                </label>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="form-check form-switch mb-3">
+                                <input class="form-check-input" type="checkbox" id="tem_difer_desenho_lado" name="tem_difer_desenho_lado"
+                                       {% if produto.tem_difer_desenho_lado_dir_esq %}checked{% endif %}>
+                                <label class="form-check-label" for="tem_difer_desenho_lado">
+                                    Diferencia Lado Dir./Esq.
+                                </label>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="form-check form-switch mb-3">
+                                <input class="form-check-input" type="checkbox" id="tem_difer_desenho_tamanho" name="tem_difer_desenho_tamanho"
+                                       {% if produto.tem_difer_desenho_tamanho %}checked{% endif %}>
+                                <label class="form-check-label" for="tem_difer_desenho_tamanho">
+                                    Diferencia por Tamanho
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Campos específicos para Acessórios -->
+                    <div class="row" id="campos-acessorio" style="display: none;">
+                        <div class="col-md-3">
+                            <div class="form-check form-switch mb-3">
+                                <input class="form-check-input" type="checkbox" id="ativo_acessorio" name="ativo"
+                                       {% if produto.ativo %}checked{% endif %}>
+                                <label class="form-check-label" for="ativo_acessorio">
+                                    Acessório Ativo
+                                </label>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="form-floating mb-3">
+                                <input type="number" step="0.01" class="form-control" id="preco_acessorio" name="preco_acessorio" 
+                                       value="{{ produto.preco_acessorio|default:'' }}" placeholder="0.00">
+                                <label for="preco_acessorio">Preço (R$)</label>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-floating mb-3">
+                                <textarea class="form-control" id="descricao_acessorio" name="descricao_acessorio" 
+                                         placeholder="Descrição do acessório" style="height: 58px;">{{ produto.descricao_acessorio|default:'' }}</textarea>
+                                <label for="descricao_acessorio">Descrição</label>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Campos básicos para outros tipos -->
+                    <div class="row" id="campos-outros" style="display: none;">
+                        <div class="col-md-3">
+                            <div class="form-check form-switch mb-3">
+                                <input class="form-check-input" type="checkbox" id="ativo_outros" name="ativo"
+                                       {% if produto.ativo %}checked{% endif %}>
+                                <label class="form-check-label" for="ativo_outros">
+                                    Produto Ativo
+                                </label>
+                            </div>
+                        </div>
+                        <div class="col-md-9">
+                            <div class="alert alert-info mb-0">
+                                <i class="bi bi-info-circle"></i> 
+                                Campos específicos para este tipo de produto (Almofadas, Banquetas, Cadeiras, Poltronas, Pufes) serão implementados em breve.
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Imagens do Produto -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card border-primary">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0">
+                        <i class="bi bi-images"></i> Imagens do Produto
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <!-- Imagem Principal -->
+                        <div class="col-md-8">
+                            <div class="mb-3">
+                                <label for="imagem_principal" class="form-label fw-bold">
+                                    <i class="bi bi-image"></i> Imagem Principal
+                                </label>
+                                {% if produto.imagem_principal %}
+                                    <div class="mb-2">
+                                        <img src="{{ produto.imagem_principal.url }}" alt="Imagem Atual" 
+                                             class="img-thumbnail border border-info" style="max-width: 200px; max-height: 200px;">
+                                        <div class="form-text text-info">Imagem atual</div>
+                                    </div>
+                                {% endif %}
+                                <input type="file" class="form-control form-control-lg" id="imagem_principal" name="imagem_principal" 
+                                       accept="image/*" onchange="previewImage(this, 'preview_principal')">
+                                <div class="form-text">JPG, PNG, GIF (máx. 5MB)</div>
+                                <div id="preview_principal" class="mt-3" style="display: none;">
+                                    <img id="img_preview_principal" src="" alt="Preview" 
+                                         class="img-thumbnail border border-primary" style="max-width: 300px; max-height: 300px;">
+                                    <button type="button" class="btn btn-sm btn-danger mt-2" onclick="removeImage('preview_principal', 'imagem_principal')">
+                                        <i class="bi bi-trash"></i> Remover
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Segunda Imagem - Botão Compacto -->
+                        <div class="col-md-4">
+                            <div class="mb-3">
+                                {% if produto.imagem_secundaria %}
+                                    <div class="mb-2">
+                                        <label class="form-label fw-bold">
+                                            <i class="bi bi-image"></i> Segunda Imagem Atual
+                                        </label>
+                                        <div>
+                                            <img src="{{ produto.imagem_secundaria.url }}" alt="Segunda Imagem Atual" 
+                                                 class="img-thumbnail border border-info" style="max-width: 150px; max-height: 150px;">
+                                            <div class="form-text text-info">Segunda imagem atual</div>
+                                        </div>
+                                    </div>
+                                {% endif %}
+                                <div id="segunda_imagem_area" style="display: none;">
+                                    <label for="imagem_secundaria" class="form-label fw-bold">
+                                        <i class="bi bi-image"></i> Segunda Imagem
+                                    </label>
+                                    <input type="file" class="form-control" id="imagem_secundaria" name="imagem_secundaria" 
+                                           accept="image/*" onchange="previewImage(this, 'preview_secundaria')">
+                                    <div class="form-text">Formatos aceitos: JPG, PNG, GIF (máx. 5MB)</div>
+                                    <div id="preview_secundaria" class="mt-3" style="display: none;">
+                                        <img id="img_preview_secundaria" src="" alt="Preview" 
+                                             class="img-thumbnail border border-primary" style="max-width: 200px; max-height: 200px;">
+                                        <button type="button" class="btn btn-sm btn-danger mt-2" onclick="removeImage('preview_secundaria', 'imagem_secundaria')">
+                                            <i class="bi bi-trash"></i> Remover
+                                        </button>
+                                    </div>
+                                </div>
+                                <div class="text-end mt-3">
+                                    <button type="button" class="btn btn-outline-primary btn-sm btn-add-image" 
+                                            id="btn_adicionar_segunda_imagem" 
+                                            onclick="mostrarSegundaImagem()" 
+                                            title="Adicionar outra imagem">
+                                        <i class="bi bi-camera-fill"></i><i class="bi bi-plus-circle-fill" style="font-size: 0.7em; margin-left: -3px;"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Vinculação de Produtos (apenas para acessórios) -->
+    <div class="row mb-4" id="vinculacao-produtos" style="display: none;">
+        <div class="col-12">
+            <div class="card border-success">
+                <div class="card-header bg-success text-white">
+                    <h6 class="mb-0">
+                        <i class="bi bi-link"></i> Produtos Vinculados
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <div class="alert alert-info">
+                        <i class="bi bi-info-circle"></i> 
+                        <strong>Selecione os produtos:</strong> Marque os produtos aos quais este acessório pode ser vinculado.
+                    </div>
+                    <div class="row" id="produtos-disponiveis">
+                        <!-- Os produtos serão carregados via JavaScript -->
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Módulos (apenas para sofás) -->
+    <div class="row mb-4" id="secao-modulos">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <h6 class="mb-0">
+                            <i class="bi bi-grid-3x3"></i> Módulos
+                        </h6>
+                        <button type="button" class="btn btn-sm btn-success" onclick="adicionarModulo()">
+                            <i class="bi bi-plus"></i> Adicionar Módulo
+                        </button>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <div id="modulosContainer">
+                        <!-- Módulos existentes serão carregados aqui -->
+                        {% for modulo in modulos %}
+                        <div class="card mb-3 modulo-recolhido" id="modulo_existing_{{ forloop.counter }}">
+                            <div class="card-header d-flex justify-content-between align-items-center">
+                                <div class="d-flex align-items-center">
+                                    <button type="button" class="btn btn-sm btn-outline-secondary me-2" onclick="toggleModulo('existing_{{ forloop.counter }}')" id="toggleBtn_existing_{{ forloop.counter }}" title="Expandir módulo">
+                                        <i class="bi bi-plus-lg"></i>
+                                    </button>
+                                    <div class="modulo-header-container">
+                                        <h6 class="mb-0" id="moduloTitle_existing_{{ forloop.counter }}">Módulo {{ forloop.counter }} - {{ modulo.nome }}</h6>
+                                        <div class="modulo-status-indicator ativo"></div>
+                                    </div>
+                                </div>
+                                <button type="button" class="btn btn-sm btn-danger" onclick="removerModulo('modulo_existing_{{ forloop.counter }}')">
+                                    <i class="bi bi-trash"></i> Remover
+                                </button>
+                            </div>
+                            <div class="card-body" id="moduloBody_existing_{{ forloop.counter }}" style="display: none;">
+                                <!-- Nome do Módulo -->
+                                <div class="row mb-3">
+                                    <div class="col-md-6">
+                                        <div class="form-floating">
+                                            <input type="text" class="form-control" name="modulo_nome_{{ forloop.counter }}" 
+                                                   value="{{ modulo.nome }}" placeholder="Nome">
+                                            <label>Nome do Módulo</label>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <!-- Campos do módulo -->
+                                <div class="row mb-3">
+                                    <div class="col-md-3">
+                                        <div class="form-floating">
+                                            <input type="number" step="0.01" class="form-control" 
+                                                   name="modulo_profundidade_{{ forloop.counter }}" 
+                                                   value="{{ modulo.profundidade|default:'' }}" placeholder="Profundidade">
+                                            <label>Profundidade (cm)</label>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <div class="form-floating">
+                                            <input type="number" step="0.01" class="form-control" 
+                                                   name="modulo_altura_{{ forloop.counter }}" 
+                                                   value="{{ modulo.altura|default:'' }}" placeholder="Altura">
+                                            <label>Altura (cm)</label>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <div class="form-floating">
+                                            <input type="number" step="0.01" class="form-control" 
+                                                   name="modulo_braco_{{ forloop.counter }}" 
+                                                   value="{{ modulo.braco|default:'' }}" placeholder="Braço">
+                                            <label>Braço (cm)</label>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <div class="form-floating">
+                                            <textarea class="form-control" name="modulo_descricao_{{ forloop.counter }}" 
+                                                     placeholder="Descrição" style="height: 58px;">{{ modulo.descricao|default:'' }}</textarea>
+                                            <label>Descrição (Opcional)</label>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <!-- Tamanhos do Módulo -->
+                                <div class="mt-4">
+                                    <div class="d-flex justify-content-between align-items-center mb-3">
+                                        <h6 class="mb-0">
+                                            <i class="bi bi-rulers"></i> Tamanhos
+                                        </h6>
+                                        <button type="button" class="btn btn-sm btn-outline-success" onclick="adicionarTamanho({{ forloop.counter }})">
+                                            <i class="bi bi-plus"></i> Adicionar Tamanho
+                                        </button>
+                                    </div>
+                                    <div id="tamanhosContainer_{{ forloop.counter }}">
+                                        {% for tamanho in modulo.tamanhos_detalhados.all %}
+                                        <div class="card mb-2 tamanho-recolhido" id="tamanho_existing_{{ forloop.parentloop.counter }}_{{ forloop.counter }}">
+                                            <div class="card-header d-flex justify-content-between align-items-center py-2">
+                                                <div class="d-flex align-items-center">
+                                                    <button type="button" class="btn btn-sm btn-outline-secondary me-2" onclick="toggleTamanho('existing_{{ forloop.parentloop.counter }}', '{{ forloop.counter }}')" id="toggleBtnTamanho_existing_{{ forloop.parentloop.counter }}_{{ forloop.counter }}" title="Expandir tamanho">
+                                                        <i class="bi bi-plus-lg"></i>
+                                                    </button>
+                                                    <div class="tamanho-header-container">
+                                                        <small class="mb-0 fw-medium" id="tamanhoTitle_existing_{{ forloop.parentloop.counter }}_{{ forloop.counter }}">
+                                                            {% if tamanho.largura_total %}
+                                                                Tamanho {{ tamanho.largura_total }}cm
+                                                            {% else %}
+                                                                Tamanho {{ forloop.counter }}
+                                                            {% endif %}
+                                                        </small>
+                                                        <div class="tamanho-status-indicator {% if tamanho.largura_total %}ativo{% endif %}"></div>
+                                                    </div>
+                                                </div>
+                                                <button type="button" class="btn btn-sm btn-danger" onclick="removerTamanho('tamanho_existing_{{ forloop.parentloop.counter }}_{{ forloop.counter }}')">
+                                                    <i class="bi bi-trash"></i>
+                                                </button>
+                                            </div>
+                                            <div class="card-body" id="tamanhoBody_existing_{{ forloop.parentloop.counter }}_{{ forloop.counter }}" style="display: none;">
+                                                <div class="row">
+                                                    <div class="col-md-3">
+                                                        <div class="form-floating mb-2">
+                                                            <input type="number" step="0.01" class="form-control" 
+                                                                   name="tamanho_largura_total_{{ forloop.parentloop.counter }}" 
+                                                                   value="{{ tamanho.largura_total|default:'' }}" placeholder="Largura Total">
+                                                            <label>Largura Total (cm)</label>
+                                                        </div>
+                                                    </div>
+                                                    <div class="col-md-3">
+                                                        <div class="form-floating mb-2">
+                                                            <input type="number" step="0.01" class="form-control" 
+                                                                   name="tamanho_largura_assento_{{ forloop.parentloop.counter }}" 
+                                                                   value="{{ tamanho.largura_assento|default:'' }}" placeholder="Largura Assento">
+                                                            <label>Largura Assento (cm)</label>
+                                                        </div>
+                                                    </div>
+                                                    <div class="col-md-3">
+                                                        <div class="form-floating mb-2">
+                                                            <input type="number" step="0.01" class="form-control" 
+                                                                   name="tamanho_tecido_{{ forloop.parentloop.counter }}" 
+                                                                   value="{{ tamanho.tecido_metros|default:'' }}" placeholder="Tecido">
+                                                            <label>Tecido (metros)</label>
+                                                        </div>
+                                                    </div>
+                                                    <div class="col-md-3">
+                                                        <div class="form-floating mb-2">
+                                                            <input type="number" step="0.001" class="form-control" 
+                                                                   name="tamanho_volume_{{ forloop.parentloop.counter }}" 
+                                                                   value="{{ tamanho.volume_m3|default:'' }}" placeholder="Volume">
+                                                            <label>Volume (m³)</label>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                <div class="row">
+                                                    <div class="col-md-2">
+                                                        <div class="form-floating mb-2">
+                                                            <input type="number" step="0.01" class="form-control" 
+                                                                   name="tamanho_peso_{{ forloop.parentloop.counter }}" 
+                                                                   value="{{ tamanho.peso_kg|default:'' }}" placeholder="Peso">
+                                                            <label>Peso (kg)</label>
+                                                        </div>
+                                                    </div>
+                                                    <div class="col-md-2">
+                                                        <div class="form-floating mb-2">
+                                                            <input type="number" step="0.01" class="form-control" 
+                                                                   name="tamanho_preco_{{ forloop.parentloop.counter }}" 
+                                                                   value="{{ tamanho.preco|default:'' }}" placeholder="Preço">
+                                                            <label>Preço (R$)</label>
+                                                        </div>
+                                                    </div>
+                                                    <div class="col-md-6">
+                                                        <div class="form-floating mb-2">
+                                                            <textarea class="form-control" name="tamanho_descricao_{{ forloop.parentloop.counter }}" 
+                                                                     placeholder="Descrição" style="height: 58px;">{{ tamanho.descricao|default:'' }}</textarea>
+                                                            <label>Descrição</label>
+                                                        </div>
+                                                    </div>
+                                                    <div class="col-md-2">
+                                                        <div class="d-flex align-items-end">
+                                                            <button type="button" class="btn btn-sm btn-danger" onclick="removerTamanho(this.closest('.card'))">
+                                                                <i class="bi bi-trash"></i>
+                                                            </button>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        {% endfor %}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    
+                    {% if not modulos %}
+                    <div class="alert alert-info mb-0" id="noModulosAlert">
+                        <i class="bi bi-info-circle"></i> 
+                        Nenhum módulo cadastrado. Clique em "Adicionar Módulo" para adicionar módulos ao produto.
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Botões de Ação -->
+    <div class="row">
+        <div class="col-12">
+            <div class="d-flex gap-2">
+                <button type="submit" class="btn btn-primary">
+                    <i class="bi bi-check-circle"></i> Atualizar Produto
+                </button>
+                <a href="{% url 'produto_detalhes' produto.id %}" class="btn btn-outline-info">
+                    <i class="bi bi-eye"></i> Ver Detalhes
+                </a>
+                <a href="{% url 'produtos_lista' %}" class="btn btn-outline-secondary">
+                    <i class="bi bi-x-circle"></i> Cancelar
+                </a>
+            </div>
+        </div>
+    </div>
+</form>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+let moduloCount = {{ modulos|length }};
+let produtosDisponiveis = [];
+let produtosVinculadosIds = {{ produtos_vinculados_ids|default:"[]"|safe }};
+
+// Carregar produtos para vinculação
+document.addEventListener('DOMContentLoaded', function() {
+    carregarProdutosDisponiveis();
+    toggleCamposPorTipo(); // Configurar campos iniciais
+    
+    // Configurar eventos para módulos existentes
+    const modulosExistentes = document.querySelectorAll('[id^="modulo_existing_"]');
+    modulosExistentes.forEach((modulo, index) => {
+        const moduloNum = index + 1;
+        const nomeInput = modulo.querySelector(`input[name="modulo_nome_${moduloNum}"]`);
+        
+        if (nomeInput) {
+            // Configurar evento de atualização do título do módulo
+            nomeInput.addEventListener('input', function() {
+                const titulo = document.getElementById(`moduloTitle_existing_${moduloNum}`);
+                const indicator = titulo.parentElement.querySelector('.modulo-status-indicator');
+                
+                if (this.value && this.value.trim() !== '') {
+                    titulo.textContent = `Módulo ${moduloNum} - ${this.value}`;
+                    titulo.classList.add('nome-preenchido');
+                    if (indicator) indicator.classList.add('ativo');
+                } else {
+                    titulo.textContent = `Módulo ${moduloNum}`;
+                    titulo.classList.remove('nome-preenchido');
+                    if (indicator) indicator.classList.remove('ativo');
+                }
+            });
+            
+            // Configurar eventos para tamanhos existentes deste módulo
+            const tamanhosContainer = modulo.querySelector(`[id^="tamanhosContainer_"]`);
+            if (tamanhosContainer) {
+                const tamanhos = tamanhosContainer.querySelectorAll('.card');
+                tamanhos.forEach((tamanho, tamanhoIndex) => {
+                    const tamanhoId = tamanhoIndex + 1;
+                    const larguraInput = tamanho.querySelector(`input[name*="largura_total"]`);
+                    
+                    if (larguraInput) {
+                        // Configurar evento de atualização do título do tamanho
+                        larguraInput.addEventListener('input', function() {
+                            const titulo = document.getElementById(`tamanhoTitle_existing_${moduloNum}_${tamanhoId}`);
+                            const indicator = titulo ? titulo.parentElement.querySelector('.tamanho-status-indicator') : null;
+                            
+                            if (titulo) {
+                                if (this.value && this.value.trim() !== '') {
+                                    titulo.textContent = `Tamanho ${this.value}cm`;
+                                    if (indicator) indicator.classList.add('ativo');
+                                } else {
+                                    titulo.textContent = `Tamanho ${tamanhoId}`;
+                                    if (indicator) indicator.classList.remove('ativo');
+                                }
+                            }
+                        });
+                    }
+                });
+            }
+        }
+    });
+});
+
+// Função para carregar produtos disponíveis para vinculação
+function carregarProdutosDisponiveis() {
+    fetch('/api/produtos/')
+        .then(response => response.json())
+        .then(data => {
+            produtosDisponiveis = data;
+            console.log('Produtos disponíveis carregados:', produtosDisponiveis.length);
+            console.log('Produtos já vinculados:', produtosVinculadosIds);
+            renderizarProdutosDisponiveis();
+        })
+        .catch(error => {
+            console.log('Erro ao carregar produtos:', error);
+            produtosDisponiveis = [];
+            renderizarProdutosDisponiveis();
+        });
+}
+
+// Função para renderizar checkboxes de produtos
+function renderizarProdutosDisponiveis() {
+    const container = document.getElementById('produtos-disponiveis');
+    if (!container) return;
+    
+    container.innerHTML = '';
+    
+    if (produtosDisponiveis.length === 0) {
+        container.innerHTML = '<div class="col-12"><p class="text-muted">Nenhum produto disponível para vinculação.</p></div>';
+        return;
+    }
+    
+    produtosDisponiveis.forEach(produto => {
+        // Verificar se este produto já está vinculado
+        const isChecked = produtosVinculadosIds.includes(produto.id) ? 'checked' : '';
+        
+        const html = `
+            <div class="col-md-4 col-lg-3 mb-2">
+                <div class="form-check">
+                    <input class="form-check-input" type="checkbox" value="${produto.id}" 
+                           id="produto_${produto.id}" name="produtos_vinculados" ${isChecked}>
+                    <label class="form-check-label" for="produto_${produto.id}">
+                        ${produto.ref_produto} - ${produto.nome_produto}
+                    </label>
+                </div>
+            </div>
+        `;
+        container.insertAdjacentHTML('beforeend', html);
+    });
+}
+
+// Sincronizar checkboxes de ativo antes do submit
+document.addEventListener('DOMContentLoaded', function() {
+    const form = document.getElementById('produtoForm');
+    if (form) {
+        form.addEventListener('submit', function(e) {
+            const checkboxAtivo = document.getElementById('ativo');
+            const checkboxAtivoAcessorio = document.getElementById('ativo_acessorio');
+            const checkboxAtivoOutros = document.getElementById('ativo_outros');
+            
+            // Determinar qual seção está visível
+            const camposSofa = document.getElementById('campos-sofa');
+            const camposAcessorio = document.getElementById('campos-acessorio');
+            const camposOutros = document.getElementById('campos-outros');
+            
+            let checkboxVisivel = null;
+            
+            if (camposSofa.style.display !== 'none') {
+                checkboxVisivel = checkboxAtivo;
+            } else if (camposAcessorio.style.display !== 'none') {
+                checkboxVisivel = checkboxAtivoAcessorio;
+            } else if (camposOutros.style.display !== 'none') {
+                checkboxVisivel = checkboxAtivoOutros;
+            }
+            
+            // Desabilitar checkboxes não visíveis para que não sejam enviados
+            if (checkboxVisivel) {
+                [checkboxAtivo, checkboxAtivoAcessorio, checkboxAtivoOutros].forEach(checkbox => {
+                    if (checkbox && checkbox !== checkboxVisivel) {
+                        checkbox.disabled = true;
+                    }
+                });
+            }
+        });
+    }
+});
+
+// Função para alternar campos conforme tipo selecionado
+function toggleCamposPorTipo() {
+    const tipoSelect = document.getElementById('tipo_produto');
+    const selectedOption = tipoSelect.options[tipoSelect.selectedIndex];
+    const tipoNome = selectedOption.getAttribute('data-nome');
+    
+    // Elementos de controle
+    const camposSofa = document.getElementById('campos-sofa');
+    const camposAcessorio = document.getElementById('campos-acessorio');
+    const camposOutros = document.getElementById('campos-outros');
+    const secaoModulos = document.getElementById('secao-modulos');
+    const vinculacaoProdutos = document.getElementById('vinculacao-produtos');
+    
+    // Esconder todos os campos específicos primeiro
+    camposSofa.style.display = 'none';
+    camposAcessorio.style.display = 'none';
+    camposOutros.style.display = 'none';
+    secaoModulos.style.display = 'none';
+    vinculacaoProdutos.style.display = 'none';
+    
+    if (!tipoNome) {
+        return; // Nenhum tipo selecionado
+    }
+    
+    // Obter valor atual do checkbox ativo
+    const checkboxAtivo = document.getElementById('ativo');
+    const checkboxAtivoAcessorio = document.getElementById('ativo_acessorio');
+    const checkboxAtivoOutros = document.getElementById('ativo_outros');
+    
+    let valorAtual = false;
+    if (checkboxAtivo && !checkboxAtivo.disabled) valorAtual = checkboxAtivo.checked;
+    if (checkboxAtivoAcessorio && !checkboxAtivoAcessorio.disabled) valorAtual = checkboxAtivoAcessorio.checked;
+    if (checkboxAtivoOutros && !checkboxAtivoOutros.disabled) valorAtual = checkboxAtivoOutros.checked;
+    
+    // Reabilitar todos os checkboxes
+    [checkboxAtivo, checkboxAtivoAcessorio, checkboxAtivoOutros].forEach(checkbox => {
+        if (checkbox) {
+            checkbox.disabled = false;
+        }
+    });
+    
+    // Mostrar campos conforme o tipo
+    if (tipoNome === 'Sofás') {
+        camposSofa.style.display = 'flex';
+        secaoModulos.style.display = 'block';
+        if (checkboxAtivo) checkboxAtivo.checked = valorAtual;
+    } else if (tipoNome === 'Acessórios') {
+        camposAcessorio.style.display = 'flex';
+        vinculacaoProdutos.style.display = 'block';
+        if (checkboxAtivoAcessorio) checkboxAtivoAcessorio.checked = valorAtual;
+        
+        // Carregar dados do acessório se estiver editando
+        carregarDadosAcessorio();
+    } else {
+        // Para outros tipos (Almofadas, Banquetas, Cadeiras, Poltronas, Pufes), mostrar apenas campos básicos
+        camposOutros.style.display = 'flex';
+        if (checkboxAtivoOutros) checkboxAtivoOutros.checked = valorAtual;
+    }
+}
+
+// Função para carregar dados do acessório na edição
+function carregarDadosAcessorio() {
+    // Se estamos editando um acessório, carregar os dados
+    const tipoSelect = document.getElementById('tipo_produto');
+    const selectedOption = tipoSelect.options[tipoSelect.selectedIndex];
+    const tipoNome = selectedOption.getAttribute('data-nome');
+    
+    if (tipoNome && tipoNome.toLowerCase() === 'acessórios') {
+        // Aqui você carregaria os dados do acessório via AJAX se necessário
+        // Por enquanto, vamos deixar em branco para simplificar
+    }
+}
+
+// Função para preview de imagens
+function previewImage(input, previewId) {
+    const preview = document.getElementById(previewId);
+    const img = document.getElementById('img_' + previewId);
+    
+    if (input.files && input.files[0]) {
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            img.src = e.target.result;
+            preview.style.display = 'block';
+        }
+        reader.readAsDataURL(input.files[0]);
+    }
+}
+
+// Função para remover imagem
+function removeImage(previewId, inputId) {
+    const preview = document.getElementById(previewId);
+    const input = document.getElementById(inputId);
+    const img = document.getElementById('img_' + previewId);
+    
+    preview.style.display = 'none';
+    input.value = '';
+    img.src = '';
+    
+    // Se for a segunda imagem, mostrar o botão novamente
+    if (inputId === 'imagem_secundaria') {
+        document.getElementById('segunda_imagem_area').style.display = 'none';
+        document.getElementById('btn_adicionar_segunda_imagem').style.display = 'block';
+    }
+}
+
+// Função para mostrar segunda imagem
+function mostrarSegundaImagem() {
+    document.getElementById('segunda_imagem_area').style.display = 'block';
+    document.getElementById('btn_adicionar_segunda_imagem').style.display = 'none';
+}
+
+// Função para adicionar módulo
+function adicionarModulo() {
+    moduloCount++;
+    const container = document.getElementById('modulosContainer');
+    const noModulosAlert = document.getElementById('noModulosAlert');
+    
+    if (noModulosAlert) {
+        noModulosAlert.style.display = 'none';
+    }
+    
+    const moduloHTML = `
+        <div class="card mb-3 modulo-recolhido" id="modulo_${moduloCount}">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <div class="d-flex align-items-center">
+                    <button type="button" class="btn btn-sm btn-outline-secondary me-2" onclick="toggleModulo(${moduloCount})" id="toggleBtn_${moduloCount}" title="Expandir módulo">
+                        <i class="bi bi-plus-lg"></i>
+                    </button>
+                    <div class="modulo-header-container">
+                        <h6 class="mb-0" id="moduloTitle_${moduloCount}">Módulo ${moduloCount}</h6>
+                        <div class="modulo-status-indicator"></div>
+                    </div>
+                </div>
+                <button type="button" class="btn btn-sm btn-danger" onclick="removerModulo('modulo_${moduloCount}')">
+                    <i class="bi bi-trash"></i> Remover
+                </button>
+            </div>
+            <div class="card-body" id="moduloBody_${moduloCount}" style="display: none;">
+                <!-- Nome do Módulo -->
+                <div class="row mb-3">
+                    <div class="col-md-6">
+                        <div class="form-floating">
+                            <input type="text" class="form-control" name="modulo_nome_${moduloCount}" placeholder="Nome" oninput="atualizarTituloModulo(${moduloCount}, this.value)" onchange="atualizarTituloModulo(${moduloCount}, this.value)">
+                            <label>Nome do Módulo</label>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Campos do módulo -->
+                <div class="row mb-3">
+                    <div class="col-md-3">
+                        <div class="form-floating">
+                            <input type="number" step="0.01" class="form-control" name="modulo_profundidade_${moduloCount}" placeholder="Profundidade">
+                            <label>Profundidade (cm)</label>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="form-floating">
+                            <input type="number" step="0.01" class="form-control" name="modulo_altura_${moduloCount}" placeholder="Altura">
+                            <label>Altura (cm)</label>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="form-floating">
+                            <input type="number" step="0.01" class="form-control" name="modulo_braco_${moduloCount}" placeholder="Braço">
+                            <label>Braço (cm)</label>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="form-floating">
+                            <textarea class="form-control" name="modulo_descricao_${moduloCount}" placeholder="Descrição" style="height: 58px;"></textarea>
+                            <label>Descrição (Opcional)</label>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Tamanhos do Módulo -->
+                <div class="mt-4">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <h6 class="mb-0">
+                            <i class="bi bi-rulers"></i> Tamanhos (Opcional)
+                        </h6>
+                        <button type="button" class="btn btn-sm btn-outline-success" onclick="adicionarTamanho(${moduloCount})">
+                            <i class="bi bi-plus"></i> Adicionar Tamanho
+                        </button>
+                    </div>
+                    <div id="tamanhosContainer_${moduloCount}">
+                        <!-- Tamanhos serão adicionados aqui -->
+                    </div>
+                </div>
+            </div>
+        </div>
+    `;
+    
+    container.insertAdjacentHTML('beforeend', moduloHTML);
+}
+
+// Função para remover módulo
+function removerModulo(moduloId) {
+    const modulo = document.getElementById(moduloId);
+    modulo.remove();
+    
+    // Se não há mais módulos, mostrar alert
+    const container = document.getElementById('modulosContainer');
+    if (container.children.length === 0) {
+        const noModulosAlert = document.getElementById('noModulosAlert');
+        if (noModulosAlert) {
+            noModulosAlert.style.display = 'block';
+        }
+    }
+}
+
+// Função para adicionar tamanho
+function adicionarTamanho(moduloId) {
+    const container = document.getElementById(`tamanhosContainer_${moduloId}`);
+    const tamanhoCount = container.children.length + 1;
+    
+    const tamanhoHTML = `
+        <div class="card mb-2 tamanho-recolhido" id="tamanho_${moduloId}_${tamanhoCount}">
+            <div class="card-header d-flex justify-content-between align-items-center py-2">
+                <div class="d-flex align-items-center">
+                    <button type="button" class="btn btn-sm btn-outline-secondary me-2" onclick="toggleTamanho(${moduloId}, ${tamanhoCount})" id="toggleBtnTamanho_${moduloId}_${tamanhoCount}" title="Expandir tamanho">
+                        <i class="bi bi-plus-lg"></i>
+                    </button>
+                    <div class="tamanho-header-container">
+                        <small class="mb-0 fw-medium" id="tamanhoTitle_${moduloId}_${tamanhoCount}">Tamanho ${tamanhoCount}</small>
+                        <div class="tamanho-status-indicator"></div>
+                    </div>
+                </div>
+                <button type="button" class="btn btn-sm btn-danger" onclick="removerTamanho(document.getElementById('tamanho_${moduloId}_${tamanhoCount}'))">
+                    <i class="bi bi-trash"></i>
+                </button>
+            </div>
+            <div class="card-body" id="tamanhoBody_${moduloId}_${tamanhoCount}" style="display: none;">
+                <div class="row">
+                    <div class="col-md-3">
+                        <div class="form-floating mb-2">
+                            <input type="number" step="0.01" class="form-control" name="tamanho_largura_total_${moduloId}" placeholder="Largura Total" oninput="atualizarTituloTamanho(${moduloId}, ${tamanhoCount}, this.value)" onchange="atualizarTituloTamanho(${moduloId}, ${tamanhoCount}, this.value)">
+                            <label>Largura Total (cm)</label>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="form-floating mb-2">
+                            <input type="number" step="0.01" class="form-control" name="tamanho_largura_assento_${moduloId}" placeholder="Largura Assento">
+                            <label>Largura Assento (cm)</label>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="form-floating mb-2">
+                            <input type="number" step="0.01" class="form-control" name="tamanho_tecido_${moduloId}" placeholder="Tecido">
+                            <label>Tecido (metros)</label>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="form-floating mb-2">
+                            <input type="number" step="0.001" class="form-control" name="tamanho_volume_${moduloId}" placeholder="Volume">
+                            <label>Volume (m³)</label>
+                        </div>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-md-2">
+                        <div class="form-floating mb-2">
+                            <input type="number" step="0.01" class="form-control" name="tamanho_peso_${moduloId}" placeholder="Peso">
+                            <label>Peso (kg)</label>
+                        </div>
+                    </div>
+                    <div class="col-md-2">
+                        <div class="form-floating mb-2">
+                            <input type="number" step="0.01" class="form-control" name="tamanho_preco_${moduloId}" placeholder="Preço">
+                            <label>Preço (R$)</label>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="form-floating mb-2">
+                            <textarea class="form-control" name="tamanho_descricao_${moduloId}" placeholder="Descrição" style="height: 58px;"></textarea>
+                            <label>Descrição</label>
+                        </div>
+                    </div>
+                    <div class="col-md-2">
+                        <div class="d-flex align-items-end">
+                            <button type="button" class="btn btn-sm btn-danger" onclick="removerTamanho(document.getElementById('tamanho_${moduloId}_${tamanhoCount}'))">
+                                <i class="bi bi-trash"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    `;
+    
+    container.insertAdjacentHTML('beforeend', tamanhoHTML);
+}
+
+// Função para remover tamanho
+function removerTamanho(tamanhoElement) {
+    tamanhoElement.remove();
+}
+
+// Função para expandir/recolher módulo
+function toggleModulo(moduloId) {
+    const body = document.getElementById(`moduloBody_${moduloId}`);
+    const toggleBtn = document.getElementById(`toggleBtn_${moduloId}`);
+    const card = document.getElementById(`modulo_${moduloId}`);
+    const icon = toggleBtn.querySelector('i');
+    
+    if (body.style.display === 'none') {
+        // Expandir
+        body.style.display = 'block';
+        icon.className = 'bi bi-dash-lg';
+        toggleBtn.title = 'Recolher módulo';
+        card.classList.remove('modulo-recolhido');
+        card.classList.add('modulo-expandido');
+        
+        // Animação suave de expansão
+        body.style.opacity = '0';
+        body.style.transform = 'translateY(-10px)';
+        setTimeout(() => {
+            body.style.transition = 'opacity 0.3s ease-in-out, transform 0.3s ease-in-out';
+            body.style.opacity = '1';
+            body.style.transform = 'translateY(0)';
+        }, 10);
+    } else {
+        // Recolher
+        body.style.transition = 'opacity 0.2s ease-in-out, transform 0.2s ease-in-out';
+        body.style.opacity = '0';
+        body.style.transform = 'translateY(-10px)';
+        
+        setTimeout(() => {
+            body.style.display = 'none';
+            body.style.transition = '';
+        }, 200);
+        
+        icon.className = 'bi bi-plus-lg';
+        toggleBtn.title = 'Expandir módulo';
+        card.classList.remove('modulo-expandido');
+        card.classList.add('modulo-recolhido');
+    }
+}
+
+// Função para expandir/recolher tamanho
+function toggleTamanho(moduloId, tamanhoId) {
+    const body = document.getElementById(`tamanhoBody_${moduloId}_${tamanhoId}`);
+    const toggleBtn = document.getElementById(`toggleBtnTamanho_${moduloId}_${tamanhoId}`);
+    const icon = toggleBtn.querySelector('i');
+    
+    if (body.style.display === 'none') {
+        // Expandir
+        body.style.display = 'block';
+        icon.className = 'bi bi-dash-lg';
+        toggleBtn.title = 'Recolher tamanho';
+        
+        // Animação suave de expansão
+        body.style.opacity = '0';
+        body.style.transform = 'translateY(-5px)';
+        setTimeout(() => {
+            body.style.transition = 'opacity 0.3s ease-in-out, transform 0.3s ease-in-out';
+            body.style.opacity = '1';
+            body.style.transform = 'translateY(0)';
+        }, 10);
+    } else {
+        // Recolher
+        body.style.transition = 'opacity 0.2s ease-in-out, transform 0.2s ease-in-out';
+        body.style.opacity = '0';
+        body.style.transform = 'translateY(-5px)';
+        
+        setTimeout(() => {
+            body.style.display = 'none';
+            body.style.transition = '';
+        }, 200);
+        
+        icon.className = 'bi bi-plus-lg';
+        toggleBtn.title = 'Expandir tamanho';
+    }
+}
+
+// Função para atualizar o título do módulo dinamicamente
+function atualizarTituloModulo(moduloId, nomeModulo) {
+    const titulo = document.getElementById(`moduloTitle_${moduloId}`);
+    const indicator = titulo.parentElement.querySelector('.modulo-status-indicator');
+    
+    if (nomeModulo && nomeModulo.trim() !== '') {
+        titulo.textContent = `Módulo ${moduloId} - ${nomeModulo}`;
+        titulo.classList.add('nome-preenchido');
+        if (indicator) indicator.classList.add('ativo');
+        
+        // Animação de feedback
+        titulo.classList.add('animando');
+        setTimeout(() => titulo.classList.remove('animando'), 100);
+    } else {
+        titulo.textContent = `Módulo ${moduloId}`;
+        titulo.classList.remove('nome-preenchido');
+        if (indicator) indicator.classList.remove('ativo');
+    }
+}
+
+// Função para atualizar título do tamanho baseado na largura total
+function atualizarTituloTamanho(moduloId, tamanhoId, larguraTotal) {
+    const titulo = document.getElementById(`tamanhoTitle_${moduloId}_${tamanhoId}`);
+    const indicator = titulo.parentElement.querySelector('.tamanho-status-indicator');
+    
+    if (larguraTotal && larguraTotal.trim() !== '') {
+        titulo.textContent = `Tamanho ${larguraTotal}cm`;
+        if (indicator) indicator.classList.add('ativo');
+    } else {
+        titulo.textContent = `Tamanho ${tamanhoId}`;
+        if (indicator) indicator.classList.remove('ativo');
+    }
+}
+
+// Validação do formulário
+document.getElementById('produtoForm').addEventListener('submit', function(e) {
+    const refProduto = document.getElementById('ref_produto').value;
+    const nomeProduto = document.getElementById('nome_produto').value;
+    const tipoProduto = document.getElementById('tipo_produto').value;
+    
+    if (!refProduto || !nomeProduto || !tipoProduto) {
+        e.preventDefault();
+        alert('Por favor, preencha todos os campos obrigatórios.');
+        return false;
+    }
+    
+    // Validação específica para acessórios
+    const tipoSelect = document.getElementById('tipo_produto');
+    const selectedOption = tipoSelect.options[tipoSelect.selectedIndex];
+    const tipoNome = selectedOption.getAttribute('data-nome');
+    
+    if (tipoNome && tipoNome.toLowerCase() === 'acessórios') {
+        const precoAcessorio = document.getElementById('preco_acessorio').value;
+        if (!precoAcessorio || parseFloat(precoAcessorio) < 0) {
+            e.preventDefault();
+            alert('Por favor, informe um preço válido para o acessório.');
+            return false;
+        }
+    }
+});
+</script>
+
+<style>
+/* Estilos para os botões de expandir/recolher módulos */
+.card-header .btn-outline-secondary {
+    border: 1px solid #dee2e6;
+    color: #6c757d;
+    transition: all 0.2s ease-in-out;
+    width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+}
+
+.card-header .btn-outline-secondary:hover {
+    background-color: #f8f9fa;
+    border-color: #adb5bd;
+    color: #495057;
+    transform: scale(1.05);
+}
+
+.card-header .btn-outline-secondary:focus {
+    box-shadow: 0 0 0 0.2rem rgba(108, 117, 125, 0.25);
+}
+
+.card-header .btn-outline-secondary i {
+    font-size: 14px;
+    font-weight: bold;
+}
+
+/* Animação suave para expandir/recolher */
+.card-body {
+    transition: all 0.3s ease-in-out;
+    overflow: hidden;
+}
+
+/* Destaque do nome do módulo */
+.card-header h6 {
+    color: #495057;
+    font-weight: 500;
+    transition: all 0.2s ease-in-out;
+    margin: 0;
+    padding: 0;
+}
+
+/* Estado quando o nome está preenchido */
+.card-header h6.nome-preenchido {
+    color: #0d6efd !important;
+    font-weight: 600 !important;
+}
+
+/* Animação ao alterar o título */
+.card-header h6.animando {
+    transform: scale(1.02);
+    transition: transform 0.1s ease-in-out;
+}
+
+/* Estilo para módulo expandido/recolhido */
+.card.modulo-recolhido {
+    box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+}
+
+.card.modulo-expandido {
+    box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
+    border-color: #0d6efd;
+}
+
+.card.tamanho-recolhido {
+    box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+}
+
+/* Indicador visual de status do módulo */
+.modulo-header-container, .tamanho-header-container {
+    position: relative;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.modulo-status-indicator, .tamanho-status-indicator {
+    width: 8px;
+    height: 8px;
+    background-color: #28a745;
+    border-radius: 50%;
+    opacity: 0;
+    transition: opacity 0.2s ease-in-out;
+    flex-shrink: 0;
+}
+
+.modulo-status-indicator.ativo, .tamanho-status-indicator.ativo {
+    opacity: 1;
+}
+
+/* Estilos para cabeçalho de tamanhos */
+.card-header small.fw-medium {
+    color: #495057;
+    font-weight: 500;
+    transition: all 0.2s ease-in-out;
+}
+
+/* Feedback visual nos botões */
+.btn:active {
+    transform: scale(0.98);
+}
+
+/* Melhoria visual das transições */
+.card {
+    transition: all 0.2s ease-in-out;
+}
+
+.card:hover {
+    transform: translateY(-1px);
+}
+</style>
+{% endblock %}

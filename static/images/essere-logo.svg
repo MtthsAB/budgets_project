@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 140 38" width="140" height="38">
+  <style>
+    .logo-text {
+      font-family: 'Times New Roman', serif;
+      font-size: 24px;
+      font-weight: bold;
+      fill: white;
+      letter-spacing: 0.5px;
+    }
+  </style>
+  <text x="5" y="26" class="logo-text">Essere</text>
+</svg>

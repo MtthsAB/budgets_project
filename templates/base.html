@@ -20,6 +20,158 @@
         .main-content {
             min-height: calc(100vh - 56px);
         }
+        
+        /* Estilos para o menu expansível */
+        .menu-section {
+            margin-bottom: 0.25rem;
+        }
+        
+        .menu-toggle {
+            background: none;
+            border: none;
+            width: 100%;
+            text-align: left;
+            padding: 0.75rem 1rem;
+            color: #495057;
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            border-radius: 0.375rem;
+            font-weight: 500;
+        }
+        
+        .menu-toggle:hover {
+            background-color: #e9ecef;
+            color: #0d6efd;
+        }
+        
+        .menu-toggle.active {
+            background-color: #0d6efd;
+            color: white;
+        }
+        
+        .menu-toggle .menu-icon {
+            margin-right: 0.75rem;
+            font-size: 1.1rem;
+        }
+        
+        .menu-toggle .arrow-icon {
+            margin-left: auto;
+            transition: transform 0.3s ease;
+            font-size: 0.9rem;
+        }
+        
+        .menu-toggle.collapsed .arrow-icon {
+            transform: rotate(-90deg);
+        }
+        
+        .menu-submenu {
+            background-color: #ffffff;
+            border-radius: 0.375rem;
+            margin: 0.25rem 0 0.5rem 1rem;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        
+        .menu-submenu .list-group-item {
+            border: none;
+            padding: 0.625rem 1rem 0.625rem 2.5rem;
+            font-size: 0.9rem;
+            color: #6c757d;
+            transition: all 0.2s ease;
+            border-radius: 0.25rem;
+            margin: 0.125rem;
+        }
+        
+        .menu-submenu .list-group-item:hover {
+            background-color: #f8f9fa;
+            color: #0d6efd;
+            transform: translateX(2px);
+        }
+        
+        .menu-submenu .list-group-item.active {
+            background-color: #e3f2fd;
+            color: #0d6efd;
+            border-left: 3px solid #0d6efd;
+            font-weight: 500;
+        }
+        
+        .menu-submenu .list-group-item i {
+            margin-right: 0.5rem;
+            width: 1rem;
+        }
+        
+        /* Responsividade para telas menores */
+        @media (max-width: 768px) {
+            .sidebar {
+                min-height: auto;
+            }
+            
+            .menu-toggle {
+                padding: 0.625rem 0.75rem;
+            }
+            
+            .menu-submenu {
+                margin-left: 0.5rem;
+            }
+            
+            .menu-submenu .list-group-item {
+                padding-left: 2rem;
+                font-size: 0.85rem;
+            }
+        }
+        
+        /* Estilos para dropdown do navbar superior */
+        .navbar-nav .dropdown-menu {
+            border-radius: 0.5rem;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            border: none;
+            margin-top: 0.25rem;
+        }
+        
+        .navbar-nav .dropdown-item {
+            padding: 0.625rem 1rem;
+            transition: all 0.2s ease;
+            color: #495057;
+        }
+        
+        .navbar-nav .dropdown-item:hover {
+            background-color: #f8f9fa;
+            color: #0d6efd;
+            transform: translateX(2px);
+        }
+        
+        .navbar-nav .dropdown-item i {
+            margin-right: 0.5rem;
+            width: 1rem;
+        }
+        
+        .navbar-nav .dropdown-toggle::after {
+            margin-left: 0.5rem;
+            transition: transform 0.3s ease;
+        }
+        
+        .navbar-nav .dropdown.show .dropdown-toggle::after {
+            transform: rotate(180deg);
+        }
+        
+        /* Estilos para o logo */
+        .navbar-brand {
+            display: flex;
+            align-items: center;
+        }
+        
+        .navbar-brand img {
+            height: 38px;
+            width: auto;
+            transition: all 0.3s ease;
+            margin-right: 0.5rem;
+        }
+        
+        .navbar-brand:hover img {
+            transform: scale(1.05);
+        }
     </style>
 </head>
 <body>
@@ -27,7 +179,8 @@
     <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
         <div class="container-fluid">
             <a class="navbar-brand" href="{% url 'home' %}">
-                <i class="bi bi-box-seam"></i> Sistema de Produtos
+                {% load static %}
+                <img src="{% static 'images/essere-logo.svg' %}" alt="Essere" />
             </a>
             
             {% if user.is_authenticated %}
@@ -42,25 +195,43 @@
                             <i class="bi bi-house"></i> Home
                         </a>
                     </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="{% url 'produtos_lista' %}">
-                            <i class="bi bi-list-ul"></i> Produtos
+                    
+                    <!-- Dropdown Produtos -->
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                            <i class="bi bi-box-seam"></i> Produtos
                         </a>
+                        <ul class="dropdown-menu">
+                            <li>
+                                <a class="dropdown-item" href="{% url 'produtos_lista' %}">
+                                    <i class="bi bi-list-ul"></i> Listar Produtos
+                                </a>
+                            </li>
+                            <li>
+                                <a class="dropdown-item" href="{% url 'produto_cadastro' %}">
+                                    <i class="bi bi-plus-circle"></i> Novo Produto
+                                </a>
+                            </li>
+                        </ul>
                     </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="{% url 'produto_cadastro' %}">
-                            <i class="bi bi-plus-circle"></i> Cadastrar Produto
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="{% url 'cliente_lista' %}">
+                    
+                    <!-- Dropdown Clientes -->
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
                             <i class="bi bi-people"></i> Clientes
                         </a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="{% url 'cliente_cadastro' %}">
-                            <i class="bi bi-person-plus"></i> Cadastrar Cliente
-                        </a>
+                        <ul class="dropdown-menu">
+                            <li>
+                                <a class="dropdown-item" href="{% url 'cliente_lista' %}">
+                                    <i class="bi bi-people"></i> Listar Clientes
+                                </a>
+                            </li>
+                            <li>
+                                <a class="dropdown-item" href="{% url 'cliente_cadastro' %}">
+                                    <i class="bi bi-person-plus"></i> Novo Cliente
+                                </a>
+                            </li>
+                        </ul>
                     </li>
                 </ul>
                 
@@ -100,22 +271,48 @@
             <!-- Sidebar for authenticated users -->
             <div class="col-md-2 col-lg-2 sidebar p-3">
                 <div class="list-group list-group-flush">
+                    <!-- Dashboard -->
                     <a href="{% url 'home' %}" class="list-group-item list-group-item-action {% if request.resolver_match.url_name == 'home' %}active{% endif %}">
                         <i class="bi bi-house"></i> Dashboard
                     </a>
-                    <a href="{% url 'produtos_lista' %}" class="list-group-item list-group-item-action {% if request.resolver_match.url_name == 'produtos_lista' %}active{% endif %}">
-                        <i class="bi bi-list-ul"></i> Listar Produtos
-                    </a>
-                    <a href="{% url 'produto_cadastro' %}" class="list-group-item list-group-item-action {% if request.resolver_match.url_name == 'produto_cadastro' %}active{% endif %}">
-                        <i class="bi bi-plus-circle"></i> Novo Produto
-                    </a>
-                    <hr class="my-2">
-                    <a href="{% url 'cliente_lista' %}" class="list-group-item list-group-item-action {% if request.resolver_match.url_name == 'cliente_lista' %}active{% endif %}">
-                        <i class="bi bi-people"></i> Listar Clientes
-                    </a>
-                    <a href="{% url 'cliente_cadastro' %}" class="list-group-item list-group-item-action {% if request.resolver_match.url_name == 'cliente_cadastro' %}active{% endif %}">
-                        <i class="bi bi-person-plus"></i> Novo Cliente
-                    </a>
+                    
+                    <!-- Menu Produtos -->
+                    <div class="menu-section">
+                        <button class="menu-toggle collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#produtosMenu" aria-expanded="false" aria-controls="produtosMenu">
+                            <i class="bi bi-box-seam menu-icon"></i>
+                            <span>Produtos</span>
+                            <i class="bi bi-chevron-down arrow-icon"></i>
+                        </button>
+                        <div class="collapse" id="produtosMenu">
+                            <div class="menu-submenu">
+                                <a href="{% url 'produtos_lista' %}" class="list-group-item list-group-item-action {% if request.resolver_match.url_name == 'produtos_lista' %}active{% endif %}">
+                                    <i class="bi bi-list-ul"></i> Listar Produtos
+                                </a>
+                                <a href="{% url 'produto_cadastro' %}" class="list-group-item list-group-item-action {% if request.resolver_match.url_name == 'produto_cadastro' %}active{% endif %}">
+                                    <i class="bi bi-plus-circle"></i> Novo Produto
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Menu Clientes -->
+                    <div class="menu-section">
+                        <button class="menu-toggle collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#clientesMenu" aria-expanded="false" aria-controls="clientesMenu">
+                            <i class="bi bi-people menu-icon"></i>
+                            <span>Clientes</span>
+                            <i class="bi bi-chevron-down arrow-icon"></i>
+                        </button>
+                        <div class="collapse" id="clientesMenu">
+                            <div class="menu-submenu">
+                                <a href="{% url 'cliente_lista' %}" class="list-group-item list-group-item-action {% if request.resolver_match.url_name == 'cliente_lista' %}active{% endif %}">
+                                    <i class="bi bi-people"></i> Listar Clientes
+                                </a>
+                                <a href="{% url 'cliente_cadastro' %}" class="list-group-item list-group-item-action {% if request.resolver_match.url_name == 'cliente_cadastro' %}active{% endif %}">
+                                    <i class="bi bi-person-plus"></i> Novo Cliente
+                                </a>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
             <!-- Content area for authenticated users -->
@@ -137,6 +334,106 @@
 
     <!-- Bootstrap JS -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Função para gerenciar o estado dos menus expansíveis na sidebar
+            function initExpandableMenus() {
+                // Encontrar menu ativo baseado na página atual
+                const activeMenuItems = document.querySelectorAll('.menu-submenu .list-group-item.active');
+                
+                // Expandir o menu que contém o item ativo
+                activeMenuItems.forEach(function(activeItem) {
+                    const menuSection = activeItem.closest('.menu-section');
+                    if (menuSection) {
+                        const toggleButton = menuSection.querySelector('.menu-toggle');
+                        const collapseTarget = menuSection.querySelector('.collapse');
+                        
+                        if (toggleButton && collapseTarget) {
+                            // Remover classe collapsed e adicionar classe active ao botão
+                            toggleButton.classList.remove('collapsed');
+                            toggleButton.classList.add('active');
+                            toggleButton.setAttribute('aria-expanded', 'true');
+                            
+                            // Mostrar o menu
+                            collapseTarget.classList.add('show');
+                        }
+                    }
+                });
+                
+                // Adicionar listeners para os botões de toggle
+                const toggleButtons = document.querySelectorAll('.menu-toggle');
+                toggleButtons.forEach(function(button) {
+                    // Listener para o evento de collapse do Bootstrap
+                    const target = button.getAttribute('data-bs-target');
+                    const collapseElement = document.querySelector(target);
+                    
+                    if (collapseElement) {
+                        collapseElement.addEventListener('show.bs.collapse', function() {
+                            button.classList.add('active');
+                            button.classList.remove('collapsed');
+                        });
+                        
+                        collapseElement.addEventListener('hide.bs.collapse', function() {
+                            button.classList.remove('active');
+                            button.classList.add('collapsed');
+                        });
+                    }
+                });
+                
+                // Adicionar efeito de hover suave
+                const menuItems = document.querySelectorAll('.menu-submenu .list-group-item');
+                menuItems.forEach(function(item) {
+                    item.addEventListener('mouseenter', function() {
+                        if (!this.classList.contains('active')) {
+                            this.style.transform = 'translateX(4px)';
+                        }
+                    });
+                    
+                    item.addEventListener('mouseleave', function() {
+                        if (!this.classList.contains('active')) {
+                            this.style.transform = 'translateX(0)';
+                        }
+                    });
+                });
+            }
+            
+            // Função para gerenciar dropdowns do navbar superior
+            function initNavbarDropdowns() {
+                // Adicionar efeito de rotação para as setas dos dropdowns
+                const dropdownToggles = document.querySelectorAll('.navbar-nav .dropdown-toggle');
+                dropdownToggles.forEach(function(toggle) {
+                    const dropdown = toggle.closest('.dropdown');
+                    
+                    // Listener para quando o dropdown abre
+                    dropdown.addEventListener('show.bs.dropdown', function() {
+                        toggle.classList.add('show');
+                    });
+                    
+                    // Listener para quando o dropdown fecha
+                    dropdown.addEventListener('hide.bs.dropdown', function() {
+                        toggle.classList.remove('show');
+                    });
+                });
+                
+                // Adicionar efeito de hover suave aos itens do dropdown
+                const dropdownItems = document.querySelectorAll('.navbar-nav .dropdown-item');
+                dropdownItems.forEach(function(item) {
+                    item.addEventListener('mouseenter', function() {
+                        this.style.transform = 'translateX(4px)';
+                    });
+                    
+                    item.addEventListener('mouseleave', function() {
+                        this.style.transform = 'translateX(0)';
+                    });
+                });
+            }
+            
+            // Inicializar os menus
+            initExpandableMenus();
+            initNavbarDropdowns();
+        });
+    </script>
     
     {% block extra_js %}{% endblock %}
 </body>
