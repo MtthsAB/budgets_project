@@ -1,0 +1,180 @@
+{% extends 'base.html' %}
+
+{% block title %}Cadastrar Produto - Sistema de Produtos{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="d-flex justify-content-between align-items-center">
+            <h1 class="h2 mb-0">
+                <i class="bi bi-plus-circle"></i> Cadastrar Produto
+            </h1>
+            <a href="{% url 'produtos_lista' %}" class="btn btn-outline-secondary">
+                <i class="bi bi-arrow-left"></i> Voltar
+            </a>
+        </div>
+    </div>
+</div>
+
+<form method="post" enctype="multipart/form-data" id="produtoForm">
+    {% csrf_token %}
+    
+    <!-- Dados Básicos -->
+    <div class="card mb-4">
+        <div class="card-header">
+            <h6 class="mb-0">
+                <i class="bi bi-info-circle"></i> Dados Básicos
+            </h6>
+        </div>
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="form-floating mb-3">
+                        <input type="text" class="form-control" id="ref_produto" name="ref_produto" 
+                               placeholder="Referência" required>
+                        <label for="ref_produto">Referência do Produto *</label>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="form-floating mb-3">
+                        <input type="text" class="form-control" id="nome_produto" name="nome_produto" 
+                               placeholder="Nome" required>
+                        <label for="nome_produto">Nome do Produto *</label>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="form-floating mb-3">
+                        <select class="form-select" id="tipo_produto" name="tipo_produto" required>
+                            <option value="">Selecione...</option>
+                            {% for tipo in tipos %}
+                            <option value="{{ tipo.id }}">{{ tipo.nome }}</option>
+                            {% endfor %}
+                        </select>
+                        <label for="tipo_produto">Tipo de Produto *</label>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="form-floating mb-3">
+                        <select class="form-select" id="linha" name="linha" required>
+                            <option value="">Selecione...</option>
+                            {% for linha in linhas %}
+                            <option value="{{ linha.id }}">{{ linha.nome }}</option>
+                            {% endfor %}
+                        </select>
+                        <label for="linha">Linha *</label>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="row">
+                <div class="col-md-3">
+                    <div class="form-check mb-3">
+                        <input class="form-check-input" type="checkbox" id="ativo" name="ativo" checked>
+                        <label class="form-check-label" for="ativo">Produto Ativo</label>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="form-check mb-3">
+                        <input class="form-check-input" type="checkbox" id="tem_cor_tecido" name="tem_cor_tecido">
+                        <label class="form-check-label" for="tem_cor_tecido">Tem Cor Tecido</label>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="form-check mb-3">
+                        <input class="form-check-input" type="checkbox" id="tem_difer_desenho_lado" name="tem_difer_desenho_lado">
+                        <label class="form-check-label" for="tem_difer_desenho_lado">Diferencia Lado Dir/Esq</label>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="form-check mb-3">
+                        <input class="form-check-input" type="checkbox" id="tem_difer_desenho_tamanho" name="tem_difer_desenho_tamanho">
+                        <label class="form-check-label" for="tem_difer_desenho_tamanho">Diferencia por Tamanho</label>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- IMAGENS DO PRODUTO -->
+    <div class="card mb-4 border-primary">
+        <div class="card-header bg-primary text-white">
+            <h5 class="mb-0">
+                <i class="bi bi-images"></i> Imagens do Produto
+            </h5>
+        </div>
+        <div class="card-body">
+            <div class="alert alert-info">
+                <i class="bi bi-info-circle"></i> 
+                <strong>Adicione imagens ao seu produto:</strong> Selecione arquivos de imagem para melhorar a apresentação do produto.
+            </div>
+            
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="mb-3">
+                        <label for="imagem_principal" class="form-label fw-bold">
+                            <i class="bi bi-image"></i> Imagem Principal
+                        </label>
+                        <input type="file" class="form-control form-control-lg" id="imagem_principal" name="imagem_principal" 
+                               accept="image/*" onchange="previewImage(this, 'preview_principal')">
+                        <div class="form-text">Formatos aceitos: JPG, PNG, GIF (máx. 5MB)</div>
+                        <div id="preview_principal" class="mt-3" style="display: none;">
+                            <img id="img_preview_principal" src="" alt="Preview" 
+                                 class="img-thumbnail border border-primary" style="max-width: 200px; max-height: 200px;">
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="mb-3">
+                        <label for="imagem_secundaria" class="form-label fw-bold">
+                            <i class="bi bi-image"></i> Imagem Secundária
+                        </label>
+                        <input type="file" class="form-control form-control-lg" id="imagem_secundaria" name="imagem_secundaria" 
+                               accept="image/*" onchange="previewImage(this, 'preview_secundaria')">
+                        <div class="form-text">Formatos aceitos: JPG, PNG, GIF (máx. 5MB)</div>
+                        <div id="preview_secundaria" class="mt-3" style="display: none;">
+                            <img id="img_preview_secundaria" src="" alt="Preview" 
+                                 class="img-thumbnail border border-primary" style="max-width: 200px; max-height: 200px;">
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Botões de Ação -->
+    <div class="row mb-4">
+        <div class="col-12 text-center">
+            <button type="submit" class="btn btn-primary btn-lg me-2">
+                <i class="bi bi-save"></i> Salvar Produto
+            </button>
+            <a href="{% url 'produtos_lista' %}" class="btn btn-outline-secondary btn-lg">
+                <i class="bi bi-x-circle"></i> Cancelar
+            </a>
+        </div>
+    </div>
+</form>
+
+<script>
+// Função para preview de imagens
+function previewImage(input, previewId) {
+    const preview = document.getElementById(previewId);
+    const imgPreview = document.getElementById('img_' + previewId);
+    
+    if (input.files && input.files[0]) {
+        const reader = new FileReader();
+        
+        reader.onload = function(e) {
+            imgPreview.src = e.target.result;
+            preview.style.display = 'block';
+        }
+        
+        reader.readAsDataURL(input.files[0]);
+    } else {
+        preview.style.display = 'none';
+    }
+}
+</script>
+{% endblock %}

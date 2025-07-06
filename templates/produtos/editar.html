@@ -21,7 +21,7 @@
     </div>
 </div>
 
-<form method="post" id="produtoForm">
+<form method="post" enctype="multipart/form-data" id="produtoForm">
     {% csrf_token %}
     
     <!-- Dados Básicos -->
@@ -64,20 +64,6 @@
                                     {% endfor %}
                                 </select>
                                 <label for="tipo_produto">Tipo de Produto *</label>
-                            </div>
-                        </div>
-                        <div class="col-md-6">
-                            <div class="form-floating mb-3">
-                                <select class="form-select" id="linha" name="linha" required>
-                                    <option value="">Selecione a linha</option>
-                                    {% for linha in linhas %}
-                                        <option value="{{ linha.id }}" 
-                                                {% if produto.id_linha.id == linha.id %}selected{% endif %}>
-                                            {{ linha.nome }}
-                                        </option>
-                                    {% endfor %}
-                                </select>
-                                <label for="linha">Linha *</label>
                             </div>
                         </div>
                     </div>
@@ -125,6 +111,81 @@
             </div>
         </div>
     </div>
+
+    <!-- IMAGENS DO PRODUTO -->
+    <div class="card mb-4 border-primary">
+        <div class="card-header bg-primary text-white">
+            <h5 class="mb-0">
+                <i class="bi bi-images"></i> Imagens do Produto
+            </h5>
+        </div>
+        <div class="card-body">
+            <div class="alert alert-info">
+                <i class="bi bi-info-circle"></i> 
+                <strong>Editar imagens:</strong> Selecione novos arquivos para substituir as imagens atuais.
+            </div>
+            
+            <div class="row">
+                <!-- Imagem Principal -->
+                <div class="col-md-8">
+                    <div class="mb-3">
+                        <label for="imagem_principal" class="form-label fw-bold">
+                            <i class="bi bi-image"></i> Imagem Principal
+                        </label>
+                        {% if produto.imagem_principal %}
+                        <div class="mb-2">
+                            <small class="text-muted">Imagem atual:</small><br>
+                            <img src="{{ produto.imagem_principal.url }}" alt="Imagem Principal Atual" 
+                                 class="img-thumbnail border border-primary" style="max-width: 200px; max-height: 200px;">
+                        </div>
+                        {% endif %}
+                        <input type="file" class="form-control form-control-lg" id="imagem_principal" name="imagem_principal" 
+                               accept="image/*" onchange="previewImage(this, 'preview_principal')">
+                        <div class="form-text">Formatos aceitos: JPG, PNG, GIF (máx. 5MB)</div>
+                        <div id="preview_principal" class="mt-3" style="display: none;">
+                            <small class="text-muted">Nova imagem:</small><br>
+                            <img id="img_preview_principal" src="" alt="Preview" 
+                                 class="img-thumbnail border border-success" style="max-width: 300px; max-height: 300px;">
+                            <button type="button" class="btn btn-sm btn-danger mt-2" onclick="removeImage('preview_principal', 'imagem_principal')">
+                                <i class="bi bi-trash"></i> Remover
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Botão para Segunda Imagem -->
+                <div class="col-md-4">
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">
+                            <i class="bi bi-plus-circle"></i> Segunda Imagem (Opcional)
+                        </label>
+                        {% if produto.imagem_secundaria %}
+                        <div class="mb-2">
+                            <small class="text-muted">Imagem atual:</small><br>
+                            <img src="{{ produto.imagem_secundaria.url }}" alt="Imagem Secundária Atual" 
+                                 class="img-thumbnail border border-primary" style="max-width: 200px; max-height: 200px;">
+                        </div>
+                        {% endif %}
+                        <div id="segunda_imagem_area" style="display: none;">
+                            <input type="file" class="form-control" id="imagem_secundaria" name="imagem_secundaria" 
+                                   accept="image/*" onchange="previewImage(this, 'preview_secundaria')">
+                            <div class="form-text">Formatos aceitos: JPG, PNG, GIF (máx. 5MB)</div>
+                            <div id="preview_secundaria" class="mt-3" style="display: none;">
+                                <img id="img_preview_secundaria" src="" alt="Preview" 
+                                     class="img-thumbnail border border-primary" style="max-width: 200px; max-height: 200px;">
+                                <button type="button" class="btn btn-sm btn-danger mt-2" onclick="removeImage('preview_secundaria', 'imagem_secundaria')">
+                                    <i class="bi bi-trash"></i> Remover
+                                </button>
+                            </div>
+                        </div>
+                        <button type="button" class="btn btn-outline-primary btn-sm" id="btn_adicionar_segunda_imagem" onclick="mostrarSegundaImagem()">
+                            <i class="bi bi-plus"></i> Adicionar Segunda Imagem
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
     
     <!-- Módulos -->
     <div class="row mb-4">
@@ -133,7 +194,7 @@
                 <div class="card-header">
                     <div class="d-flex justify-content-between align-items-center">
                         <h6 class="mb-0">
-                            <i class="bi bi-grid-3x3"></i> Módulos
+                            <i class="bi bi-grid-3x3"></i> Módulos (Opcional)
                         </h6>
                         <button type="button" class="btn btn-sm btn-success" onclick="adicionarModulo()">
                             <i class="bi bi-plus"></i> Adicionar Módulo
@@ -142,12 +203,180 @@
                 </div>
                 <div class="card-body">
                     <div id="modulosContainer">
-                        <!-- Módulos existentes serão carregados via JavaScript -->
+                        <!-- Carregar módulos existentes -->
+                        {% for modulo in modulos %}
+                        <div class="card mb-3" id="modulo_{{ forloop.counter }}">
+                            <div class="card-header d-flex justify-content-between align-items-center">
+                                <h6 class="mb-0">Módulo {{ forloop.counter }}</h6>
+                                <button type="button" class="btn btn-sm btn-danger" onclick="removerModulo({{ forloop.counter }})">
+                                    <i class="bi bi-trash"></i> Remover
+                                </button>
+                            </div>
+                            <div class="card-body">
+                                <!-- Nome do Módulo -->
+                                <div class="row mb-3">
+                                    <div class="col-md-6">
+                                        <div class="form-floating">
+                                            <input type="text" class="form-control" id="modulo_nome_{{ forloop.counter }}" name="modulo_nome_{{ forloop.counter }}" value="{{ modulo.nome }}" placeholder="Nome">
+                                            <label for="modulo_nome_{{ forloop.counter }}">Nome do Módulo</label>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <!-- Campos dimensões -->
+                                <div class="row mb-3">
+                                    <div class="col-md-3">
+                                        <div class="form-floating">
+                                            <input type="number" step="0.01" class="form-control" id="modulo_profundidade_{{ forloop.counter }}" name="modulo_profundidade_{{ forloop.counter }}" value="{{ modulo.profundidade|default:'' }}" placeholder="Profundidade">
+                                            <label for="modulo_profundidade_{{ forloop.counter }}">Profundidade (cm)</label>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <div class="form-floating">
+                                            <input type="number" step="0.01" class="form-control" id="modulo_altura_{{ forloop.counter }}" name="modulo_altura_{{ forloop.counter }}" value="{{ modulo.altura|default:'' }}" placeholder="Altura">
+                                            <label for="modulo_altura_{{ forloop.counter }}">Altura (cm)</label>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <div class="form-floating">
+                                            <input type="number" step="0.01" class="form-control" id="modulo_braco_{{ forloop.counter }}" name="modulo_braco_{{ forloop.counter }}" value="{{ modulo.braco|default:'' }}" placeholder="Braço">
+                                            <label for="modulo_braco_{{ forloop.counter }}">Braço (cm)</label>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <div class="form-floating">
+                                            <textarea class="form-control" id="modulo_descricao_{{ forloop.counter }}" name="modulo_descricao_{{ forloop.counter }}" placeholder="Descrição" style="height: 58px;">{{ modulo.descricao|default:'' }}</textarea>
+                                            <label for="modulo_descricao_{{ forloop.counter }}">Descrição (Opcional)</label>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <!-- Imagens do Módulo -->
+                                <div class="row mb-3">
+                                    <div class="col-md-8">
+                                        <label for="modulo_imagem_principal_{{ forloop.counter }}" class="form-label fw-bold">
+                                            <i class="bi bi-image"></i> Imagem Principal do Módulo
+                                        </label>
+                                        {% if modulo.imagem_principal %}
+                                        <div class="mb-2">
+                                            <small class="text-muted">Imagem atual:</small><br>
+                                            <img src="{{ modulo.imagem_principal.url }}" alt="Imagem do Módulo" 
+                                                 class="img-thumbnail border border-primary" style="max-width: 200px; max-height: 200px;">
+                                        </div>
+                                        {% endif %}
+                                        <input type="file" class="form-control" id="modulo_imagem_principal_{{ forloop.counter }}" name="modulo_imagem_principal_{{ forloop.counter }}" 
+                                               accept="image/*" onchange="previewImage(this, 'preview_modulo_principal_{{ forloop.counter }}')">
+                                        <div id="preview_modulo_principal_{{ forloop.counter }}" class="mt-3" style="display: none;">
+                                            <img id="img_preview_modulo_principal_{{ forloop.counter }}" src="" alt="Preview" 
+                                                 class="img-thumbnail border border-primary" style="max-width: 250px; max-height: 250px;">
+                                            <button type="button" class="btn btn-sm btn-danger mt-2" onclick="removeImage('preview_modulo_principal_{{ forloop.counter }}', 'modulo_imagem_principal_{{ forloop.counter }}')">
+                                                <i class="bi bi-trash"></i> Remover
+                                            </button>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="col-md-4">
+                                        <label class="form-label fw-bold">
+                                            <i class="bi bi-plus-circle"></i> Segunda Imagem (Opcional)
+                                        </label>
+                                        <div id="modulo_segunda_imagem_area_{{ forloop.counter }}" style="display: none;">
+                                            <input type="file" class="form-control" id="modulo_imagem_secundaria_{{ forloop.counter }}" name="modulo_imagem_secundaria_{{ forloop.counter }}" 
+                                                   accept="image/*" onchange="previewImage(this, 'preview_modulo_secundaria_{{ forloop.counter }}')">
+                                            <div id="preview_modulo_secundaria_{{ forloop.counter }}" class="mt-3" style="display: none;">
+                                                <img id="img_preview_modulo_secundaria_{{ forloop.counter }}" src="" alt="Preview" 
+                                                     class="img-thumbnail border border-primary" style="max-width: 150px; max-height: 150px;">
+                                                <button type="button" class="btn btn-sm btn-danger mt-2" onclick="removeModuloSegundaImagem({{ forloop.counter }})">
+                                                    <i class="bi bi-trash"></i> Remover
+                                                </button>
+                                            </div>
+                                        </div>
+                                        <button type="button" class="btn btn-outline-primary btn-sm" id="btn_modulo_segunda_imagem_{{ forloop.counter }}" onclick="mostrarModuloSegundaImagem({{ forloop.counter }})">
+                                            <i class="bi bi-plus"></i> Adicionar Segunda Imagem
+                                        </button>
+                                    </div>
+                                </div>
+                                
+                                <!-- Tamanhos do Módulo (será implementado conforme necessário) -->
+                                <div class="mt-4">
+                                    <div class="d-flex justify-content-between align-items-center mb-3">
+                                        <h6 class="mb-0">
+                                            <i class="bi bi-rulers"></i> Tamanhos (Opcional)
+                                        </h6>
+                                        <button type="button" class="btn btn-sm btn-outline-success" onclick="adicionarTamanho({{ forloop.counter }})">
+                                            <i class="bi bi-plus"></i> Adicionar Tamanho
+                                        </button>
+                                    </div>
+                                    <div id="tamanhosContainer_{{ forloop.counter }}">
+                                        <!-- Carregar tamanhos existentes -->
+                                        {% for tamanho in modulo.tamanhos_detalhados.all %}
+                                        <div class="card mb-2" id="tamanho_{{ forloop.parentloop.counter }}_{{ forloop.counter }}">
+                                            <div class="card-body">
+                                                <div class="row">
+                                                    <div class="col-md-3">
+                                                        <div class="form-floating mb-2">
+                                                            <input type="number" step="0.01" class="form-control" name="tamanho_largura_total_{{ forloop.parentloop.counter }}" value="{{ tamanho.largura_total|default:'' }}" placeholder="Largura Total">
+                                                            <label>Largura Total (cm)</label>
+                                                        </div>
+                                                    </div>
+                                                    <div class="col-md-3">
+                                                        <div class="form-floating mb-2">
+                                                            <input type="number" step="0.01" class="form-control" name="tamanho_largura_assento_{{ forloop.parentloop.counter }}" value="{{ tamanho.largura_assento|default:'' }}" placeholder="Largura Assento">
+                                                            <label>Largura Assento (cm)</label>
+                                                        </div>
+                                                    </div>
+                                                    <div class="col-md-3">
+                                                        <div class="form-floating mb-2">
+                                                            <input type="number" step="0.01" class="form-control" name="tamanho_tecido_{{ forloop.parentloop.counter }}" value="{{ tamanho.tecido_metros|default:'' }}" placeholder="Tecido">
+                                                            <label>Tecido (metros)</label>
+                                                        </div>
+                                                    </div>
+                                                    <div class="col-md-3">
+                                                        <div class="form-floating mb-2">
+                                                            <input type="number" step="0.001" class="form-control" name="tamanho_volume_{{ forloop.parentloop.counter }}" value="{{ tamanho.volume_m3|default:'' }}" placeholder="Volume">
+                                                            <label>Volume (m³)</label>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                <div class="row">
+                                                    <div class="col-md-2">
+                                                        <div class="form-floating mb-2">
+                                                            <input type="number" step="0.01" class="form-control" name="tamanho_peso_{{ forloop.parentloop.counter }}" value="{{ tamanho.peso_kg|default:'' }}" placeholder="Peso">
+                                                            <label>Peso (kg)</label>
+                                                        </div>
+                                                    </div>
+                                                    <div class="col-md-2">
+                                                        <div class="form-floating mb-2">
+                                                            <input type="number" step="0.01" class="form-control" name="tamanho_preco_{{ forloop.parentloop.counter }}" value="{{ tamanho.preco|default:'' }}" placeholder="Preço">
+                                                            <label>Preço (R$)</label>
+                                                        </div>
+                                                    </div>
+                                                    <div class="col-md-6">
+                                                        <div class="form-floating mb-2">
+                                                            <textarea class="form-control" name="tamanho_descricao_{{ forloop.parentloop.counter }}" placeholder="Descrição" style="height: 58px;">{{ tamanho.descricao|default:'' }}</textarea>
+                                                            <label>Descrição</label>
+                                                        </div>
+                                                    </div>
+                                                    <div class="col-md-2">
+                                                        <div class="d-flex align-items-end">
+                                                            <button type="button" class="btn btn-sm btn-danger" onclick="removerTamanho('tamanho_{{ forloop.parentloop.counter }}_{{ forloop.counter }}')">
+                                                                <i class="bi bi-trash"></i>
+                                                            </button>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        {% endfor %}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        {% endfor %}
                     </div>
                     
-                    <div class="alert alert-info mb-0" id="noModulosAlert" style="display: none;">
+                    <div class="alert alert-info mb-0" id="noModulosAlert" {% if modulos %}style="display: none;"{% endif %}>
                         <i class="bi bi-info-circle"></i> 
-                        Nenhum módulo adicionado. Clique em "Adicionar Módulo" para começar.
+                        Os módulos são opcionais. Clique em "Adicionar Módulo" se desejar adicionar módulos ao produto.
                     </div>
                 </div>
             </div>
@@ -158,7 +387,7 @@
     <div class="row">
         <div class="col-12">
             <div class="d-flex gap-2">
-                <button type="submit" class="btn btn-primary">
+                <button type="submit" class="btn btn-primary" id="btnSalvar">
                     <i class="bi bi-check-circle"></i> Salvar Alterações
                 </button>
                 <a href="{% url 'produto_detalhes' produto.id %}" class="btn btn-outline-info">
@@ -177,209 +406,299 @@
 <script>
 let moduloCount = 0;
 
+// Função para preview de imagens
+function previewImage(input, previewId) {
+    const preview = document.getElementById(previewId);
+    const img = document.getElementById('img_' + previewId);
+    
+    if (input.files && input.files[0]) {
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            img.src = e.target.result;
+            preview.style.display = 'block';
+        }
+        reader.readAsDataURL(input.files[0]);
+    }
+}
+
+// Função para remover imagem
+function removeImage(previewId, inputId) {
+    const preview = document.getElementById(previewId);
+    const input = document.getElementById(inputId);
+    const img = document.getElementById('img_' + previewId);
+    
+    preview.style.display = 'none';
+    input.value = '';
+    img.src = '';
+    
+    // Se for segunda imagem, esconder área novamente
+    if (inputId === 'imagem_secundaria') {
+        document.getElementById('segunda_imagem_area').style.display = 'none';
+        document.getElementById('btn_adicionar_segunda_imagem').style.display = 'block';
+    }
+}
+
+// Função para mostrar segunda imagem
+function mostrarSegundaImagem() {
+    document.getElementById('segunda_imagem_area').style.display = 'block';
+    document.getElementById('btn_adicionar_segunda_imagem').style.display = 'none';
+}
+
+// Função para adicionar módulo
 function adicionarModulo() {
     moduloCount++;
-    
     const container = document.getElementById('modulosContainer');
     const noModulosAlert = document.getElementById('noModulosAlert');
     
-    const moduloHtml = `
-        <div class="modulo-item border rounded p-3 mb-3" id="modulo${moduloCount}">
-            <div class="d-flex justify-content-between align-items-center mb-3">
+    noModulosAlert.style.display = 'none';
+    
+    const moduloHTML = `
+        <div class="card mb-3" id="modulo_${moduloCount}">
+            <div class="card-header d-flex justify-content-between align-items-center">
                 <h6 class="mb-0">Módulo ${moduloCount}</h6>
-                <button type="button" class="btn btn-sm btn-outline-danger" onclick="removerModulo(${moduloCount})">
+                <button type="button" class="btn btn-sm btn-danger" onclick="removerModulo(${moduloCount})">
                     <i class="bi bi-trash"></i> Remover
                 </button>
             </div>
-            
-            <div class="row">
-            <div class="row">
-                <div class="col-md-12">
-                    <div class="form-floating mb-3">
-                        <input type="text" class="form-control" name="modulo_nome" placeholder="Nome do módulo" required>
-                        <label>Nome do Módulo *</label>
+            <div class="card-body">
+                <!-- Nome do Módulo -->
+                <div class="row mb-3">
+                    <div class="col-md-6">
+                        <div class="form-floating">
+                            <input type="text" class="form-control" id="modulo_nome_${moduloCount}" name="modulo_nome_${moduloCount}" placeholder="Nome">
+                            <label for="modulo_nome_${moduloCount}">Nome do Módulo</label>
+                        </div>
                     </div>
                 </div>
-            </div>
-            
-            <!-- Seção de Tamanhos -->
-            <div class="mt-3">
-                <div class="d-flex justify-content-between align-items-center mb-2">
-                    <h6 class="mb-0 text-muted">
-                        <i class="bi bi-rulers"></i> Tamanhos Disponíveis
-                    </h6>
-                    <button type="button" class="btn btn-sm btn-outline-primary" onclick="adicionarTamanho(${moduloCount})">
-                        <i class="bi bi-plus"></i> Adicionar Tamanho
-                    </button>
+                
+                <!-- Novos campos -->
+                <div class="row mb-3">
+                    <div class="col-md-3">
+                        <div class="form-floating">
+                            <input type="number" step="0.01" class="form-control" id="modulo_profundidade_${moduloCount}" name="modulo_profundidade_${moduloCount}" placeholder="Profundidade">
+                            <label for="modulo_profundidade_${moduloCount}">Profundidade (cm)</label>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="form-floating">
+                            <input type="number" step="0.01" class="form-control" id="modulo_altura_${moduloCount}" name="modulo_altura_${moduloCount}" placeholder="Altura">
+                            <label for="modulo_altura_${moduloCount}">Altura (cm)</label>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="form-floating">
+                            <input type="number" step="0.01" class="form-control" id="modulo_braco_${moduloCount}" name="modulo_braco_${moduloCount}" placeholder="Braço">
+                            <label for="modulo_braco_${moduloCount}">Braço (cm)</label>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="form-floating">
+                            <textarea class="form-control" id="modulo_descricao_${moduloCount}" name="modulo_descricao_${moduloCount}" placeholder="Descrição" style="height: 58px;"></textarea>
+                            <label for="modulo_descricao_${moduloCount}">Descrição (Opcional)</label>
+                        </div>
+                    </div>
                 </div>
-                <div class="tamanhos-container" id="tamanhosContainer${moduloCount}">
-                    <!-- Tamanhos serão adicionados aqui -->
+                
+                <!-- Imagens do Módulo -->
+                <div class="row mb-3">
+                    <div class="col-md-8">
+                        <label for="modulo_imagem_principal_${moduloCount}" class="form-label fw-bold">
+                            <i class="bi bi-image"></i> Imagem Principal do Módulo
+                        </label>
+                        <input type="file" class="form-control" id="modulo_imagem_principal_${moduloCount}" name="modulo_imagem_principal_${moduloCount}" 
+                               accept="image/*" onchange="previewImage(this, 'preview_modulo_principal_${moduloCount}')">
+                        <div id="preview_modulo_principal_${moduloCount}" class="mt-3" style="display: none;">
+                            <img id="img_preview_modulo_principal_${moduloCount}" src="" alt="Preview" 
+                                 class="img-thumbnail border border-primary" style="max-width: 250px; max-height: 250px;">
+                            <button type="button" class="btn btn-sm btn-danger mt-2" onclick="removeImage('preview_modulo_principal_${moduloCount}', 'modulo_imagem_principal_${moduloCount}')">
+                                <i class="bi bi-trash"></i> Remover
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <div class="col-md-4">
+                        <label class="form-label fw-bold">
+                            <i class="bi bi-plus-circle"></i> Segunda Imagem (Opcional)
+                        </label>
+                        <div id="modulo_segunda_imagem_area_${moduloCount}" style="display: none;">
+                            <input type="file" class="form-control" id="modulo_imagem_secundaria_${moduloCount}" name="modulo_imagem_secundaria_${moduloCount}" 
+                                   accept="image/*" onchange="previewImage(this, 'preview_modulo_secundaria_${moduloCount}')">
+                            <div id="preview_modulo_secundaria_${moduloCount}" class="mt-3" style="display: none;">
+                                <img id="img_preview_modulo_secundaria_${moduloCount}" src="" alt="Preview" 
+                                     class="img-thumbnail border border-primary" style="max-width: 150px; max-height: 150px;">
+                                <button type="button" class="btn btn-sm btn-danger mt-2" onclick="removeModuloSegundaImagem(${moduloCount})">
+                                    <i class="bi bi-trash"></i> Remover
+                                </button>
+                            </div>
+                        </div>
+                        <button type="button" class="btn btn-outline-primary btn-sm" id="btn_modulo_segunda_imagem_${moduloCount}" onclick="mostrarModuloSegundaImagem(${moduloCount})">
+                            <i class="bi bi-plus"></i> Adicionar Segunda Imagem
+                        </button>
+                    </div>
                 </div>
-                <div class="alert alert-light mb-0" style="display: none;" id="noTamanhosAlert${moduloCount}">
-                    <small class="text-muted">
-                        <i class="bi bi-info-circle"></i> 
-                        Nenhum tamanho adicionado. Clique em "Adicionar Tamanho" para começar.
-                    </small>
+                
+                <!-- Tamanhos do Módulo (Opcional) -->
+                <div class="mt-4">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <h6 class="mb-0">
+                            <i class="bi bi-rulers"></i> Tamanhos (Opcional)
+                        </h6>
+                        <button type="button" class="btn btn-sm btn-outline-success" onclick="adicionarTamanho(${moduloCount})">
+                            <i class="bi bi-plus"></i> Adicionar Tamanho
+                        </button>
+                    </div>
+                    <div id="tamanhosContainer_${moduloCount}">
+                        <!-- Tamanhos serão adicionados aqui -->
+                    </div>
                 </div>
             </div>
         </div>
     `;
     
-    container.insertAdjacentHTML('beforeend', moduloHtml);
-    noModulosAlert.style.display = 'none';
+    container.insertAdjacentHTML('beforeend', moduloHTML);
 }
 
-function removerModulo(id) {
-    const modulo = document.getElementById(`modulo${id}`);
+// Função para remover módulo
+function removerModulo(moduloId) {
+    const modulo = document.getElementById(`modulo_${moduloId}`);
     modulo.remove();
     
+    // Se não há mais módulos, mostrar alert
     const container = document.getElementById('modulosContainer');
-    const noModulosAlert = document.getElementById('noModulosAlert');
-    
     if (container.children.length === 0) {
-        noModulosAlert.style.display = 'block';
+        document.getElementById('noModulosAlert').style.display = 'block';
     }
 }
 
-function adicionarTamanho(moduloId) {
-    const container = document.getElementById(`tamanhosContainer${moduloId}`);
-    const noTamanhosAlert = document.getElementById(`noTamanhosAlert${moduloId}`);
-    const tamanhoCount = container.children.length + 1;
+// Função para mostrar segunda imagem do módulo
+function mostrarModuloSegundaImagem(moduloId) {
+    document.getElementById(`modulo_segunda_imagem_area_${moduloId}`).style.display = 'block';
+    document.getElementById(`btn_modulo_segunda_imagem_${moduloId}`).style.display = 'none';
+}
+
+// Função para remover segunda imagem do módulo
+function removeModuloSegundaImagem(moduloId) {
+    const preview = document.getElementById(`preview_modulo_secundaria_${moduloId}`);
+    const input = document.getElementById(`modulo_imagem_secundaria_${moduloId}`);
+    const img = document.getElementById(`img_preview_modulo_secundaria_${moduloId}`);
     
-    const tamanhoHtml = `
-        <div class="tamanho-item border rounded p-3 mb-3 bg-light" id="tamanho${moduloId}_${tamanhoCount}">
-            <div class="d-flex justify-content-between align-items-center mb-3">
-                <h6 class="mb-0 text-primary">
-                    <i class="bi bi-resize"></i> Tamanho ${tamanhoCount}
-                </h6>
-                <button type="button" class="btn btn-sm btn-outline-danger" onclick="removerTamanho('${moduloId}_${tamanhoCount}')">
-                    <i class="bi bi-trash3"></i> Remover
-                </button>
-            </div>
-            
-            <div class="row">
-                <div class="col-md-4">
-                    <div class="form-floating mb-3">
-                        <input type="text" class="form-control" name="tamanho_nome_${moduloId}" placeholder="Nome" required>
-                        <label>Nome do Tamanho *</label>
+    preview.style.display = 'none';
+    input.value = '';
+    img.src = '';
+    
+    document.getElementById(`modulo_segunda_imagem_area_${moduloId}`).style.display = 'none';
+    document.getElementById(`btn_modulo_segunda_imagem_${moduloId}`).style.display = 'block';
+}
+
+// Função para adicionar tamanho
+function adicionarTamanho(moduloId) {
+    const container = document.getElementById(`tamanhosContainer_${moduloId}`);
+    const tamanhosExistentes = container.querySelectorAll('.card');
+    const tamanhoCount = tamanhosExistentes.length + 1;
+    
+    const tamanhoHTML = `
+        <div class="card mb-2" id="tamanho_${moduloId}_${tamanhoCount}">
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-3">
+                        <div class="form-floating mb-2">
+                            <input type="number" step="0.01" class="form-control" name="tamanho_largura_total_${moduloId}" placeholder="Largura Total">
+                            <label>Largura Total (cm)</label>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="form-floating mb-2">
+                            <input type="number" step="0.01" class="form-control" name="tamanho_largura_assento_${moduloId}" placeholder="Largura Assento">
+                            <label>Largura Assento (cm)</label>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="form-floating mb-2">
+                            <input type="number" step="0.01" class="form-control" name="tamanho_tecido_${moduloId}" placeholder="Tecido">
+                            <label>Tecido (metros)</label>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="form-floating mb-2">
+                            <input type="number" step="0.001" class="form-control" name="tamanho_volume_${moduloId}" placeholder="Volume">
+                            <label>Volume (m³)</label>
+                        </div>
                     </div>
                 </div>
-                <div class="col-md-4">
-                    <div class="form-floating mb-3">
-                        <input type="number" step="0.01" class="form-control" name="tamanho_largura_total_${moduloId}" placeholder="Largura total">
-                        <label>Largura Total (cm)</label>
+                <div class="row">
+                    <div class="col-md-2">
+                        <div class="form-floating mb-2">
+                            <input type="number" step="0.01" class="form-control" name="tamanho_peso_${moduloId}" placeholder="Peso">
+                            <label>Peso (kg)</label>
+                        </div>
                     </div>
-                </div>
-                <div class="col-md-4">
-                    <div class="form-floating mb-3">
-                        <input type="number" step="0.01" class="form-control" name="tamanho_largura_assento_${moduloId}" placeholder="Largura assento">
-                        <label>Largura Assento (cm)</label>
+                    <div class="col-md-2">
+                        <div class="form-floating mb-2">
+                            <input type="number" step="0.01" class="form-control" name="tamanho_preco_${moduloId}" placeholder="Preço">
+                            <label>Preço (R$)</label>
+                        </div>
                     </div>
-                </div>
-            </div>
-            
-            <div class="row">
-                <div class="col-md-4">
-                    <div class="form-floating mb-3">
-                        <input type="number" step="0.01" class="form-control" name="tamanho_altura_${moduloId}" placeholder="Altura">
-                        <label>Altura (cm)</label>
+                    <div class="col-md-6">
+                        <div class="form-floating mb-2">
+                            <textarea class="form-control" name="tamanho_descricao_${moduloId}" placeholder="Descrição" style="height: 58px;"></textarea>
+                            <label>Descrição</label>
+                        </div>
                     </div>
-                </div>
-                <div class="col-md-4">
-                    <div class="form-floating mb-3">
-                        <input type="number" step="0.01" class="form-control" name="tamanho_profundidade_${moduloId}" placeholder="Profundidade">
-                        <label>Profundidade (cm)</label>
-                    </div>
-                </div>
-                <div class="col-md-4">
-                    <div class="form-floating mb-3">
-                        <input type="number" step="0.01" class="form-control" name="tamanho_tecido_${moduloId}" placeholder="Tecido">
-                        <label>Tecido (metros)</label>
-                    </div>
-                </div>
-            </div>
-            
-            <div class="row">
-                <div class="col-md-4">
-                    <div class="form-floating mb-3">
-                        <input type="number" step="0.001" class="form-control" name="tamanho_volume_${moduloId}" placeholder="Volume">
-                        <label>Volume (m³)</label>
-                    </div>
-                </div>
-                <div class="col-md-4">
-                    <div class="form-floating mb-3">
-                        <input type="number" step="0.01" class="form-control" name="tamanho_peso_${moduloId}" placeholder="Peso">
-                        <label>Peso (kg)</label>
-                    </div>
-                </div>
-                <div class="col-md-4">
-                    <div class="form-floating mb-3">
-                        <input type="number" step="0.01" class="form-control" name="tamanho_preco_${moduloId}" placeholder="Preço">
-                        <label>Preço (R$)</label>
-                    </div>
-                </div>
-            </div>
-            
-            <div class="row">
-                <div class="col-12">
-                    <div class="form-floating">
-                        <textarea class="form-control" name="tamanho_descricao_${moduloId}" placeholder="Descrição" style="height: 60px;"></textarea>
-                        <label>Descrição (opcional)</label>
+                    <div class="col-md-2">
+                        <div class="d-flex align-items-end">
+                            <button type="button" class="btn btn-sm btn-danger" onclick="removerTamanho('tamanho_${moduloId}_${tamanhoCount}')">
+                                <i class="bi bi-trash"></i>
+                            </button>
+                        </div>
                     </div>
                 </div>
             </div>
         </div>
     `;
     
-    container.insertAdjacentHTML('beforeend', tamanhoHtml);
-    noTamanhosAlert.style.display = 'none';
+    container.insertAdjacentHTML('beforeend', tamanhoHTML);
 }
 
-function removerTamanho(id) {
-    const tamanho = document.getElementById(`tamanho${id}`);
-    tamanho.remove();
-    
-    const moduloId = id.split('_')[0];
-    const container = document.getElementById(`tamanhosContainer${moduloId}`);
-    const noTamanhosAlert = document.getElementById(`noTamanhosAlert${moduloId}`);
-    
-    if (container.children.length === 0) {
-        noTamanhosAlert.style.display = 'block';
-    }
+// Função para remover tamanho
+function removerTamanho(tamanhoId) {
+    document.getElementById(tamanhoId).remove();
 }
 
-// Carregar módulos existentes
+// Carregar módulos existentes (para modo edição)
 document.addEventListener('DOMContentLoaded', function() {
-    // Carregar módulos existentes
-    {% for modulo in modulos %}
-        adicionarModulo();
-        const ultimoModulo = document.getElementById(`modulo${moduloCount}`);
-        
-        ultimoModulo.querySelector('input[name="modulo_nome"]').value = '{{ modulo.nome }}';
-        
-        // Carregar tamanhos existentes para este módulo
-        {% for tamanho in modulo.tamanhos_detalhados.all %}
-            adicionarTamanho(moduloCount);
-            const container = document.getElementById(`tamanhosContainer${moduloCount}`);
-            const ultimoTamanho = container.lastElementChild;
-            
-            ultimoTamanho.querySelector('input[name="tamanho_nome_' + moduloCount + '"]').value = '{{ tamanho.nome_tamanho }}';
-            ultimoTamanho.querySelector('input[name="tamanho_largura_total_' + moduloCount + '"]').value = '{{ tamanho.largura_total|default:"" }}';
-            ultimoTamanho.querySelector('input[name="tamanho_largura_assento_' + moduloCount + '"]').value = '{{ tamanho.largura_assento|default:"" }}';
-            ultimoTamanho.querySelector('input[name="tamanho_altura_' + moduloCount + '"]').value = '{{ tamanho.altura_cm|default:"" }}';
-            ultimoTamanho.querySelector('input[name="tamanho_profundidade_' + moduloCount + '"]').value = '{{ tamanho.profundidade_cm|default:"" }}';
-            ultimoTamanho.querySelector('input[name="tamanho_tecido_' + moduloCount + '"]').value = '{{ tamanho.tecido_metros|default:"" }}';
-            ultimoTamanho.querySelector('input[name="tamanho_volume_' + moduloCount + '"]').value = '{{ tamanho.volume_m3|default:"" }}';
-            ultimoTamanho.querySelector('input[name="tamanho_peso_' + moduloCount + '"]').value = '{{ tamanho.peso_kg|default:"" }}';
-            ultimoTamanho.querySelector('input[name="tamanho_preco_' + moduloCount + '"]').value = '{{ tamanho.preco|default:"" }}';
-            ultimoTamanho.querySelector('textarea[name="tamanho_descricao_' + moduloCount + '"]').value = '{{ tamanho.descricao|default:"" }}';
-        {% endfor %}
-    {% endfor %}
+    // Contar módulos existentes e definir o contador
+    const container = document.getElementById('modulosContainer');
+    const modulosExistentes = container.querySelectorAll('.card');
+    moduloCount = modulosExistentes.length;
     
-    // Se não há módulos, mostrar pelo menos um vazio
+    // Se não há módulos existentes, mostrar o alerta
+    const noModulosAlert = document.getElementById('noModulosAlert');
     if (moduloCount === 0) {
-        adicionarModulo();
+        noModulosAlert.style.display = 'block';
+    } else {
+        noModulosAlert.style.display = 'none';
     }
+    
+    console.log(`Módulos existentes carregados: ${moduloCount}`);
+    
+    // Adicionar feedback visual ao envio do formulário
+    const form = document.getElementById('produtoForm');
+    const btnSalvar = document.getElementById('btnSalvar');
+    
+    form.addEventListener('submit', function(e) {
+        // Mostrar feedback de carregamento
+        const originalText = btnSalvar.innerHTML;
+        btnSalvar.innerHTML = '<i class="bi bi-hourglass-split"></i> Salvando...';
+        btnSalvar.disabled = true;
+        
+        // Em caso de erro ou demora, restaurar botão após timeout
+        setTimeout(function() {
+            if (btnSalvar.disabled) {
+                btnSalvar.innerHTML = originalText;
+                btnSalvar.disabled = false;
+            }
+        }, 10000); // 10 segundos
+    });
 });
 </script>
 {% endblock %}

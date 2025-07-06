@@ -1,0 +1,595 @@
+{% extends 'base.html' %}
+
+{% block title %}Cadastrar Produto - Sistema de Produtos{% endblock %}
+
+{% block extra_css %}
+<style>
+    .image-upload-area {
+        border: 2px dashed #007bff;
+        border-radius: 8px;
+        padding: 2rem;
+        text-align: center;
+        background-color: #f8f9fa;
+        transition: all 0.3s ease;
+    }
+    .image-upload-area:hover {
+        border-color: #0056b3;
+        background-color: #e9ecef;
+    }
+    .image-preview {
+        max-width: 100%;
+        max-height: 300px;
+        border-radius: 8px;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    }
+    .secondary-image-btn {
+        position: absolute;
+        bottom: 10px;
+        right: 10px;
+        z-index: 10;
+    }
+    .image-container {
+        position: relative;
+        display: inline-block;
+    }
+    .modulo-item {
+        background-color: #f8f9fa;
+        border-left: 4px solid #007bff;
+    }
+    .required-field::after {
+        content: " *";
+        color: #dc3545;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="d-flex justify-content-between align-items-center">
+            <h1 class="h2 mb-0">
+                <i class="bi bi-plus-circle"></i> Cadastrar Produto
+            </h1>
+            <a href="{% url 'produtos_lista' %}" class="btn btn-outline-secondary">
+                <i class="bi bi-arrow-left"></i> Voltar
+            </a>
+        </div>
+    </div>
+</div>
+
+<form method="post" enctype="multipart/form-data" id="produtoForm">
+    {% csrf_token %}
+    
+    <!-- Dados Básicos -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h6 class="mb-0">
+                        <i class="bi bi-info-circle"></i> Dados Básicos
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="form-floating mb-3">
+                                <input type="text" class="form-control" id="ref_produto" name="ref_produto" 
+                                       placeholder="Referência" required>
+                                <label for="ref_produto" class="required-field">Referência do Produto</label>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-floating mb-3">
+                                <input type="text" class="form-control" id="nome_produto" name="nome_produto" 
+                                       placeholder="Nome" required>
+                                <label for="nome_produto" class="required-field">Nome do Produto</label>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="form-floating mb-3">
+                                <select class="form-select" id="tipo_produto" name="tipo_produto" required>
+                                    <option value="">Selecione o tipo</option>
+                                    {% for tipo in tipos %}
+                                        <option value="{{ tipo.id }}">{{ tipo.nome }}</option>
+                                    {% endfor %}
+                                </select>
+                                <label for="tipo_produto" class="required-field">Tipo de Produto</label>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <!-- Campo Linha removido conforme solicitado -->
+                        </div>
+                    </div>
+                    
+                    <!-- Checkboxes -->
+                    <div class="row">
+                        <div class="col-md-3">
+                            <div class="form-check form-switch mb-3">
+                                <input class="form-check-input" type="checkbox" id="ativo" name="ativo" checked>
+                                <label class="form-check-label" for="ativo">
+                                    Produto Ativo
+                                </label>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="form-check form-switch mb-3">
+                                <input class="form-check-input" type="checkbox" id="tem_cor_tecido" name="tem_cor_tecido">
+                                <label class="form-check-label" for="tem_cor_tecido">
+                                    Tem Cor Tecido
+                                </label>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="form-check form-switch mb-3">
+                                <input class="form-check-input" type="checkbox" id="tem_difer_desenho_lado" name="tem_difer_desenho_lado">
+                                <label class="form-check-label" for="tem_difer_desenho_lado">
+                                    Diferencia Lado Dir./Esq.
+                                </label>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="form-check form-switch mb-3">
+                                <input class="form-check-input" type="checkbox" id="tem_difer_desenho_tamanho" name="tem_difer_desenho_tamanho">
+                                <label class="form-check-label" for="tem_difer_desenho_tamanho">
+                                    Diferencia por Tamanho
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Imagens do Produto -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card border-primary">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0">
+                        <i class="bi bi-images"></i> Imagens do Produto
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <!-- Imagem Principal - Espaço aumentado -->
+                        <div class="col-md-8">
+                            <div class="mb-3">
+                                <label for="imagem_principal" class="form-label fw-bold">
+                                    <i class="bi bi-image"></i> Imagem Principal
+                                </label>
+                                <div class="image-upload-area" onclick="document.getElementById('imagem_principal').click()">
+                                    <input type="file" class="d-none" id="imagem_principal" name="imagem_principal" 
+                                           accept="image/*" onchange="previewImage(this, 'preview_principal')">
+                                    <div id="preview_principal" style="display: none;">
+                                        <div class="image-container">
+                                            <img id="img_preview_principal" src="" alt="Preview" class="image-preview">
+                                            <!-- Botão para imagem secundária -->
+                                            <button type="button" class="btn btn-sm btn-outline-primary secondary-image-btn" 
+                                                    onclick="event.stopPropagation(); document.getElementById('imagem_secundaria').click()">
+                                                <i class="bi bi-plus"></i> 2ª Imagem
+                                            </button>
+                                        </div>
+                                    </div>
+                                    <div id="upload_text_principal">
+                                        <i class="bi bi-cloud-upload display-4 text-primary"></i>
+                                        <p class="mb-0 mt-2">Clique para adicionar a imagem principal</p>
+                                        <small class="text-muted">JPG, PNG, GIF (máx. 5MB)</small>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Área para Segunda Imagem -->
+                        <div class="col-md-4">
+                            <div class="mb-3">
+                                <label for="imagem_secundaria" class="form-label fw-bold">
+                                    <i class="bi bi-image"></i> Segunda Imagem (Opcional)
+                                </label>
+                                <input type="file" class="d-none" id="imagem_secundaria" name="imagem_secundaria" 
+                                       accept="image/*" onchange="previewImage(this, 'preview_secundaria')">
+                                <div id="preview_secundaria" style="display: none;">
+                                    <img id="img_preview_secundaria" src="" alt="Preview" 
+                                         class="img-thumbnail border border-primary" style="max-width: 100%; max-height: 200px;">
+                                    <button type="button" class="btn btn-sm btn-outline-danger mt-2" 
+                                            onclick="removeSecondaryImage()">
+                                        <i class="bi bi-trash"></i> Remover
+                                    </button>
+                                </div>
+                                <div class="image-upload-area" id="upload_area_secundaria" 
+                                     onclick="document.getElementById('imagem_secundaria').click()" 
+                                     style="min-height: 200px; display: flex; align-items: center; justify-content: center;">
+                                    <div class="text-center">
+                                        <i class="bi bi-plus-circle display-5 text-muted"></i>
+                                        <p class="mb-0 mt-2 text-muted">Segunda imagem</p>
+                                        <small class="text-muted">Opcional</small>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Módulos (Opcional) -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <h6 class="mb-0">
+                            <i class="bi bi-grid-3x3"></i> Módulos <small class="text-muted">(Opcional)</small>
+                        </h6>
+                        <button type="button" class="btn btn-sm btn-success" onclick="adicionarModulo()">
+                            <i class="bi bi-plus"></i> Adicionar Módulo
+                        </button>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <div class="alert alert-info">
+                        <i class="bi bi-info-circle"></i> 
+                        A seção de módulos é <strong>opcional</strong>. Você pode cadastrar o produto sem módulos ou adicionar quantos módulos precisar.
+                    </div>
+                    
+                    <div id="modulosContainer">
+                        <!-- Módulos serão adicionados aqui via JavaScript -->
+                    </div>
+                    
+                    <div class="alert alert-light mb-0" id="noModulosAlert">
+                        <i class="bi bi-info-circle"></i> 
+                        Nenhum módulo adicionado. Clique em "Adicionar Módulo" se desejar incluir módulos neste produto.
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Botões de Ação -->
+    <div class="row">
+        <div class="col-12">
+            <div class="d-flex gap-2">
+                <button type="submit" class="btn btn-primary btn-lg">
+                    <i class="bi bi-check-circle"></i> Cadastrar Produto
+                </button>
+                <a href="{% url 'produtos_lista' %}" class="btn btn-outline-secondary btn-lg">
+                    <i class="bi bi-x-circle"></i> Cancelar
+                </a>
+            </div>
+        </div>
+    </div>
+</form>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+let moduloCount = 0;
+
+function adicionarModulo() {
+    moduloCount++;
+    
+    const container = document.getElementById('modulosContainer');
+    const noModulosAlert = document.getElementById('noModulosAlert');
+    
+    const moduloHtml = `
+        <div class="modulo-item border rounded p-4 mb-4" id="modulo${moduloCount}">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <h6 class="mb-0 text-primary">
+                    <i class="bi bi-cube"></i> Módulo ${moduloCount}
+                </h6>
+                <button type="button" class="btn btn-sm btn-outline-danger" onclick="removerModulo(${moduloCount})">
+                    <i class="bi bi-trash"></i> Remover
+                </button>
+            </div>
+            
+            <!-- Nome do Módulo -->
+            <div class="row mb-3">
+                <div class="col-md-12">
+                    <div class="form-floating">
+                        <input type="text" class="form-control" name="modulo_nome" placeholder="Nome do módulo">
+                        <label>Nome do Módulo</label>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Novos campos: Profundidade, Altura, Braço -->
+            <div class="row mb-3">
+                <div class="col-md-4">
+                    <div class="form-floating">
+                        <input type="number" step="0.01" class="form-control" name="modulo_profundidade" placeholder="Profundidade">
+                        <label>Profundidade (cm)</label>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="form-floating">
+                        <input type="number" step="0.01" class="form-control" name="modulo_altura" placeholder="Altura">
+                        <label>Altura (cm)</label>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="form-floating">
+                        <input type="number" step="0.01" class="form-control" name="modulo_braco" placeholder="Braço">
+                        <label>Braço (cm)</label>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Descrição -->
+            <div class="row mb-3">
+                <div class="col-12">
+                    <div class="form-floating">
+                        <textarea class="form-control" name="modulo_descricao" placeholder="Descrição" style="height: 80px;"></textarea>
+                        <label>Descrição (Opcional)</label>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Imagens do Módulo -->
+            <div class="row">
+                <div class="col-12">
+                    <h6 class="text-primary mb-3">
+                        <i class="bi bi-images"></i> Imagens do Módulo
+                    </h6>
+                </div>
+                
+                <!-- Imagem Principal do Módulo - Espaço aumentado -->
+                <div class="col-md-8">
+                    <label for="modulo_imagem_principal_${moduloCount}" class="form-label fw-bold">
+                        <i class="bi bi-image"></i> Imagem Principal
+                    </label>
+                    <div class="image-upload-area" onclick="document.getElementById('modulo_imagem_principal_${moduloCount}').click()">
+                        <input type="file" class="d-none" id="modulo_imagem_principal_${moduloCount}" name="modulo_imagem_principal_${moduloCount}" 
+                               accept="image/*" onchange="previewModuleImage(this, 'preview_modulo_principal_${moduloCount}')">
+                        <div id="preview_modulo_principal_${moduloCount}" style="display: none;">
+                            <div class="image-container">
+                                <img id="img_preview_modulo_principal_${moduloCount}" src="" alt="Preview" class="image-preview">
+                                <!-- Botão para segunda imagem do módulo -->
+                                <button type="button" class="btn btn-sm btn-outline-primary secondary-image-btn" 
+                                        onclick="event.stopPropagation(); document.getElementById('modulo_imagem_secundaria_${moduloCount}').click()">
+                                    <i class="bi bi-plus"></i> 2ª Imagem
+                                </button>
+                            </div>
+                        </div>
+                        <div id="upload_text_modulo_${moduloCount}">
+                            <i class="bi bi-cloud-upload display-5 text-primary"></i>
+                            <p class="mb-0 mt-2">Adicionar imagem principal</p>
+                            <small class="text-muted">JPG, PNG, GIF</small>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Segunda Imagem do Módulo -->
+                <div class="col-md-4">
+                    <label for="modulo_imagem_secundaria_${moduloCount}" class="form-label fw-bold">
+                        <i class="bi bi-image"></i> Segunda Imagem (Opcional)
+                    </label>
+                    <input type="file" class="d-none" id="modulo_imagem_secundaria_${moduloCount}" name="modulo_imagem_secundaria_${moduloCount}" 
+                           accept="image/*" onchange="previewModuleImage(this, 'preview_modulo_secundaria_${moduloCount}')">
+                    <div id="preview_modulo_secundaria_${moduloCount}" style="display: none;">
+                        <img id="img_preview_modulo_secundaria_${moduloCount}" src="" alt="Preview" 
+                             class="img-thumbnail border border-primary" style="max-width: 100%; max-height: 180px;">
+                        <button type="button" class="btn btn-sm btn-outline-danger mt-2" 
+                                onclick="removeModuleSecondaryImage(${moduloCount})">
+                            <i class="bi bi-trash"></i> Remover
+                        </button>
+                    </div>
+                    <div class="image-upload-area" id="upload_area_modulo_secundaria_${moduloCount}" 
+                         onclick="document.getElementById('modulo_imagem_secundaria_${moduloCount}').click()" 
+                         style="min-height: 180px; display: flex; align-items: center; justify-content: center;">
+                        <div class="text-center">
+                            <i class="bi bi-plus-circle display-6 text-muted"></i>
+                            <p class="mb-0 mt-2 text-muted">Segunda imagem</p>
+                            <small class="text-muted">Opcional</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Seção de Tamanhos (Opcional) -->
+            <div class="mt-4">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h6 class="mb-0 text-muted">
+                        <i class="bi bi-rulers"></i> Tamanhos Disponíveis <small>(Opcional)</small>
+                    </h6>
+                    <button type="button" class="btn btn-sm btn-outline-primary" onclick="adicionarTamanho(${moduloCount})">
+                        <i class="bi bi-plus"></i> Adicionar Tamanho
+                    </button>
+                </div>
+                <div class="tamanhos-container" id="tamanhosContainer${moduloCount}">
+                    <!-- Tamanhos serão adicionados aqui -->
+                </div>
+                <div class="alert alert-light mb-0" id="noTamanhosAlert${moduloCount}">
+                    <small class="text-muted">
+                        <i class="bi bi-info-circle"></i> 
+                        Nenhum tamanho adicionado. Os tamanhos são opcionais.
+                    </small>
+                </div>
+            </div>
+        </div>
+    `;
+    
+    container.insertAdjacentHTML('beforeend', moduloHtml);
+    noModulosAlert.style.display = 'none';
+}
+
+function removerModulo(id) {
+    const modulo = document.getElementById(`modulo${id}`);
+    modulo.remove();
+    
+    const container = document.getElementById('modulosContainer');
+    const noModulosAlert = document.getElementById('noModulosAlert');
+    
+    if (container.children.length === 0) {
+        noModulosAlert.style.display = 'block';
+    }
+}
+
+function adicionarTamanho(moduloId) {
+    const container = document.getElementById(`tamanhosContainer${moduloId}`);
+    const noTamanhosAlert = document.getElementById(`noTamanhosAlert${moduloId}`);
+    const tamanhoCount = container.children.length + 1;
+    
+    const tamanhoHtml = `
+        <div class="tamanho-item border rounded p-3 mb-3 bg-white" id="tamanho${moduloId}_${tamanhoCount}">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <h6 class="mb-0 text-success">
+                    <i class="bi bi-resize"></i> Tamanho ${tamanhoCount}
+                </h6>
+                <button type="button" class="btn btn-sm btn-outline-danger" onclick="removerTamanho('${moduloId}_${tamanhoCount}')">
+                    <i class="bi bi-trash3"></i> Remover
+                </button>
+            </div>
+            
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="form-floating mb-3">
+                        <input type="number" step="0.01" class="form-control" name="tamanho_largura_total_${moduloId}" placeholder="Largura total">
+                        <label>Largura Total (cm)</label>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="form-floating mb-3">
+                        <input type="number" step="0.01" class="form-control" name="tamanho_largura_assento_${moduloId}" placeholder="Largura assento">
+                        <label>Largura Assento (cm)</label>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="row">
+                <div class="col-md-4">
+                    <div class="form-floating mb-3">
+                        <input type="number" step="0.01" class="form-control" name="tamanho_tecido_${moduloId}" placeholder="Tecido">
+                        <label>Tecido (metros)</label>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <!-- Campos removidos conforme solicitado -->
+                </div>
+                <div class="col-md-4">
+                    <!-- Espaço reservado para futuras expansões -->
+                </div>
+            </div>
+            
+            <div class="row">
+                <div class="col-md-4">
+                    <div class="form-floating mb-3">
+                        <input type="number" step="0.001" class="form-control" name="tamanho_volume_${moduloId}" placeholder="Volume">
+                        <label>Volume (m³)</label>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="form-floating mb-3">
+                        <input type="number" step="0.01" class="form-control" name="tamanho_peso_${moduloId}" placeholder="Peso">
+                        <label>Peso (kg)</label>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="form-floating mb-3">
+                        <input type="number" step="0.01" class="form-control" name="tamanho_preco_${moduloId}" placeholder="Preço">
+                        <label>Preço (R$)</label>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="row">
+                <div class="col-12">
+                    <div class="form-floating">
+                        <textarea class="form-control" name="tamanho_descricao_${moduloId}" placeholder="Descrição" style="height: 60px;"></textarea>
+                        <label>Descrição (opcional)</label>
+                    </div>
+                </div>
+            </div>
+        </div>
+    `;
+    
+    container.insertAdjacentHTML('beforeend', tamanhoHtml);
+    noTamanhosAlert.style.display = 'none';
+}
+
+function removerTamanho(id) {
+    const tamanho = document.getElementById(`tamanho${id}`);
+    tamanho.remove();
+    
+    const moduloId = id.split('_')[0];
+    const container = document.getElementById(`tamanhosContainer${moduloId}`);
+    const noTamanhosAlert = document.getElementById(`noTamanhosAlert${moduloId}`);
+    
+    if (container.children.length === 0) {
+        noTamanhosAlert.style.display = 'block';
+    }
+}
+
+// Função para preview de imagens principais
+function previewImage(input, previewId) {
+    const preview = document.getElementById(previewId);
+    const imgPreview = document.getElementById('img_' + previewId);
+    const uploadText = document.getElementById('upload_text_' + previewId.replace('preview_', ''));
+    
+    if (input.files && input.files[0]) {
+        const reader = new FileReader();
+        
+        reader.onload = function(e) {
+            imgPreview.src = e.target.result;
+            preview.style.display = 'block';
+            if (uploadText) uploadText.style.display = 'none';
+        }
+        
+        reader.readAsDataURL(input.files[0]);
+    } else {
+        preview.style.display = 'none';
+        if (uploadText) uploadText.style.display = 'block';
+    }
+}
+
+// Função para preview de imagens de módulos
+function previewModuleImage(input, previewId) {
+    const preview = document.getElementById(previewId);
+    const imgPreview = document.getElementById('img_' + previewId);
+    const uploadText = document.getElementById('upload_text_modulo_' + previewId.split('_')[3]);
+    const uploadArea = document.getElementById('upload_area_modulo_secundaria_' + previewId.split('_')[3]);
+    
+    if (input.files && input.files[0]) {
+        const reader = new FileReader();
+        
+        reader.onload = function(e) {
+            imgPreview.src = e.target.result;
+            preview.style.display = 'block';
+            if (uploadText) uploadText.style.display = 'none';
+            if (uploadArea && previewId.includes('secundaria')) uploadArea.style.display = 'none';
+        }
+        
+        reader.readAsDataURL(input.files[0]);
+    } else {
+        preview.style.display = 'none';
+        if (uploadText) uploadText.style.display = 'block';
+        if (uploadArea && previewId.includes('secundaria')) uploadArea.style.display = 'flex';
+    }
+}
+
+// Função para remover imagem secundária
+function removeSecondaryImage() {
+    const input = document.getElementById('imagem_secundaria');
+    const preview = document.getElementById('preview_secundaria');
+    const uploadArea = document.getElementById('upload_area_secundaria');
+    
+    input.value = '';
+    preview.style.display = 'none';
+    uploadArea.style.display = 'flex';
+}
+
+// Função para remover imagem secundária do módulo
+function removeModuleSecondaryImage(moduloId) {
+    const input = document.getElementById(`modulo_imagem_secundaria_${moduloId}`);
+    const preview = document.getElementById(`preview_modulo_secundaria_${moduloId}`);
+    const uploadArea = document.getElementById(`upload_area_modulo_secundaria_${moduloId}`);
+    
+    input.value = '';
+    preview.style.display = 'none';
+    uploadArea.style.display = 'flex';
+}
+</script>
+{% endblock %}

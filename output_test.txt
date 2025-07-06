@@ -1,0 +1,13 @@
+/home/matas/projetos/Project/.venv/lib/python3.12/site-packages/rest_framework_simplejwt/__init__.py:1: UserWarning: pkg_resources is deprecated as an API. See https://setuptools.pypa.io/en/latest/pkg_resources.html. The pkg_resources package is slated for removal as early as 2025-11-30. Refrain from using this package or pin to Setuptools<81.
+  from pkg_resources import DistributionNotFound, get_distribution
+Produto criado: TEST001 - Sofá de Teste
+Módulo criado: TEST001 - Módulo Principal
+Tamanho criado: Módulo Principal - Médio (L:180.0 x A:85.0 x P:90.0cm) - R$1299.99
+
+Total de produtos no banco: 3
+- TEST001: Sofá de Teste (Módulos: 1)
+  * Módulo Principal (Tamanhos: 1)
+    - Médio: 180.00x85.00x90.00cm
+- TESTE001: Produto de Teste (Módulos: 1)
+  * Módulo Teste (Tamanhos: 0)
+- asdas: dasdasd (Módulos: 0)

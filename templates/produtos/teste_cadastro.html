@@ -1,0 +1,116 @@
+{% extends 'base.html' %}
+
+{% block title %}Teste Cadastro - Sistema de Produtos{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-12">
+        <h1 class="h2 mb-0">Teste de Cadastro de Produto</h1>
+    </div>
+</div>
+
+<form method="post" enctype="multipart/form-data" action="{% url 'debug_cadastro' %}">
+    {% csrf_token %}
+    
+    <!-- Dados Básicos -->
+    <div class="card mb-3">
+        <div class="card-header">
+            <h6 class="mb-0">Dados Básicos</h6>
+        </div>
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="mb-3">
+                        <label for="ref_produto" class="form-label">Referência *</label>
+                        <input type="text" class="form-control" id="ref_produto" name="ref_produto" 
+                               value="TESTE{{ now|date:'His' }}" required>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="mb-3">
+                        <label for="nome_produto" class="form-label">Nome *</label>
+                        <input type="text" class="form-control" id="nome_produto" name="nome_produto" 
+                               value="Produto de Teste" required>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="mb-3">
+                        <label for="tipo_produto" class="form-label">Tipo *</label>
+                        <select class="form-select" id="tipo_produto" name="tipo_produto" required>
+                            <option value="">Selecione o tipo</option>
+                            {% for tipo in tipos %}
+                                <option value="{{ tipo.id }}">{{ tipo.nome }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="form-check">
+                <input class="form-check-input" type="checkbox" id="ativo" name="ativo" checked>
+                <label class="form-check-label" for="ativo">Produto Ativo</label>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Módulos -->
+    <div class="card mb-3">
+        <div class="card-header">
+            <h6 class="mb-0">Módulos</h6>
+        </div>
+        <div class="card-body">
+            <div class="mb-3">
+                <label for="modulo_nome_1" class="form-label">Nome do Módulo 1</label>
+                <input type="text" class="form-control" id="modulo_nome_1" name="modulo_nome" 
+                       value="Módulo Teste">
+            </div>
+            
+            <div class="row">
+                <div class="col-md-3">
+                    <div class="mb-3">
+                        <label for="modulo_profundidade_1" class="form-label">Profundidade (cm)</label>
+                        <input type="number" step="0.01" class="form-control" id="modulo_profundidade_1" 
+                               name="modulo_profundidade_1" value="90">
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="mb-3">
+                        <label for="modulo_altura_1" class="form-label">Altura (cm)</label>
+                        <input type="number" step="0.01" class="form-control" id="modulo_altura_1" 
+                               name="modulo_altura_1" value="85">
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Tamanho do módulo -->
+            <h6>Tamanho do Módulo</h6>
+            <div class="row">
+                <div class="col-md-3">
+                    <div class="mb-3">
+                        <label class="form-label">Largura Total (cm)</label>
+                        <input type="number" step="0.01" class="form-control" name="tamanho_largura_total_1" value="180">
+                    </div>
+                </div>
+                <div class="col-md-2">
+                    <div class="mb-3">
+                        <label class="form-label">Largura Assento (cm)</label>
+                        <input type="number" step="0.01" class="form-control" name="tamanho_largura_assento_1" value="140">
+                    </div>
+                </div>
+                <div class="col-md-2">
+                    <div class="mb-3">
+                        <label class="form-label">Preço (R$)</label>
+                        <input type="number" step="0.01" class="form-control" name="tamanho_preco_1" value="1299.99">
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <button type="submit" class="btn btn-primary">Salvar Produto de Teste</button>
+    <a href="{% url 'produtos_lista' %}" class="btn btn-secondary">Cancelar</a>
+</form>
+{% endblock %}

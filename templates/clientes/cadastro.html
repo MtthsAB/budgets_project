@@ -1,0 +1,354 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{{ title }} - Sistema de Produtos{% endblock %}
+
+{% block extra_css %}
+<style>
+    .form-section {
+        background: #f8f9fa;
+        border-left: 4px solid #007bff;
+        padding: 1rem;
+        margin-bottom: 2rem;
+        border-radius: 0.375rem;
+    }
+    .form-section h5 {
+        margin-bottom: 1rem;
+        color: #007bff;
+        font-weight: 600;
+    }
+    .required-field::after {
+        content: " *";
+        color: #dc3545;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h2><i class="bi bi-person-plus"></i> {{ title }}</h2>
+            <a href="{% url 'cliente_lista' %}" class="btn btn-outline-secondary">
+                <i class="bi bi-arrow-left"></i> Voltar à Lista
+            </a>
+        </div>
+
+        <form method="post" novalidate>
+            {% csrf_token %}
+            
+            <!-- Dados da Empresa -->
+            <div class="form-section">
+                <h5><i class="bi bi-building"></i> Dados da Empresa</h5>
+                <div class="row">
+                    <div class="col-md-8">
+                        <div class="mb-3">
+                            <label for="{{ form.nome_empresa.id_for_label }}" class="form-label required-field">
+                                Nome da Empresa
+                            </label>
+                            {{ form.nome_empresa }}
+                            {% if form.nome_empresa.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {{ form.nome_empresa.errors.0 }}
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="mb-3">
+                            <label for="{{ form.representante.id_for_label }}" class="form-label required-field">
+                                Representante
+                            </label>
+                            {{ form.representante }}
+                            {% if form.representante.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {{ form.representante.errors.0 }}
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Dados Legais -->
+            <div class="form-section">
+                <h5><i class="bi bi-file-text"></i> Dados Legais</h5>
+                <div class="row">
+                    <div class="col-md-4">
+                        <div class="mb-3">
+                            <label for="{{ form.cnpj.id_for_label }}" class="form-label required-field">
+                                CNPJ
+                            </label>
+                            {{ form.cnpj }}
+                            {% if form.cnpj.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {{ form.cnpj.errors.0 }}
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="mb-3">
+                            <label for="{{ form.inscricao_estadual.id_for_label }}" class="form-label">
+                                Inscrição Estadual
+                            </label>
+                            {{ form.inscricao_estadual }}
+                            {% if form.inscricao_estadual.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {{ form.inscricao_estadual.errors.0 }}
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="mb-3">
+                            <label for="{{ form.inscricao_municipal.id_for_label }}" class="form-label">
+                                Inscrição Municipal
+                            </label>
+                            {{ form.inscricao_municipal }}
+                            {% if form.inscricao_municipal.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {{ form.inscricao_municipal.errors.0 }}
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Endereço -->
+            <div class="form-section">
+                <h5><i class="bi bi-geo-alt"></i> Endereço</h5>
+                <div class="row">
+                    <div class="col-md-8">
+                        <div class="mb-3">
+                            <label for="{{ form.logradouro.id_for_label }}" class="form-label required-field">
+                                Logradouro
+                            </label>
+                            {{ form.logradouro }}
+                            {% if form.logradouro.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {{ form.logradouro.errors.0 }}
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                    <div class="col-md-2">
+                        <div class="mb-3">
+                            <label for="{{ form.numero.id_for_label }}" class="form-label required-field">
+                                Número
+                            </label>
+                            {{ form.numero }}
+                            {% if form.numero.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {{ form.numero.errors.0 }}
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                    <div class="col-md-2">
+                        <div class="mb-3">
+                            <label for="{{ form.cep.id_for_label }}" class="form-label required-field">
+                                CEP
+                            </label>
+                            {{ form.cep }}
+                            {% if form.cep.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {{ form.cep.errors.0 }}
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-md-4">
+                        <div class="mb-3">
+                            <label for="{{ form.complemento.id_for_label }}" class="form-label">
+                                Complemento
+                            </label>
+                            {{ form.complemento }}
+                            {% if form.complemento.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {{ form.complemento.errors.0 }}
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="mb-3">
+                            <label for="{{ form.bairro.id_for_label }}" class="form-label required-field">
+                                Bairro
+                            </label>
+                            {{ form.bairro }}
+                            {% if form.bairro.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {{ form.bairro.errors.0 }}
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="mb-3">
+                            <label for="{{ form.cidade.id_for_label }}" class="form-label required-field">
+                                Cidade
+                            </label>
+                            {{ form.cidade }}
+                            {% if form.cidade.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {{ form.cidade.errors.0 }}
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-md-2">
+                        <div class="mb-3">
+                            <label for="{{ form.estado.id_for_label }}" class="form-label required-field">
+                                Estado (UF)
+                            </label>
+                            {{ form.estado }}
+                            {% if form.estado.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {{ form.estado.errors.0 }}
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Contato -->
+            <div class="form-section">
+                <h5><i class="bi bi-telephone"></i> Contato</h5>
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="mb-3">
+                            <label for="{{ form.telefone.id_for_label }}" class="form-label required-field">
+                                Telefone
+                            </label>
+                            {{ form.telefone }}
+                            {% if form.telefone.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {{ form.telefone.errors.0 }}
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="mb-3">
+                            <label for="{{ form.email.id_for_label }}" class="form-label required-field">
+                                E-mail
+                            </label>
+                            {{ form.email }}
+                            {% if form.email.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {{ form.email.errors.0 }}
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Dados Bancários -->
+            <div class="form-section">
+                <h5><i class="bi bi-bank"></i> Dados Bancários <small class="text-muted">(Opcional)</small></h5>
+                <div class="row">
+                    <div class="col-md-4">
+                        <div class="mb-3">
+                            <label for="{{ form.banco.id_for_label }}" class="form-label">
+                                Banco
+                            </label>
+                            {{ form.banco }}
+                            {% if form.banco.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {{ form.banco.errors.0 }}
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="mb-3">
+                            <label for="{{ form.agencia.id_for_label }}" class="form-label">
+                                Agência
+                            </label>
+                            {{ form.agencia }}
+                            {% if form.agencia.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {{ form.agencia.errors.0 }}
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="mb-3">
+                            <label for="{{ form.conta_corrente.id_for_label }}" class="form-label">
+                                Conta Corrente
+                            </label>
+                            {{ form.conta_corrente }}
+                            {% if form.conta_corrente.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {{ form.conta_corrente.errors.0 }}
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Botões de Ação -->
+            <div class="row">
+                <div class="col-12">
+                    <div class="d-flex gap-2 justify-content-end">
+                        <a href="{% url 'cliente_lista' %}" class="btn btn-outline-secondary">
+                            <i class="bi bi-x-circle"></i> Cancelar
+                        </a>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="bi bi-check-circle"></i> Salvar Cliente
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Máscaras para os campos
+    document.addEventListener('DOMContentLoaded', function() {
+        // Máscara para CNPJ
+        const cnpjField = document.getElementById('{{ form.cnpj.id_for_label }}');
+        if (cnpjField) {
+            cnpjField.addEventListener('input', function(e) {
+                let value = e.target.value.replace(/\D/g, '');
+                value = value.replace(/^(\d{2})(\d)/, '$1.$2');
+                value = value.replace(/^(\d{2})\.(\d{3})(\d)/, '$1.$2.$3');
+                value = value.replace(/\.(\d{3})(\d)/, '.$1/$2');
+                value = value.replace(/(\d{4})(\d)/, '$1-$2');
+                e.target.value = value;
+            });
+        }
+
+        // Máscara para CEP
+        const cepField = document.getElementById('{{ form.cep.id_for_label }}');
+        if (cepField) {
+            cepField.addEventListener('input', function(e) {
+                let value = e.target.value.replace(/\D/g, '');
+                value = value.replace(/^(\d{5})(\d)/, '$1-$2');
+                e.target.value = value;
+            });
+        }
+
+        // Conversão automática para maiúscula no campo estado
+        const estadoField = document.getElementById('{{ form.estado.id_for_label }}');
+        if (estadoField) {
+            estadoField.addEventListener('input', function(e) {
+                e.target.value = e.target.value.toUpperCase();
+            });
+        }
+    });
+</script>
+{% endblock %}

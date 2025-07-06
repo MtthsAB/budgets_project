@@ -1,8 +1,9 @@
 from django.contrib import admin
 from .models import (
-    TipoItem, Linha, Item, Acessorio, AcessoriosItens,
+    TipoItem, Item, Acessorio,
     Modulo, TamanhosModulos, TamanhosModulosDetalhado, FaixaTecido, PrecosBase
 )
+from .forms import TamanhosModulosDetalhadoForm, ModuloForm, ItemForm
 
 @admin.register(TipoItem)
 class TipoItemAdmin(admin.ModelAdmin):
@@ -10,28 +11,23 @@ class TipoItemAdmin(admin.ModelAdmin):
     search_fields = ('nome',)
     readonly_fields = ('created_at', 'updated_at')
 
-@admin.register(Linha)
-class LinhaAdmin(admin.ModelAdmin):
-    list_display = ('nome', 'created_at', 'updated_at')
-    search_fields = ('nome',)
-    readonly_fields = ('created_at', 'updated_at')
-
 class ModuloInline(admin.TabularInline):
     model = Modulo
     extra = 1
-    fields = ('nome', 'imagem_principal')
+    fields = ('nome', 'profundidade', 'altura', 'braco', 'imagem_principal')
 
 @admin.register(Item)
 class ItemAdmin(admin.ModelAdmin):
-    list_display = ('ref_produto', 'nome_produto', 'id_tipo_produto', 'id_linha', 'ativo', 'created_at')
-    list_filter = ('ativo', 'id_tipo_produto', 'id_linha', 'tem_cor_tecido')
+    form = ItemForm
+    list_display = ('ref_produto', 'nome_produto', 'id_tipo_produto', 'ativo', 'created_at')
+    list_filter = ('ativo', 'id_tipo_produto', 'tem_cor_tecido')
     search_fields = ('ref_produto', 'nome_produto')
     readonly_fields = ('created_at', 'updated_at')
     inlines = [ModuloInline]
     
     fieldsets = (
         ('Informações Básicas', {
-            'fields': ('ref_produto', 'nome_produto', 'id_tipo_produto', 'id_linha', 'ativo')
+            'fields': ('ref_produto', 'nome_produto', 'id_tipo_produto', 'ativo')
         }),
         ('Imagens', {
             'fields': ('imagem_principal', 'imagem_secundaria')
@@ -51,22 +47,20 @@ class AcessorioAdmin(admin.ModelAdmin):
     search_fields = ('nome',)
     readonly_fields = ('created_at', 'updated_at')
 
-@admin.register(AcessoriosItens)
-class AcessoriosItensAdmin(admin.ModelAdmin):
-    list_display = ('id_acessorio', 'id_linha', 'created_at')
-    list_filter = ('id_linha',)
-    readonly_fields = ('created_at', 'updated_at')
-
 @admin.register(Modulo)
 class ModuloAdmin(admin.ModelAdmin):
-    list_display = ('nome', 'item', 'created_at')
-    list_filter = ('item__id_tipo_produto', 'item__id_linha')
+    form = ModuloForm
+    list_display = ('nome', 'item', 'profundidade', 'altura', 'braco', 'created_at')
+    list_filter = ('item__id_tipo_produto',)
     search_fields = ('nome', 'item__ref_produto', 'item__nome_produto')
     readonly_fields = ('created_at', 'updated_at')
     
     fieldsets = (
         ('Informações Básicas', {
-            'fields': ('item', 'nome')
+            'fields': ('item', 'nome', 'descricao')
+        }),
+        ('Dimensões', {
+            'fields': ('profundidade', 'altura', 'braco')
         }),
         ('Imagens', {
             'fields': ('imagem_principal', 'imagem_secundaria')
@@ -97,17 +91,18 @@ class PrecosBaseAdmin(admin.ModelAdmin):
 
 @admin.register(TamanhosModulosDetalhado)
 class TamanhosModulosDetalhadoAdmin(admin.ModelAdmin):
-    list_display = ('id_modulo', 'nome_tamanho', 'largura_total', 'largura_assento', 'peso_kg', 'preco', 'created_at')
+    form = TamanhosModulosDetalhadoForm
+    list_display = ('id_modulo', 'id', 'largura_total', 'largura_assento', 'peso_kg', 'preco', 'created_at')
     list_filter = ('id_modulo__item__id_tipo_produto',)
-    search_fields = ('nome_tamanho', 'id_modulo__nome')
+    search_fields = ('id_modulo__nome', 'descricao')
     readonly_fields = ('created_at', 'updated_at')
     
     fieldsets = (
         ('Informações Básicas', {
-            'fields': ('id_modulo', 'nome_tamanho', 'descricao')
+            'fields': ('id_modulo', 'descricao')
         }),
         ('Dimensões', {
-            'fields': ('largura_total', 'largura_assento', 'altura_cm', 'profundidade_cm')
+            'fields': ('largura_total', 'largura_assento')
         }),
         ('Especificações', {
             'fields': ('tecido_metros', 'volume_m3', 'peso_kg', 'preco')

@@ -1,0 +1,212 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{{ cliente.nome_empresa }} - Sistema de Produtos{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h2><i class="bi bi-person-lines-fill"></i> Detalhes do Cliente</h2>
+            <div class="btn-group" role="group">
+                <a href="{% url 'cliente_lista' %}" class="btn btn-outline-secondary">
+                    <i class="bi bi-arrow-left"></i> Voltar à Lista
+                </a>
+                <a href="{% url 'cliente_editar' cliente.pk %}" class="btn btn-primary">
+                    <i class="bi bi-pencil"></i> Editar
+                </a>
+                <a href="{% url 'cliente_deletar' cliente.pk %}" class="btn btn-outline-danger">
+                    <i class="bi bi-trash"></i> Excluir
+                </a>
+            </div>
+        </div>
+
+        <div class="row">
+            <!-- Dados da Empresa -->
+            <div class="col-md-6 mb-4">
+                <div class="card h-100">
+                    <div class="card-header bg-primary text-white">
+                        <h5 class="mb-0"><i class="bi bi-building"></i> Dados da Empresa</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">Nome da Empresa:</label>
+                            <p class="mb-0">{{ cliente.nome_empresa }}</p>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">Representante:</label>
+                            <p class="mb-0">{{ cliente.representante }}</p>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">CNPJ:</label>
+                            <p class="mb-0"><code>{{ cliente.cnpj }}</code></p>
+                        </div>
+                        {% if cliente.inscricao_estadual %}
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">Inscrição Estadual:</label>
+                            <p class="mb-0">{{ cliente.inscricao_estadual }}</p>
+                        </div>
+                        {% endif %}
+                        {% if cliente.inscricao_municipal %}
+                        <div class="mb-0">
+                            <label class="form-label fw-bold">Inscrição Municipal:</label>
+                            <p class="mb-0">{{ cliente.inscricao_municipal }}</p>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+
+            <!-- Endereço -->
+            <div class="col-md-6 mb-4">
+                <div class="card h-100">
+                    <div class="card-header bg-success text-white">
+                        <h5 class="mb-0"><i class="bi bi-geo-alt"></i> Endereço</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">Endereço Completo:</label>
+                            <p class="mb-0">{{ cliente.get_endereco_completo }}</p>
+                        </div>
+                        <div class="row">
+                            <div class="col-8">
+                                <div class="mb-3">
+                                    <label class="form-label fw-bold">Logradouro:</label>
+                                    <p class="mb-0">{{ cliente.logradouro }}</p>
+                                </div>
+                            </div>
+                            <div class="col-4">
+                                <div class="mb-3">
+                                    <label class="form-label fw-bold">Número:</label>
+                                    <p class="mb-0">{{ cliente.numero }}</p>
+                                </div>
+                            </div>
+                        </div>
+                        {% if cliente.complemento %}
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">Complemento:</label>
+                            <p class="mb-0">{{ cliente.complemento }}</p>
+                        </div>
+                        {% endif %}
+                        <div class="row">
+                            <div class="col-6">
+                                <div class="mb-3">
+                                    <label class="form-label fw-bold">Bairro:</label>
+                                    <p class="mb-0">{{ cliente.bairro }}</p>
+                                </div>
+                            </div>
+                            <div class="col-6">
+                                <div class="mb-3">
+                                    <label class="form-label fw-bold">CEP:</label>
+                                    <p class="mb-0"><code>{{ cliente.cep }}</code></p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-8">
+                                <div class="mb-0">
+                                    <label class="form-label fw-bold">Cidade:</label>
+                                    <p class="mb-0">{{ cliente.cidade }}</p>
+                                </div>
+                            </div>
+                            <div class="col-4">
+                                <div class="mb-0">
+                                    <label class="form-label fw-bold">Estado:</label>
+                                    <p class="mb-0">{{ cliente.estado }}</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Contato -->
+            <div class="col-md-6 mb-4">
+                <div class="card h-100">
+                    <div class="card-header bg-info text-white">
+                        <h5 class="mb-0"><i class="bi bi-telephone"></i> Contato</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">Telefone:</label>
+                            <p class="mb-0">
+                                <a href="tel:{{ cliente.telefone }}" class="text-decoration-none">
+                                    {{ cliente.telefone }}
+                                </a>
+                            </p>
+                        </div>
+                        <div class="mb-0">
+                            <label class="form-label fw-bold">E-mail:</label>
+                            <p class="mb-0">
+                                <a href="mailto:{{ cliente.email }}" class="text-decoration-none">
+                                    {{ cliente.email }}
+                                </a>
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Dados Bancários -->
+            <div class="col-md-6 mb-4">
+                <div class="card h-100">
+                    <div class="card-header bg-warning text-dark">
+                        <h5 class="mb-0"><i class="bi bi-bank"></i> Dados Bancários</h5>
+                    </div>
+                    <div class="card-body">
+                        {% if cliente.banco or cliente.agencia or cliente.conta_corrente %}
+                            {% if cliente.banco %}
+                            <div class="mb-3">
+                                <label class="form-label fw-bold">Banco:</label>
+                                <p class="mb-0">{{ cliente.banco }}</p>
+                            </div>
+                            {% endif %}
+                            {% if cliente.agencia %}
+                            <div class="mb-3">
+                                <label class="form-label fw-bold">Agência:</label>
+                                <p class="mb-0">{{ cliente.agencia }}</p>
+                            </div>
+                            {% endif %}
+                            {% if cliente.conta_corrente %}
+                            <div class="mb-0">
+                                <label class="form-label fw-bold">Conta Corrente:</label>
+                                <p class="mb-0">{{ cliente.conta_corrente }}</p>
+                            </div>
+                            {% endif %}
+                        {% else %}
+                            <p class="text-muted mb-0">
+                                <i class="bi bi-info-circle"></i> Dados bancários não informados
+                            </p>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+
+            <!-- Informações do Sistema -->
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-header bg-secondary text-white">
+                        <h5 class="mb-0"><i class="bi bi-clock-history"></i> Informações do Sistema</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-0">
+                                    <label class="form-label fw-bold">Cadastrado em:</label>
+                                    <p class="mb-0">{{ cliente.created_at|date:"d/m/Y H:i" }}</p>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-0">
+                                    <label class="form-label fw-bold">Última atualização:</label>
+                                    <p class="mb-0">{{ cliente.updated_at|date:"d/m/Y H:i" }}</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -45,22 +45,11 @@ class Item(BaseModel):
         default=False, 
         verbose_name="Diferencia Desenho por Tamanho"
     )
-    id_linha = models.ForeignKey(
-        Linha, 
-        on_delete=models.PROTECT, 
-        verbose_name="Linha"
-    )
     imagem_principal = models.ImageField(
         upload_to='produtos/itens/',
         blank=True,
         null=True,
         verbose_name="Imagem Principal"
-    )
-    imagem_secundaria = models.ImageField(
-        upload_to='produtos/itens/',
-        blank=True,
-        null=True,
-        verbose_name="Imagem Secundária"
     )
     
     class Meta:
@@ -84,27 +73,6 @@ class Acessorio(BaseModel):
     def __str__(self):
         return self.nome
 
-class AcessoriosItens(BaseModel):
-    """Relacionamento entre acessórios e linhas"""
-    id_acessorio = models.ForeignKey(
-        Acessorio, 
-        on_delete=models.CASCADE, 
-        verbose_name="Acessório"
-    )
-    id_linha = models.ForeignKey(
-        Linha, 
-        on_delete=models.CASCADE, 
-        verbose_name="Linha"
-    )
-    
-    class Meta:
-        verbose_name = "Acessório do Item"
-        verbose_name_plural = "Acessórios dos Itens"
-        unique_together = ['id_acessorio', 'id_linha']
-    
-    def __str__(self):
-        return f"{self.id_acessorio.nome} - {self.id_linha.nome}"
-
 class Modulo(BaseModel):
     """Módulos dos produtos"""
     item = models.ForeignKey(
@@ -114,17 +82,37 @@ class Modulo(BaseModel):
         verbose_name="Item"
     )
     nome = models.CharField(max_length=100, verbose_name="Nome do Módulo")
+    profundidade = models.DecimalField(
+        max_digits=10, 
+        decimal_places=2, 
+        verbose_name="Profundidade (cm)",
+        blank=True,
+        null=True
+    )
+    altura = models.DecimalField(
+        max_digits=10, 
+        decimal_places=2, 
+        verbose_name="Altura (cm)",
+        blank=True,
+        null=True
+    )
+    braco = models.DecimalField(
+        max_digits=10, 
+        decimal_places=2, 
+        verbose_name="Braço (cm)",
+        blank=True,
+        null=True
+    )
+    descricao = models.TextField(
+        blank=True, 
+        null=True, 
+        verbose_name="Descrição"
+    )
     imagem_principal = models.ImageField(
         upload_to='produtos/modulos/',
         blank=True,
         null=True,
         verbose_name="Imagem Principal"
-    )
-    imagem_secundaria = models.ImageField(
-        upload_to='produtos/modulos/',
-        blank=True,
-        null=True,
-        verbose_name="Imagem Secundária"
     )
     
     class Meta:
@@ -160,7 +148,6 @@ class TamanhosModulosDetalhado(BaseModel):
         related_name='tamanhos_detalhados',
         verbose_name="Módulo"
     )
-    nome_tamanho = models.CharField(max_length=50, verbose_name="Nome do Tamanho")
     largura_total = models.DecimalField(
         max_digits=10, 
         decimal_places=2, 
@@ -172,20 +159,6 @@ class TamanhosModulosDetalhado(BaseModel):
         max_digits=10, 
         decimal_places=2, 
         verbose_name="Largura do Assento (cm)",
-        blank=True,
-        null=True
-    )
-    altura_cm = models.DecimalField(
-        max_digits=10, 
-        decimal_places=2, 
-        verbose_name="Altura (cm)",
-        blank=True,
-        null=True
-    )
-    profundidade_cm = models.DecimalField(
-        max_digits=10, 
-        decimal_places=2, 
-        verbose_name="Profundidade (cm)",
         blank=True,
         null=True
     )
@@ -226,20 +199,15 @@ class TamanhosModulosDetalhado(BaseModel):
     class Meta:
         verbose_name = "Tamanho Detalhado do Módulo"
         verbose_name_plural = "Tamanhos Detalhados dos Módulos"
-        unique_together = ['id_modulo', 'nome_tamanho']
     
     def __str__(self):
         dimensoes = []
         if self.largura_total:
             dimensoes.append(f"L:{self.largura_total}")
-        if self.altura_cm:
-            dimensoes.append(f"A:{self.altura_cm}")
-        if self.profundidade_cm:
-            dimensoes.append(f"P:{self.profundidade_cm}")
         
         dimensoes_str = f" ({' x '.join(dimensoes)}cm)" if dimensoes else ""
         preco_str = f" - R${self.preco}" if self.preco else ""
-        return f"{self.id_modulo.nome} - {self.nome_tamanho}{dimensoes_str}{preco_str}"
+        return f"{self.id_modulo.nome} - Tamanho ID:{self.id}{dimensoes_str}{preco_str}"
 
 class FaixaTecido(BaseModel):
     """Faixas de tecido para preços"""

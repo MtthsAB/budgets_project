@@ -52,6 +52,16 @@
                             <i class="bi bi-plus-circle"></i> Cadastrar Produto
                         </a>
                     </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{% url 'cliente_lista' %}">
+                            <i class="bi bi-people"></i> Clientes
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{% url 'cliente_cadastro' %}">
+                            <i class="bi bi-person-plus"></i> Cadastrar Cliente
+                        </a>
+                    </li>
                 </ul>
                 
                 <ul class="navbar-nav">
@@ -98,6 +108,13 @@
                     </a>
                     <a href="{% url 'produto_cadastro' %}" class="list-group-item list-group-item-action {% if request.resolver_match.url_name == 'produto_cadastro' %}active{% endif %}">
                         <i class="bi bi-plus-circle"></i> Novo Produto
+                    </a>
+                    <hr class="my-2">
+                    <a href="{% url 'cliente_lista' %}" class="list-group-item list-group-item-action {% if request.resolver_match.url_name == 'cliente_lista' %}active{% endif %}">
+                        <i class="bi bi-people"></i> Listar Clientes
+                    </a>
+                    <a href="{% url 'cliente_cadastro' %}" class="list-group-item list-group-item-action {% if request.resolver_match.url_name == 'cliente_cadastro' %}active{% endif %}">
+                        <i class="bi bi-person-plus"></i> Novo Cliente
                     </a>
                 </div>
             </div>

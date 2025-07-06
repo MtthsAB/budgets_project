@@ -46,22 +46,6 @@
     </div>
 
     <div class="col-md-3 mb-4">
-        <div class="card bg-info text-white">
-            <div class="card-body">
-                <div class="d-flex justify-content-between">
-                    <div>
-                        <h5 class="card-title">Linhas</h5>
-                        <h2 class="card-text">{{ total_linhas|default:0 }}</h2>
-                    </div>
-                    <div class="align-self-center">
-                        <i class="bi bi-diagram-2 fs-1"></i>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <div class="col-md-3 mb-4">
         <div class="card bg-warning text-dark">
             <div class="card-body">
                 <div class="d-flex justify-content-between">
@@ -90,13 +74,11 @@
                 {% if produtos_recentes %}
                 <div class="table-responsive">
                     <table class="table table-striped">
-                        <thead>
-                            <tr>
-                                <th>Produto</th>
-                                <th>Tipo</th>
-                                <th>Linha</th>
-                                <th>Criado em</th>
-                            </tr>
+                        <thead>                                            <tr>
+                                                <th>Produto</th>
+                                                <th>Tipo</th>
+                                                <th>Criado em</th>
+                                            </tr>
                         </thead>
                         <tbody>
                             {% for produto in produtos_recentes %}
@@ -107,7 +89,6 @@
                                     </a>
                                 </td>
                                 <td>{{ produto.id_tipo_produto.nome }}</td>
-                                <td>{{ produto.id_linha.nome }}</td>
                                 <td>{{ produto.created_at|date:"d/m/Y H:i" }}</td>
                             </tr>
                             {% endfor %}

@@ -1,0 +1,578 @@
+{% extends 'base.html' %}
+
+{% block title %}Editar Produto - Sistema de Produtos{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="d-flex justify-content-between align-items-center">
+            <h1 class="h2 mb-0">
+                <i class="bi bi-pencil"></i> Editar Produto
+            </h1>
+            <div>
+                <a href="{% url 'produto_detalhes' produto.id %}" class="btn btn-outline-info">
+                    <i class="bi bi-eye"></i> Ver Detalhes
+                </a>
+                <a href="{% url 'produtos_lista' %}" class="btn btn-outline-secondary">
+                    <i class="bi bi-arrow-left"></i> Voltar
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<form method="post" enctype="multipart/form-data" id="produtoForm">
+    {% csrf_token %}
+    
+    <!-- Dados Básicos -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h6 class="mb-0">
+                        <i class="bi bi-info-circle"></i> Dados Básicos
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="form-floating mb-3">
+                                <input type="text" class="form-control" id="ref_produto" name="ref_produto" 
+                                       value="{{ produto.ref_produto }}" placeholder="Referência" required>
+                                <label for="ref_produto">Referência do Produto *</label>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-floating mb-3">
+                                <input type="text" class="form-control" id="nome_produto" name="nome_produto" 
+                                       value="{{ produto.nome_produto }}" placeholder="Nome" required>
+                                <label for="nome_produto">Nome do Produto *</label>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="form-floating mb-3">
+                                <select class="form-select" id="tipo_produto" name="tipo_produto" required>
+                                    <option value="">Selecione o tipo</option>
+                                    {% for tipo in tipos %}
+                                        <option value="{{ tipo.id }}" 
+                                                {% if produto.id_tipo_produto.id == tipo.id %}selected{% endif %}>
+                                            {{ tipo.nome }}
+                                        </option>
+                                    {% endfor %}
+                                </select>
+                                <label for="tipo_produto">Tipo de Produto *</label>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Checkboxes -->
+                    <div class="row">
+                        <div class="col-md-3">
+                            <div class="form-check form-switch mb-3">
+                                <input class="form-check-input" type="checkbox" id="ativo" name="ativo" 
+                                       {% if produto.ativo %}checked{% endif %}>
+                                <label class="form-check-label" for="ativo">
+                                    Produto Ativo
+                                </label>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="form-check form-switch mb-3">
+                                <input class="form-check-input" type="checkbox" id="tem_cor_tecido" name="tem_cor_tecido"
+                                       {% if produto.tem_cor_tecido %}checked{% endif %}>
+                                <label class="form-check-label" for="tem_cor_tecido">
+                                    Tem Cor Tecido
+                                </label>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="form-check form-switch mb-3">
+                                <input class="form-check-input" type="checkbox" id="tem_difer_desenho_lado" name="tem_difer_desenho_lado"
+                                       {% if produto.tem_difer_desenho_lado_dir_esq %}checked{% endif %}>
+                                <label class="form-check-label" for="tem_difer_desenho_lado">
+                                    Diferencia Lado Dir./Esq.
+                                </label>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="form-check form-switch mb-3">
+                                <input class="form-check-input" type="checkbox" id="tem_difer_desenho_tamanho" name="tem_difer_desenho_tamanho"
+                                       {% if produto.tem_difer_desenho_tamanho %}checked{% endif %}>
+                                <label class="form-check-label" for="tem_difer_desenho_tamanho">
+                                    Diferencia por Tamanho
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Imagens do Produto -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card border-primary">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0">
+                        <i class="bi bi-images"></i> Imagens do Produto
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="alert alert-info">
+                        <i class="bi bi-info-circle"></i> 
+                        <strong>Editar imagens:</strong> Selecione novos arquivos para substituir as imagens atuais.
+                    </div>
+                    
+                    <div class="row">
+                        <!-- Imagem Principal -->
+                        <div class="col-md-8">
+                            <div class="mb-3">
+                                <label for="imagem_principal" class="form-label fw-bold">
+                                    <i class="bi bi-image"></i> Imagem Principal
+                                </label>
+                                {% if produto.imagem_principal %}
+                                <div class="mb-2">
+                                    <small class="text-muted">Imagem atual:</small><br>
+                                    <img src="{{ produto.imagem_principal.url }}" alt="Imagem Principal Atual" 
+                                         class="img-thumbnail border border-primary" style="max-width: 200px; max-height: 200px;">
+                                </div>
+                                {% endif %}
+                                <input type="file" class="form-control form-control-lg" id="imagem_principal" name="imagem_principal" 
+                                       accept="image/*" onchange="previewImage(this, 'preview_principal')">
+                                <div class="form-text">Formatos aceitos: JPG, PNG, GIF (máx. 5MB)</div>
+                                <div id="preview_principal" class="mt-3" style="display: none;">
+                                    <small class="text-muted">Nova imagem:</small><br>
+                                    <img id="img_preview_principal" src="" alt="Preview" 
+                                         class="img-thumbnail border border-success" style="max-width: 300px; max-height: 300px;">
+                                    <button type="button" class="btn btn-sm btn-danger mt-2" onclick="removeImage('preview_principal', 'imagem_principal')">
+                                        <i class="bi bi-trash"></i> Remover
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Botão para Segunda Imagem -->
+                        <div class="col-md-4">
+                            <div class="mb-3">
+                                <label class="form-label fw-bold">
+                                    <i class="bi bi-plus-circle"></i> Segunda Imagem (Opcional)
+                                </label>
+                                <div id="segunda_imagem_area" style="display: none;">
+                                    <input type="file" class="form-control" id="imagem_secundaria" name="imagem_secundaria" 
+                                           accept="image/*" onchange="previewImage(this, 'preview_secundaria')">
+                                    <div class="form-text">Formatos aceitos: JPG, PNG, GIF (máx. 5MB)</div>
+                                    <div id="preview_secundaria" class="mt-3" style="display: none;">
+                                        <img id="img_preview_secundaria" src="" alt="Preview" 
+                                             class="img-thumbnail border border-primary" style="max-width: 200px; max-height: 200px;">
+                                        <button type="button" class="btn btn-sm btn-danger mt-2" onclick="removeImage('preview_secundaria', 'imagem_secundaria')">
+                                            <i class="bi bi-trash"></i> Remover
+                                        </button>
+                                    </div>
+                                </div>
+                                <button type="button" class="btn btn-outline-primary btn-sm" id="btn_adicionar_segunda_imagem" onclick="mostrarSegundaImagem()">
+                                    <i class="bi bi-plus"></i> Adicionar Segunda Imagem
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Módulos (Opcional) -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <h6 class="mb-0">
+                            <i class="bi bi-grid-3x3"></i> Módulos (Opcional)
+                        </h6>
+                        <button type="button" class="btn btn-sm btn-success" onclick="adicionarModulo()">
+                            <i class="bi bi-plus"></i> Adicionar Módulo
+                        </button>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <div id="modulosContainer">
+                        <!-- Módulos existentes serão carregados via JavaScript -->
+                    </div>
+                    
+                    <div class="alert alert-info mb-0" id="noModulosAlert">
+                        <i class="bi bi-info-circle"></i> 
+                        Os módulos são opcionais. Clique em "Adicionar Módulo" se desejar adicionar módulos ao produto.
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Botões de Ação -->
+    <div class="row">
+        <div class="col-12">
+            <div class="d-flex gap-2">
+                <button type="submit" class="btn btn-primary">
+                    <i class="bi bi-check-circle"></i> Atualizar Produto
+                </button>
+                <a href="{% url 'produtos_lista' %}" class="btn btn-outline-secondary">
+                    <i class="bi bi-x-circle"></i> Cancelar
+                </a>
+            </div>
+        </div>
+    </div>
+</form>
+
+{% block extra_js %}
+<script>
+let moduloCount = 0;
+
+// Função para preview de imagens
+function previewImage(input, previewId) {
+    const preview = document.getElementById(previewId);
+    const img = document.getElementById('img_' + previewId);
+    
+    if (input.files && input.files[0]) {
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            img.src = e.target.result;
+            preview.style.display = 'block';
+        }
+        reader.readAsDataURL(input.files[0]);
+    }
+}
+
+// Função para remover imagem
+function removeImage(previewId, inputId) {
+    const preview = document.getElementById(previewId);
+    const input = document.getElementById(inputId);
+    const img = document.getElementById('img_' + previewId);
+    
+    preview.style.display = 'none';
+    input.value = '';
+    img.src = '';
+    
+    // Se for segunda imagem, esconder área novamente
+    if (inputId === 'imagem_secundaria') {
+        document.getElementById('segunda_imagem_area').style.display = 'none';
+        document.getElementById('btn_adicionar_segunda_imagem').style.display = 'block';
+    }
+}
+
+// Função para mostrar segunda imagem
+function mostrarSegundaImagem() {
+    document.getElementById('segunda_imagem_area').style.display = 'block';
+    document.getElementById('btn_adicionar_segunda_imagem').style.display = 'none';
+}
+
+// Função para adicionar módulo
+function adicionarModulo() {
+    moduloCount++;
+    const container = document.getElementById('modulosContainer');
+    const noModulosAlert = document.getElementById('noModulosAlert');
+    
+    if (noModulosAlert) {
+        noModulosAlert.style.display = 'none';
+    }
+    
+    const moduloHTML = `
+        <div class="card mb-3" id="modulo_${moduloCount}">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h6 class="mb-0">Módulo ${moduloCount}</h6>
+                <button type="button" class="btn btn-sm btn-danger" onclick="removerModulo(${moduloCount})">
+                    <i class="bi bi-trash"></i> Remover
+                </button>
+            </div>
+            <div class="card-body">
+                <!-- Nome do Módulo -->
+                <div class="row mb-3">
+                    <div class="col-md-6">
+                        <div class="form-floating">
+                            <input type="text" class="form-control" id="modulo_nome_${moduloCount}" name="modulo_nome" placeholder="Nome">
+                            <label for="modulo_nome_${moduloCount}">Nome do Módulo</label>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Novos campos -->
+                <div class="row mb-3">
+                    <div class="col-md-3">
+                        <div class="form-floating">
+                            <input type="number" step="0.01" class="form-control" id="modulo_profundidade_${moduloCount}" name="modulo_profundidade_${moduloCount}" placeholder="Profundidade">
+                            <label for="modulo_profundidade_${moduloCount}">Profundidade (cm)</label>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="form-floating">
+                            <input type="number" step="0.01" class="form-control" id="modulo_altura_${moduloCount}" name="modulo_altura_${moduloCount}" placeholder="Altura">
+                            <label for="modulo_altura_${moduloCount}">Altura (cm)</label>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="form-floating">
+                            <input type="number" step="0.01" class="form-control" id="modulo_braco_${moduloCount}" name="modulo_braco_${moduloCount}" placeholder="Braço">
+                            <label for="modulo_braco_${moduloCount}">Braço (cm)</label>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="form-floating">
+                            <textarea class="form-control" id="modulo_descricao_${moduloCount}" name="modulo_descricao_${moduloCount}" placeholder="Descrição" style="height: 58px;"></textarea>
+                            <label for="modulo_descricao_${moduloCount}">Descrição (Opcional)</label>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Imagens do Módulo -->
+                <div class="row mb-3">
+                    <div class="col-md-8">
+                        <label for="modulo_imagem_principal_${moduloCount}" class="form-label fw-bold">
+                            <i class="bi bi-image"></i> Imagem Principal do Módulo
+                        </label>
+                        <input type="file" class="form-control" id="modulo_imagem_principal_${moduloCount}" name="modulo_imagem_principal_${moduloCount}" 
+                               accept="image/*" onchange="previewImage(this, 'preview_modulo_principal_${moduloCount}')">
+                        <div id="preview_modulo_principal_${moduloCount}" class="mt-3" style="display: none;">
+                            <img id="img_preview_modulo_principal_${moduloCount}" src="" alt="Preview" 
+                                 class="img-thumbnail border border-primary" style="max-width: 250px; max-height: 250px;">
+                            <button type="button" class="btn btn-sm btn-danger mt-2" onclick="removeImage('preview_modulo_principal_${moduloCount}', 'modulo_imagem_principal_${moduloCount}')">
+                                <i class="bi bi-trash"></i> Remover
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <div class="col-md-4">
+                        <label class="form-label fw-bold">
+                            <i class="bi bi-plus-circle"></i> Segunda Imagem (Opcional)
+                        </label>
+                        <div id="modulo_segunda_imagem_area_${moduloCount}" style="display: none;">
+                            <input type="file" class="form-control" id="modulo_imagem_secundaria_${moduloCount}" name="modulo_imagem_secundaria_${moduloCount}" 
+                                   accept="image/*" onchange="previewImage(this, 'preview_modulo_secundaria_${moduloCount}')">
+                            <div id="preview_modulo_secundaria_${moduloCount}" class="mt-3" style="display: none;">
+                                <img id="img_preview_modulo_secundaria_${moduloCount}" src="" alt="Preview" 
+                                     class="img-thumbnail border border-primary" style="max-width: 150px; max-height: 150px;">
+                                <button type="button" class="btn btn-sm btn-danger mt-2" onclick="removeModuloSegundaImagem(${moduloCount})">
+                                    <i class="bi bi-trash"></i> Remover
+                                </button>
+                            </div>
+                        </div>
+                        <button type="button" class="btn btn-outline-primary btn-sm" id="btn_modulo_segunda_imagem_${moduloCount}" onclick="mostrarModuloSegundaImagem(${moduloCount})">
+                            <i class="bi bi-plus"></i> Adicionar Segunda Imagem
+                        </button>
+                    </div>
+                </div>
+                
+                <!-- Tamanhos do Módulo (Opcional) -->
+                <div class="mt-4">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <h6 class="mb-0">
+                            <i class="bi bi-rulers"></i> Tamanhos (Opcional)
+                        </h6>
+                        <button type="button" class="btn btn-sm btn-outline-success" onclick="adicionarTamanho(${moduloCount})">
+                            <i class="bi bi-plus"></i> Adicionar Tamanho
+                        </button>
+                    </div>
+                    <div id="tamanhosContainer_${moduloCount}">
+                        <!-- Tamanhos serão adicionados aqui -->
+                    </div>
+                </div>
+            </div>
+        </div>
+    `;
+    
+    container.insertAdjacentHTML('beforeend', moduloHTML);
+}
+
+// Função para remover módulo
+function removerModulo(moduloId) {
+    const modulo = document.getElementById(`modulo_${moduloId}`);
+    modulo.remove();
+    
+    // Se não há mais módulos, mostrar alert
+    const container = document.getElementById('modulosContainer');
+    if (container.children.length === 0) {
+        const noModulosAlert = document.getElementById('noModulosAlert');
+        if (noModulosAlert) {
+            noModulosAlert.style.display = 'block';
+        }
+    }
+}
+
+// Função para mostrar segunda imagem do módulo
+function mostrarModuloSegundaImagem(moduloId) {
+    document.getElementById(`modulo_segunda_imagem_area_${moduloId}`).style.display = 'block';
+    document.getElementById(`btn_modulo_segunda_imagem_${moduloId}`).style.display = 'none';
+}
+
+// Função para remover segunda imagem do módulo
+function removeModuloSegundaImagem(moduloId) {
+    const preview = document.getElementById(`preview_modulo_secundaria_${moduloId}`);
+    const input = document.getElementById(`modulo_imagem_secundaria_${moduloId}`);
+    const img = document.getElementById(`img_preview_modulo_secundaria_${moduloId}`);
+    
+    preview.style.display = 'none';
+    input.value = '';
+    img.src = '';
+    
+    document.getElementById(`modulo_segunda_imagem_area_${moduloId}`).style.display = 'none';
+    document.getElementById(`btn_modulo_segunda_imagem_${moduloId}`).style.display = 'block';
+}
+
+// Função para adicionar tamanho
+function adicionarTamanho(moduloId) {
+    const container = document.getElementById(`tamanhosContainer_${moduloId}`);
+    const tamanhoCount = container.children.length + 1;
+    
+    const tamanhoHTML = `
+        <div class="card mb-2" id="tamanho_${moduloId}_${tamanhoCount}">
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-3">
+                        <div class="form-floating mb-2">
+                            <input type="number" step="0.01" class="form-control" name="tamanho_largura_total_${moduloId}_${tamanhoCount}" placeholder="Largura Total">
+                            <label>Largura Total (cm)</label>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="form-floating mb-2">
+                            <input type="number" step="0.01" class="form-control" name="tamanho_largura_assento_${moduloId}_${tamanhoCount}" placeholder="Largura Assento">
+                            <label>Largura Assento (cm)</label>
+                        </div>
+                    </div>
+                    <div class="col-md-2">
+                        <div class="form-floating mb-2">
+                            <input type="number" step="0.01" class="form-control" name="tamanho_tecido_${moduloId}_${tamanhoCount}" placeholder="Tecido">
+                            <label>Tecido (metros)</label>
+                        </div>
+                    </div>
+                    <div class="col-md-2">
+                        <div class="form-floating mb-2">
+                            <input type="number" step="0.001" class="form-control" name="tamanho_volume_${moduloId}_${tamanhoCount}" placeholder="Volume">
+                            <label>Volume (m³)</label>
+                        </div>
+                    </div>
+                    <div class="col-md-2">
+                        <div class="d-flex align-items-end">
+                            <button type="button" class="btn btn-sm btn-danger" onclick="removerTamanho('tamanho_${moduloId}_${tamanhoCount}')">
+                                <i class="bi bi-trash"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-md-3">
+                        <div class="form-floating mb-2">
+                            <input type="number" step="0.01" class="form-control" name="tamanho_peso_${moduloId}_${tamanhoCount}" placeholder="Peso">
+                            <label>Peso (kg)</label>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="form-floating mb-2">
+                            <input type="number" step="0.01" class="form-control" name="tamanho_preco_${moduloId}_${tamanhoCount}" placeholder="Preço">
+                            <label>Preço (R$)</label>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="form-floating mb-2">
+                            <textarea class="form-control" name="tamanho_descricao_${moduloId}_${tamanhoCount}" placeholder="Descrição" style="height: 60px;"></textarea>
+                            <label>Descrição</label>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    `;
+    
+    container.insertAdjacentHTML('beforeend', tamanhoHTML);
+}
+
+// Função para remover tamanho
+function removerTamanho(tamanhoId) {
+    document.getElementById(tamanhoId).remove();
+}
+
+// Carregar módulos existentes
+document.addEventListener('DOMContentLoaded', function() {
+    // Carregar módulos existentes
+    {% for modulo in modulos %}
+        adicionarModulo();
+        const ultimoModulo = document.getElementById(`modulo_${moduloCount}`);
+        
+        ultimoModulo.querySelector('input[name="modulo_nome"]').value = '{{ modulo.nome }}';
+        
+        // Preencher novos campos
+        {% if modulo.profundidade %}
+        ultimoModulo.querySelector('input[name="modulo_profundidade_' + moduloCount + '"]').value = '{{ modulo.profundidade }}';
+        {% endif %}
+        {% if modulo.altura %}
+        ultimoModulo.querySelector('input[name="modulo_altura_' + moduloCount + '"]').value = '{{ modulo.altura }}';
+        {% endif %}
+        {% if modulo.braco %}
+        ultimoModulo.querySelector('input[name="modulo_braco_' + moduloCount + '"]').value = '{{ modulo.braco }}';
+        {% endif %}
+        {% if modulo.descricao %}
+        ultimoModulo.querySelector('textarea[name="modulo_descricao_' + moduloCount + '"]').value = '{{ modulo.descricao }}';
+        {% endif %}
+        
+        // Mostrar imagem principal atual se existir
+        {% if modulo.imagem_principal %}
+        const imgPrincipalContainer = ultimoModulo.querySelector('[name="modulo_imagem_principal_' + moduloCount + '"]').parentElement;
+        const imgPrincipalAtual = document.createElement('div');
+        imgPrincipalAtual.className = 'mb-2';
+        imgPrincipalAtual.innerHTML = `
+            <small class="text-muted">Imagem principal atual:</small><br>
+            <img src="{{ modulo.imagem_principal.url }}" alt="Imagem Principal Atual" 
+                 class="img-thumbnail border border-primary" style="max-width: 150px; max-height: 150px;">
+        `;
+        imgPrincipalContainer.insertBefore(imgPrincipalAtual, imgPrincipalContainer.querySelector('input[type="file"]'));
+        {% endif %}
+        
+        // Carregar tamanhos existentes para este módulo
+        {% for tamanho in modulo.tamanhos_detalhados.all %}
+            adicionarTamanho(moduloCount);
+            const container = document.getElementById(`tamanhosContainer_${moduloCount}`);
+            const ultimoTamanho = container.lastElementChild;
+            const tamanhoCount = container.children.length;
+            
+            // Preencher os campos com os dados existentes
+            {% if tamanho.largura_total %}
+            ultimoTamanho.querySelector('input[name="tamanho_largura_total_' + moduloCount + '_' + tamanhoCount + '"]').value = '{{ tamanho.largura_total }}';
+            {% endif %}
+            {% if tamanho.largura_assento %}
+            ultimoTamanho.querySelector('input[name="tamanho_largura_assento_' + moduloCount + '_' + tamanhoCount + '"]').value = '{{ tamanho.largura_assento }}';
+            {% endif %}
+            {% if tamanho.tecido_metros %}
+            ultimoTamanho.querySelector('input[name="tamanho_tecido_' + moduloCount + '_' + tamanhoCount + '"]').value = '{{ tamanho.tecido_metros }}';
+            {% endif %}
+            {% if tamanho.volume_m3 %}
+            ultimoTamanho.querySelector('input[name="tamanho_volume_' + moduloCount + '_' + tamanhoCount + '"]').value = '{{ tamanho.volume_m3 }}';
+            {% endif %}
+            {% if tamanho.peso_kg %}
+            ultimoTamanho.querySelector('input[name="tamanho_peso_' + moduloCount + '_' + tamanhoCount + '"]').value = '{{ tamanho.peso_kg }}';
+            {% endif %}
+            {% if tamanho.preco %}
+            ultimoTamanho.querySelector('input[name="tamanho_preco_' + moduloCount + '_' + tamanhoCount + '"]').value = '{{ tamanho.preco }}';
+            {% endif %}
+            {% if tamanho.descricao %}
+            ultimoTamanho.querySelector('textarea[name="tamanho_descricao_' + moduloCount + '_' + tamanhoCount + '"]').value = '{{ tamanho.descricao }}';
+            {% endif %}
+        {% endfor %}
+    {% endfor %}
+});
+
+// Validação do formulário
+document.getElementById('produtoForm').addEventListener('submit', function(e) {
+    const refProduto = document.getElementById('ref_produto').value;
+    const nomeProduto = document.getElementById('nome_produto').value;
+    const tipoProduto = document.getElementById('tipo_produto').value;
+    
+    if (!refProduto || !nomeProduto || !tipoProduto) {
+        e.preventDefault();
+        alert('Por favor, preencha todos os campos obrigatórios.');
+        return false;
+    }
+});
+</script>
+{% endblock %}

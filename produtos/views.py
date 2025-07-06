@@ -3,14 +3,18 @@ from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from django.views.decorators.csrf import csrf_protect
 from django.db import transaction
+from django.http import JsonResponse
 from rest_framework import viewsets, status
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
+import logging
 from .models import (
     Item, TipoItem, Linha, Modulo, Acessorio, 
-    AcessoriosItens, TamanhosModulos, FaixaTecido, PrecosBase
+    TamanhosModulos, FaixaTecido, PrecosBase
 )
+
+logger = logging.getLogger(__name__)
 
 @login_required
 def home_view(request):
@@ -18,28 +22,23 @@ def home_view(request):
     context = {
         'total_produtos': Item.objects.count(),
         'total_tipos': TipoItem.objects.count(),
-        'total_linhas': Linha.objects.count(),
         'total_modulos': Modulo.objects.count(),
-        'produtos_recentes': Item.objects.select_related('id_tipo_produto', 'id_linha').order_by('-created_at')[:5],
+        'produtos_recentes': Item.objects.select_related('id_tipo_produto').order_by('-created_at')[:5],
     }
     return render(request, 'produtos/home.html', context)
 
 @login_required
 def produtos_list_view(request):
     """View para listagem de produtos"""
-    produtos = Item.objects.select_related('id_tipo_produto', 'id_linha').all()
+    produtos = Item.objects.select_related('id_tipo_produto').prefetch_related('modulos').all()
     
     # Filtros
     tipo_filtro = request.GET.get('tipo')
-    linha_filtro = request.GET.get('linha')
     ativo_filtro = request.GET.get('ativo')
     busca = request.GET.get('busca')
     
     if tipo_filtro:
         produtos = produtos.filter(id_tipo_produto__id=tipo_filtro)
-    
-    if linha_filtro:
-        produtos = produtos.filter(id_linha__id=linha_filtro)
     
     if ativo_filtro:
         produtos = produtos.filter(ativo=ativo_filtro == 'true')
@@ -54,10 +53,8 @@ def produtos_list_view(request):
     context = {
         'produtos': produtos,
         'tipos': TipoItem.objects.all(),
-        'linhas': Linha.objects.all(),
         'filtros': {
             'tipo': tipo_filtro,
-            'linha': linha_filtro,
             'ativo': ativo_filtro,
             'busca': busca,
         }
@@ -75,14 +72,13 @@ def produto_cadastro_view(request):
                 ref_produto = request.POST.get('ref_produto')
                 nome_produto = request.POST.get('nome_produto')
                 tipo_produto_id = request.POST.get('tipo_produto')
-                linha_id = request.POST.get('linha')
                 ativo = request.POST.get('ativo') == 'on'
                 tem_cor_tecido = request.POST.get('tem_cor_tecido') == 'on'
                 tem_difer_desenho_lado = request.POST.get('tem_difer_desenho_lado') == 'on'
                 tem_difer_desenho_tamanho = request.POST.get('tem_difer_desenho_tamanho') == 'on'
                 
                 # Validações básicas
-                if not all([ref_produto, nome_produto, tipo_produto_id, linha_id]):
+                if not all([ref_produto, nome_produto, tipo_produto_id]):
                     messages.error(request, 'Por favor, preencha todos os campos obrigatórios.')
                     raise ValueError('Campos obrigatórios não preenchidos')
                 
@@ -95,66 +91,88 @@ def produto_cadastro_view(request):
                     ref_produto=ref_produto,
                     nome_produto=nome_produto,
                     id_tipo_produto_id=tipo_produto_id,
-                    id_linha_id=linha_id,
                     ativo=ativo,
                     tem_cor_tecido=tem_cor_tecido,
                     tem_difer_desenho_lado_dir_esq=tem_difer_desenho_lado,
                     tem_difer_desenho_tamanho=tem_difer_desenho_tamanho,
-                    imagem_principal=request.FILES.get('imagem_principal'),
-                    imagem_secundaria=request.FILES.get('imagem_secundaria')
+                    imagem_principal=request.FILES.get('imagem_principal')
                 )
                 
-                # Processar módulos
+                # Processar módulos (opcional)
                 modulos_nomes = request.POST.getlist('modulo_nome')
+                logger.info(f"Módulos recebidos: {modulos_nomes}")
                 
-                for i in range(len(modulos_nomes)):
-                    if modulos_nomes[i]:  # Se o nome do módulo não estiver vazio
+                for i, nome_modulo in enumerate(modulos_nomes):
+                    if nome_modulo.strip():  # Se o nome do módulo não estiver vazio
+                        # Obter dados do módulo
+                        profundidade = request.POST.get(f'modulo_profundidade_{i+1}')
+                        altura = request.POST.get(f'modulo_altura_{i+1}')
+                        braco = request.POST.get(f'modulo_braco_{i+1}')
+                        descricao = request.POST.get(f'modulo_descricao_{i+1}')
+                        
+                        logger.info(f"Criando módulo {i+1}: {nome_modulo}")
+                        
                         modulo = Modulo.objects.create(
                             item=produto,
-                            nome=modulos_nomes[i],
-                            imagem_principal=request.FILES.get(f'modulo_imagem_principal_{i+1}'),
-                            imagem_secundaria=request.FILES.get(f'modulo_imagem_secundaria_{i+1}')
+                            nome=nome_modulo,
+                            profundidade=float(profundidade) if profundidade else None,
+                            altura=float(altura) if altura else None,
+                            braco=float(braco) if braco else None,
+                            descricao=descricao if descricao else None,
+                            imagem_principal=request.FILES.get(f'modulo_imagem_principal_{i+1}')
                         )
                         
                         # Processar tamanhos deste módulo
                         modulo_id = i + 1
                         tamanhos_nomes = request.POST.getlist(f'tamanho_nome_{modulo_id}')
-                        tamanhos_largura_total = request.POST.getlist(f'tamanho_largura_total_{modulo_id}')
-                        tamanhos_largura_assento = request.POST.getlist(f'tamanho_largura_assento_{modulo_id}')
-                        tamanhos_altura = request.POST.getlist(f'tamanho_altura_{modulo_id}')
-                        tamanhos_profundidade = request.POST.getlist(f'tamanho_profundidade_{modulo_id}')
-                        tamanhos_tecido = request.POST.getlist(f'tamanho_tecido_{modulo_id}')
-                        tamanhos_volume = request.POST.getlist(f'tamanho_volume_{modulo_id}')
-                        tamanhos_peso = request.POST.getlist(f'tamanho_peso_{modulo_id}')
-                        tamanhos_preco = request.POST.getlist(f'tamanho_preco_{modulo_id}')
-                        tamanhos_descricao = request.POST.getlist(f'tamanho_descricao_{modulo_id}')
                         
-                        for j in range(len(tamanhos_nomes)):
-                            if tamanhos_nomes[j]:
-                                from .models import TamanhosModulosDetalhado
-                                TamanhosModulosDetalhado.objects.create(
-                                    id_modulo=modulo,
-                                    nome_tamanho=tamanhos_nomes[j],
-                                    largura_total=float(tamanhos_largura_total[j]) if tamanhos_largura_total[j] else None,
-                                    largura_assento=float(tamanhos_largura_assento[j]) if tamanhos_largura_assento[j] else None,
-                                    altura_cm=float(tamanhos_altura[j]) if tamanhos_altura[j] else None,
-                                    profundidade_cm=float(tamanhos_profundidade[j]) if tamanhos_profundidade[j] else None,
-                                    tecido_metros=float(tamanhos_tecido[j]) if tamanhos_tecido[j] else None,
-                                    volume_m3=float(tamanhos_volume[j]) if tamanhos_volume[j] else None,
-                                    peso_kg=float(tamanhos_peso[j]) if tamanhos_peso[j] else None,
-                                    preco=float(tamanhos_preco[j]) if tamanhos_preco[j] else None,
-                                    descricao=tamanhos_descricao[j] if tamanhos_descricao[j] else None
-                                )
+                        logger.info(f"Tamanhos para módulo {modulo_id}: {tamanhos_nomes}")
+                        
+                        if tamanhos_nomes:
+                            tamanhos_largura_total = request.POST.getlist(f'tamanho_largura_total_{modulo_id}')
+                            tamanhos_largura_assento = request.POST.getlist(f'tamanho_largura_assento_{modulo_id}')
+                            tamanhos_altura = request.POST.getlist(f'tamanho_altura_{modulo_id}')
+                            tamanhos_profundidade = request.POST.getlist(f'tamanho_profundidade_{modulo_id}')
+                            tamanhos_tecido = request.POST.getlist(f'tamanho_tecido_{modulo_id}')
+                            tamanhos_volume = request.POST.getlist(f'tamanho_volume_{modulo_id}')
+                            tamanhos_peso = request.POST.getlist(f'tamanho_peso_{modulo_id}')
+                            tamanhos_preco = request.POST.getlist(f'tamanho_preco_{modulo_id}')
+                            tamanhos_descricao = request.POST.getlist(f'tamanho_descricao_{modulo_id}')
+                            
+                            for j, nome_tamanho in enumerate(tamanhos_nomes):
+                                if nome_tamanho.strip():
+                                    from .models import TamanhosModulosDetalhado
+                                    
+                                    # Função auxiliar para converter valores
+                                    def safe_float(value):
+                                        try:
+                                            return float(value) if value and value.strip() else None
+                                        except (ValueError, TypeError):
+                                            return None
+                                    
+                                    TamanhosModulosDetalhado.objects.create(
+                                        id_modulo=modulo,
+                                        largura_total=safe_float(tamanhos_largura_total[j] if j < len(tamanhos_largura_total) else None),
+                                        largura_assento=safe_float(tamanhos_largura_assento[j] if j < len(tamanhos_largura_assento) else None),
+                                        tecido_metros=safe_float(tamanhos_tecido[j] if j < len(tamanhos_tecido) else None),
+                                        volume_m3=safe_float(tamanhos_volume[j] if j < len(tamanhos_volume) else None),
+                                        peso_kg=safe_float(tamanhos_peso[j] if j < len(tamanhos_peso) else None),
+                                        preco=safe_float(tamanhos_preco[j] if j < len(tamanhos_preco) else None),
+                                        descricao=tamanhos_descricao[j] if j < len(tamanhos_descricao) and tamanhos_descricao[j] else None
+                                    )
                 
                 messages.success(request, f'Produto "{produto.nome_produto}" cadastrado com sucesso!')
                 return redirect('produtos_lista')
                 
+        except ValueError as e:
+            logger.error(f"Erro de validação no cadastro: {str(e)}")
+            # A mensagem de erro já foi adicionada antes do raise
         except Exception as e:
+            logger.error(f"Erro inesperado no cadastro: {str(e)}", exc_info=True)
             messages.error(request, f'Erro ao cadastrar produto: {str(e)}')
     
     context = {
         'tipos': TipoItem.objects.all(),
-        'linhas': Linha.objects.all(),
     }
     return render(request, 'produtos/cadastro.html', context)
 
@@ -166,80 +184,121 @@ def produto_editar_view(request, produto_id):
     if request.method == 'POST':
         try:
             with transaction.atomic():
+                logger.info(f"Dados POST recebidos para edição do produto {produto_id}: {dict(request.POST)}")
+                logger.info(f"Arquivos recebidos: {list(request.FILES.keys())}")
+                
                 # Atualizar dados básicos
                 produto.ref_produto = request.POST.get('ref_produto')
                 produto.nome_produto = request.POST.get('nome_produto')
                 produto.id_tipo_produto_id = request.POST.get('tipo_produto')
-                produto.id_linha_id = request.POST.get('linha')
                 produto.ativo = request.POST.get('ativo') == 'on'
                 produto.tem_cor_tecido = request.POST.get('tem_cor_tecido') == 'on'
                 produto.tem_difer_desenho_lado_dir_esq = request.POST.get('tem_difer_desenho_lado') == 'on'
                 produto.tem_difer_desenho_tamanho = request.POST.get('tem_difer_desenho_tamanho') == 'on'
                 
-                # Atualizar imagens se fornecidas
+                # Atualizar imagem principal se fornecida
                 if 'imagem_principal' in request.FILES:
                     produto.imagem_principal = request.FILES['imagem_principal']
+                
+                # Atualizar segunda imagem se fornecida
                 if 'imagem_secundaria' in request.FILES:
                     produto.imagem_secundaria = request.FILES['imagem_secundaria']
                     
                 produto.save()
+                logger.info(f"Produto básico atualizado: {produto.ref_produto}")
                 
                 # Remover módulos existentes e recriar
                 produto.modulos.all().delete()
+                logger.info("Módulos existentes removidos")
                 
-                # Processar novos módulos
-                modulos_nomes = request.POST.getlist('modulo_nome')
+                # Função auxiliar para converter valores
+                def safe_float(value):
+                    try:
+                        return float(value) if value and value.strip() else None
+                    except (ValueError, TypeError):
+                        return None
                 
-                for i in range(len(modulos_nomes)):
-                    if modulos_nomes[i]:
+                # Processar módulos atualizados
+                # Buscar todos os campos que começam com 'modulo_nome_'
+                modulo_counter = 1
+                while True:
+                    nome_modulo = request.POST.get(f'modulo_nome_{modulo_counter}')
+                    if not nome_modulo:
+                        break
+                    
+                    if nome_modulo.strip():
+                        logger.info(f"Processando módulo {modulo_counter}: {nome_modulo}")
+                        
+                        # Obter dados do módulo
+                        profundidade = request.POST.get(f'modulo_profundidade_{modulo_counter}')
+                        altura = request.POST.get(f'modulo_altura_{modulo_counter}')
+                        braco = request.POST.get(f'modulo_braco_{modulo_counter}')
+                        descricao = request.POST.get(f'modulo_descricao_{modulo_counter}')
+                        
                         modulo = Modulo.objects.create(
                             item=produto,
-                            nome=modulos_nomes[i],
-                            imagem_principal=request.FILES.get(f'modulo_imagem_principal_{i+1}'),
-                            imagem_secundaria=request.FILES.get(f'modulo_imagem_secundaria_{i+1}')
+                            nome=nome_modulo,
+                            profundidade=safe_float(profundidade),
+                            altura=safe_float(altura),
+                            braco=safe_float(braco),
+                            descricao=descricao if descricao else None,
+                            imagem_principal=request.FILES.get(f'modulo_imagem_principal_{modulo_counter}')
                         )
+                        logger.info(f"Módulo criado: {modulo.nome}")
                         
                         # Processar tamanhos deste módulo
-                        modulo_id = i + 1
-                        tamanhos_nomes = request.POST.getlist(f'tamanho_nome_{modulo_id}')
-                        tamanhos_largura_total = request.POST.getlist(f'tamanho_largura_total_{modulo_id}')
-                        tamanhos_largura_assento = request.POST.getlist(f'tamanho_largura_assento_{modulo_id}')
-                        tamanhos_altura = request.POST.getlist(f'tamanho_altura_{modulo_id}')
-                        tamanhos_profundidade = request.POST.getlist(f'tamanho_profundidade_{modulo_id}')
-                        tamanhos_tecido = request.POST.getlist(f'tamanho_tecido_{modulo_id}')
-                        tamanhos_volume = request.POST.getlist(f'tamanho_volume_{modulo_id}')
-                        tamanhos_peso = request.POST.getlist(f'tamanho_peso_{modulo_id}')
-                        tamanhos_preco = request.POST.getlist(f'tamanho_preco_{modulo_id}')
-                        tamanhos_descricao = request.POST.getlist(f'tamanho_descricao_{modulo_id}')
+                        # Buscar todos os campos de tamanho deste módulo
+                        tamanhos_largura_total = request.POST.getlist(f'tamanho_largura_total_{modulo_counter}')
+                        tamanhos_largura_assento = request.POST.getlist(f'tamanho_largura_assento_{modulo_counter}')
+                        tamanhos_tecido = request.POST.getlist(f'tamanho_tecido_{modulo_counter}')
+                        tamanhos_volume = request.POST.getlist(f'tamanho_volume_{modulo_counter}')
+                        tamanhos_peso = request.POST.getlist(f'tamanho_peso_{modulo_counter}')
+                        tamanhos_preco = request.POST.getlist(f'tamanho_preco_{modulo_counter}')
+                        tamanhos_descricao = request.POST.getlist(f'tamanho_descricao_{modulo_counter}')
                         
-                        for j in range(len(tamanhos_nomes)):
-                            if tamanhos_nomes[j]:
-                                from .models import TamanhosModulosDetalhado
-                                TamanhosModulosDetalhado.objects.create(
-                                    id_modulo=modulo,
-                                    nome_tamanho=tamanhos_nomes[j],
-                                    largura_total=float(tamanhos_largura_total[j]) if tamanhos_largura_total[j] else None,
-                                    largura_assento=float(tamanhos_largura_assento[j]) if tamanhos_largura_assento[j] else None,
-                                    altura_cm=float(tamanhos_altura[j]) if tamanhos_altura[j] else None,
-                                    profundidade_cm=float(tamanhos_profundidade[j]) if tamanhos_profundidade[j] else None,
-                                    tecido_metros=float(tamanhos_tecido[j]) if tamanhos_tecido[j] else None,
-                                    volume_m3=float(tamanhos_volume[j]) if tamanhos_volume[j] else None,
-                                    peso_kg=float(tamanhos_peso[j]) if tamanhos_peso[j] else None,
-                                    preco=float(tamanhos_preco[j]) if tamanhos_preco[j] else None,
-                                    descricao=tamanhos_descricao[j] if tamanhos_descricao[j] else None
-                                )
+                        # Filtrar apenas valores não vazios de largura_total (campo obrigatório)
+                        larguras_validas = [lt for lt in tamanhos_largura_total if lt and lt.strip()]
+                        
+                        # Para cada largura válida, criar um tamanho
+                        for i, largura_total in enumerate(larguras_validas):
+                            logger.info(f"Processando tamanho {i+1} do módulo {modulo_counter}")
+                            
+                            from .models import TamanhosModulosDetalhado
+                            
+                            # Garantir que temos valores para todos os campos
+                            largura_assento = tamanhos_largura_assento[i] if i < len(tamanhos_largura_assento) else ''
+                            tecido = tamanhos_tecido[i] if i < len(tamanhos_tecido) else ''
+                            volume = tamanhos_volume[i] if i < len(tamanhos_volume) else ''
+                            peso = tamanhos_peso[i] if i < len(tamanhos_peso) else ''
+                            preco = tamanhos_preco[i] if i < len(tamanhos_preco) else ''
+                            descricao = tamanhos_descricao[i] if i < len(tamanhos_descricao) else ''
+                            
+                            TamanhosModulosDetalhado.objects.create(
+                                id_modulo=modulo,
+                                largura_total=safe_float(largura_total),
+                                largura_assento=safe_float(largura_assento),
+                                tecido_metros=safe_float(tecido),
+                                volume_m3=safe_float(volume),
+                                peso_kg=safe_float(peso),
+                                preco=safe_float(preco),
+                                descricao=descricao.strip() if descricao else None
+                            )
+                            logger.info(f"Tamanho {i+1} criado para módulo {modulo.nome}")
+                    
+                    modulo_counter += 1
                 
                 messages.success(request, f'Produto "{produto.nome_produto}" atualizado com sucesso!')
+                logger.info(f"Produto {produto.ref_produto} atualizado com sucesso - {produto.modulos.count()} módulos")
                 return redirect('produtos_lista')
                 
         except Exception as e:
+            logger.error(f"Erro ao atualizar produto {produto_id}: {str(e)}", exc_info=True)
             messages.error(request, f'Erro ao atualizar produto: {str(e)}')
     
     context = {
         'produto': produto,
-        'modulos': produto.modulos.all(),
+        'modulos': produto.modulos.prefetch_related('tamanhos_detalhados').all(),
         'tipos': TipoItem.objects.all(),
-        'linhas': Linha.objects.all(),
     }
     return render(request, 'produtos/editar.html', context)
 
@@ -261,7 +320,7 @@ def produto_excluir_view(request, produto_id):
 @login_required
 def produto_detalhes_view(request, produto_id):
     """View para visualização detalhada de um produto"""
-    produto = get_object_or_404(Item.objects.select_related('id_tipo_produto', 'id_linha'), id=produto_id)
+    produto = get_object_or_404(Item.objects.select_related('id_tipo_produto'), id=produto_id)
     modulos = produto.modulos.all()
     
     context = {
@@ -273,3 +332,45 @@ def produto_detalhes_view(request, produto_id):
 def teste_view(request):
     """View de teste para diagnosticar problemas"""
     return render(request, 'teste.html')
+
+def teste_imagem_view(request):
+    """View de teste para upload de imagem"""
+    if request.method == 'POST':
+        if 'imagem_teste' in request.FILES:
+            return render(request, 'produtos/teste_imagem.html', {
+                'sucesso': 'Imagem recebida com sucesso!',
+                'arquivo': request.FILES['imagem_teste'].name
+            })
+    
+    return render(request, 'produtos/teste_imagem.html')
+
+@login_required
+@csrf_protect
+def debug_cadastro_view(request):
+    """View de debug para verificar dados POST"""
+    if request.method == 'POST':
+        debug_info = {
+            'POST_data': dict(request.POST),
+            'FILES_data': list(request.FILES.keys()),
+            'method': request.method,
+        }
+        logger.info(f"Debug cadastro - Dados recebidos: {debug_info}")
+        messages.info(request, f"Debug: {debug_info}")
+        return JsonResponse(debug_info)
+    
+    return render(request, 'produtos/debug_cadastro.html', {
+        'tipos': TipoItem.objects.all()
+    })
+
+@login_required
+def teste_cadastro_view(request):
+    """View de teste para cadastro simples"""
+    context = {
+        'tipos': TipoItem.objects.all(),
+    }
+    return render(request, 'produtos/teste_cadastro.html', context)
+
+@login_required
+def teste_tamanhos_edicao_view(request):
+    """View de teste para verificar funcionalidade de tamanhos na edição"""
+    return render(request, 'produtos/teste_tamanhos_edicao.html')

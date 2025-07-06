@@ -45,18 +45,6 @@
                         </select>
                     </div>
                     <div class="col-md-2">
-                        <label for="linha" class="form-label">Linha</label>
-                        <select class="form-select" id="linha" name="linha">
-                            <option value="">Todas</option>
-                            {% for linha in linhas %}
-                                <option value="{{ linha.id }}" 
-                                        {% if filtros.linha == linha.id|stringformat:"s" %}selected{% endif %}>
-                                    {{ linha.nome }}
-                                </option>
-                            {% endfor %}
-                        </select>
-                    </div>
-                    <div class="col-md-2">
                         <label for="ativo" class="form-label">Status</label>
                         <select class="form-select" id="ativo" name="ativo">
                             <option value="">Todos</option>
@@ -64,7 +52,7 @@
                             <option value="false" {% if filtros.ativo == 'false' %}selected{% endif %}>Inativo</option>
                         </select>
                     </div>
-                    <div class="col-md-3">
+                    <div class="col-md-4">
                         <label class="form-label">&nbsp;</label>
                         <div class="d-flex gap-2">
                             <button type="submit" class="btn btn-primary">
@@ -99,7 +87,7 @@
                                 <th>Referência</th>
                                 <th>Nome</th>
                                 <th>Tipo</th>
-                                <th>Linha</th>
+                                <th>Módulos</th>
                                 <th>Status</th>
                                 <th>Criado em</th>
                                 <th width="150">Ações</th>
@@ -115,7 +103,13 @@
                                 <td>
                                     <span class="badge bg-secondary">{{ produto.id_tipo_produto.nome }}</span>
                                 </td>
-                                <td>{{ produto.id_linha.nome }}</td>
+                                <td>
+                                    {% if produto.modulos.count > 0 %}
+                                        <span class="badge bg-info">{{ produto.modulos.count }} módulo{{ produto.modulos.count|pluralize }}</span>
+                                    {% else %}
+                                        <span class="text-muted">Sem módulos</span>
+                                    {% endif %}
+                                </td>
                                 <td>
                                     {% if produto.ativo %}
                                         <span class="badge bg-success">Ativo</span>
