@@ -1,0 +1,21 @@
+/home/matas/projetos/Project/.venv/lib/python3.12/site-packages/rest_framework_simplejwt/__init__.py:1: UserWarning: pkg_resources is deprecated as an API. See https://setuptools.pypa.io/en/latest/pkg_resources.html. The pkg_resources package is slated for removal as early as 2025-11-30. Refrain from using this package or pin to Setuptools<81.
+  from pkg_resources import DistributionNotFound, get_distribution
+Total de banquetas: 7
+
+--- BQ13 - CERES ---
+ID: 3
+Imagem Principal: 'produtos/banquetas/bq13_teste_K4Aw6iH.png'
+Imagem Secundária: ''
+URL Principal: /media/produtos/banquetas/bq13_teste_K4Aw6iH.png
+
+--- BQ249 - GIO ---
+ID: 1
+Imagem Principal: 'produtos/banquetas/bq249_teste.png'
+Imagem Secundária: ''
+URL Principal: /media/produtos/banquetas/bq249_teste.png
+
+--- BQ250 - IAN ---
+ID: 8
+Imagem Principal: 'produtos/banquetas/bq250_teste.png'
+Imagem Secundária: ''
+URL Principal: /media/produtos/banquetas/bq250_teste.png

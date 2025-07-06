@@ -14,6 +14,9 @@ urlpatterns = [
     path('produtos/<int:produto_id>/excluir/', views.produto_excluir_view, name='produto_excluir'),
     path('teste-tamanhos-edicao/', views.teste_tamanhos_edicao_view, name='teste_tamanhos_edicao'),
     
+    # Teste temporário para imagens de banquetas
+    path('banquetas/<int:banqueta_id>/teste-imagem/', views.banqueta_teste_imagem_view, name='banqueta_teste_imagem'),
+    
     # APIs
     path('api/produtos/', views.api_produtos_disponiveis, name='api_produtos_disponiveis'),
     

@@ -75,7 +75,9 @@
                                 <th>Imagem</th>
                                 <th>Referência</th>
                                 <th>Nome</th>
-                                <th>Dimensões (L×P×A)</th>
+                                <th>Largura</th>
+                                <th>Profund.</th>
+                                <th>Altura</th>
                                 <th>Tecido (m)</th>
                                 <th>m³</th>
                                 <th>Peso (kg)</th>
@@ -104,15 +106,19 @@
                                     <strong>{{ banqueta.ref_banqueta }}</strong>
                                 </td>
                                 <td>
-                                    <a href="{% url 'banqueta_detalhes' banqueta.id %}" 
+                                    <a href="{% url 'produto_detalhes' banqueta.id %}" 
                                        class="text-decoration-none">
                                         {{ banqueta.nome }}
                                     </a>
                                 </td>
-                                <td>
-                                    <small class="text-muted">
-                                        {{ banqueta.get_dimensoes_formatadas }}
-                                    </small>
+                                <td class="text-center">
+                                    <small class="text-muted">{{ banqueta.largura }} cm</small>
+                                </td>
+                                <td class="text-center">
+                                    <small class="text-muted">{{ banqueta.profundidade }} cm</small>
+                                </td>
+                                <td class="text-center">
+                                    <small class="text-muted">{{ banqueta.altura }} cm</small>
                                 </td>
                                 <td class="text-center">{{ banqueta.tecido_metros|floatformat:2 }}</td>
                                 <td class="text-center">{{ banqueta.volume_m3|floatformat:3 }}</td>
@@ -129,7 +135,7 @@
                                 </td>
                                 <td>
                                     <div class="btn-group btn-group-sm" role="group">
-                                        <a href="{% url 'banqueta_detalhes' banqueta.id %}" 
+                                        <a href="{% url 'produto_detalhes' banqueta.id %}" 
                                            class="btn btn-outline-primary" 
                                            title="Ver detalhes">
                                             <i class="bi bi-eye"></i>

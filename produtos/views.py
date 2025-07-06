@@ -3,7 +3,7 @@ from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from django.views.decorators.csrf import csrf_protect
 from django.db import transaction
-from django.http import JsonResponse
+from django.http import JsonResponse, Http404
 from rest_framework import viewsets, status
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated
@@ -401,7 +401,7 @@ def produto_editar_view(request, produto_id):
                     produto.save()
                     
                     messages.success(request, f'Banqueta "{banqueta.ref_banqueta} - {banqueta.nome}" atualizada com sucesso!')
-                    return redirect('banqueta_detalhes', banqueta_id=banqueta.id)
+                    return redirect('produto_detalhes', produto_id=banqueta.id)
                     
                 elif eh_acessorio:
                     # Atualizar como acessório
@@ -599,23 +599,40 @@ def produto_excluir_view(request, produto_id):
 
 @login_required
 def produto_detalhes_view(request, produto_id):
-    """View para visualização detalhada de um produto"""
-    produto = get_object_or_404(Item.objects.select_related('id_tipo_produto'), id=produto_id)
-    modulos = produto.modulos.prefetch_related('tamanhos_detalhados').all()
-    
-    # Buscar acessórios vinculados a este produto
-    acessorios_vinculados = Acessorio.objects.filter(produtos_vinculados=produto).order_by('ref_acessorio')
-    
-    # Verificar se é um produto do tipo acessório
-    eh_acessorio = produto.id_tipo_produto.nome.lower() == 'acessórios'
-    
-    context = {
-        'produto': produto,
-        'modulos': modulos,
-        'acessorios_vinculados': acessorios_vinculados,
-        'eh_acessorio': eh_acessorio,
-    }
-    return render(request, 'produtos/detalhes.html', context)
+    """View para visualização detalhada de um produto (inclui banquetas)"""
+    # Primeiro, tentar buscar na tabela Item
+    try:
+        produto = Item.objects.select_related('id_tipo_produto').get(id=produto_id)
+        modulos = produto.modulos.prefetch_related('tamanhos_detalhados').all()
+        
+        # Buscar acessórios vinculados a este produto
+        acessorios_vinculados = Acessorio.objects.filter(produtos_vinculados=produto).order_by('ref_acessorio')
+        
+        # Verificar se é um produto do tipo acessório
+        eh_acessorio = produto.id_tipo_produto.nome.lower() == 'acessórios'
+        
+        context = {
+            'produto': produto,
+            'modulos': modulos,
+            'acessorios_vinculados': acessorios_vinculados,
+            'eh_acessorio': eh_acessorio,
+            'eh_banqueta': False,
+        }
+        return render(request, 'produtos/detalhes.html', context)
+        
+    except Item.DoesNotExist:
+        # Se não encontrou na tabela Item, tentar buscar na tabela Banqueta
+        try:
+            banqueta = Banqueta.objects.get(id=produto_id)
+            context = {
+                'banqueta': banqueta,
+                'eh_banqueta': True,
+            }
+            return render(request, 'produtos/banquetas/detalhes.html', context)
+            
+        except Banqueta.DoesNotExist:
+            # Se não encontrou em nenhuma tabela, retornar 404
+            raise Http404("Produto não encontrado")
 
 def teste_view(request):
     """View de teste para diagnosticar problemas"""
@@ -872,6 +889,15 @@ def banqueta_detalhes_view(request, banqueta_id):
     }
     return render(request, 'produtos/banquetas/detalhes.html', context)
 
+def banqueta_teste_imagem_view(request, banqueta_id):
+    """View de teste para imagens de banquetas"""
+    banqueta = get_object_or_404(Banqueta, id=banqueta_id)
+    
+    context = {
+        'banqueta': banqueta,
+    }
+    return render(request, 'produtos/banquetas/teste_imagem.html', context)
+
 @login_required
 @csrf_protect
 def banqueta_editar_view(request, banqueta_id):
@@ -889,7 +915,7 @@ def banqueta_editar_view(request, banqueta_id):
                     banqueta.save()
                     
                     messages.success(request, f'Banqueta "{banqueta.ref_banqueta} - {banqueta.nome}" atualizada com sucesso!')
-                    return redirect('banqueta_detalhes', banqueta_id=banqueta.id)
+                    return redirect('produto_detalhes', produto_id=banqueta.id)
             except Exception as e:
                 logger.error(f"Erro ao editar banqueta: {str(e)}")
                 messages.error(request, f'Erro ao editar banqueta: {str(e)}')
@@ -918,7 +944,7 @@ def banqueta_excluir_view(request, banqueta_id):
         except Exception as e:
             logger.error(f"Erro ao excluir banqueta: {str(e)}")
             messages.error(request, f'Erro ao excluir banqueta: {str(e)}')
-            return redirect('banqueta_detalhes', banqueta_id=banqueta.id)
+            return redirect('produto_detalhes', produto_id=banqueta.id)
     
     context = {
         'banqueta': banqueta,

@@ -139,7 +139,7 @@
 
             <!-- Imagens -->
             <div class="form-section">
-                <h6><i class="bi bi-images"></i> Imagens</h6>
+                <h6><i class="bi bi-images"></i> Imagens do Produto</h6>
                 <div class="row">
                     <div class="col-md-6">
                         <div class="mb-3">
@@ -149,7 +149,6 @@
                             {{ form.imagem_principal }}
                             {% if acessorio and acessorio.imagem_principal %}
                                 <div class="mt-2">
-                                    <small class="text-muted">Imagem atual:</small><br>
                                     <img src="{{ acessorio.imagem_principal.url }}" 
                                          alt="Imagem Principal" 
                                          class="image-preview">
@@ -157,25 +156,6 @@
                             {% endif %}
                             {% if form.imagem_principal.errors %}
                                 <div class="text-danger small">{{ form.imagem_principal.errors }}</div>
-                            {% endif %}
-                        </div>
-                    </div>
-                    <div class="col-md-6">
-                        <div class="mb-3">
-                            <label for="{{ form.imagem_secundaria.id_for_label }}" class="form-label">
-                                <strong>{{ form.imagem_secundaria.label }}:</strong>
-                            </label>
-                            {{ form.imagem_secundaria }}
-                            {% if acessorio and acessorio.imagem_secundaria %}
-                                <div class="mt-2">
-                                    <small class="text-muted">Imagem atual:</small><br>
-                                    <img src="{{ acessorio.imagem_secundaria.url }}" 
-                                         alt="Imagem Adicional" 
-                                         class="image-preview">
-                                </div>
-                            {% endif %}
-                            {% if form.imagem_secundaria.errors %}
-                                <div class="text-danger small">{{ form.imagem_secundaria.errors }}</div>
                             {% endif %}
                         </div>
                     </div>

@@ -1,0 +1,46 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ banqueta.ref_banqueta }} - {{ banqueta.nome }} - Teste de Imagem{% endblock %}
+
+{% block content %}
+<div class="container">
+    <h1>{{ banqueta.ref_banqueta }} - {{ banqueta.nome }}</h1>
+    
+    <div class="row">
+        <div class="col-12">
+            <h3>Teste de Imagem</h3>
+            
+            <p><strong>Imagem Principal:</strong> {{ banqueta.imagem_principal }}</p>
+            <p><strong>URL:</strong> {{ banqueta.imagem_principal.url }}</p>
+            
+            {% if banqueta.imagem_principal %}
+                <div class="mb-3">
+                    <h4>Imagem Principal</h4>
+                    <img src="{{ banqueta.imagem_principal.url }}" 
+                         alt="Imagem Principal - {{ banqueta.nome }}" 
+                         class="img-fluid"
+                         style="max-width: 300px;">
+                </div>
+            {% else %}
+                <p>Nenhuma imagem principal encontrada.</p>
+            {% endif %}
+            
+            {% if banqueta.imagem_secundaria %}
+                <div class="mb-3">
+                    <h4>Imagem Secundária</h4>
+                    <img src="{{ banqueta.imagem_secundaria.url }}" 
+                         alt="Imagem Secundária - {{ banqueta.nome }}" 
+                         class="img-fluid"
+                         style="max-width: 300px;">
+                </div>
+            {% else %}
+                <p>Nenhuma imagem secundária encontrada.</p>
+            {% endif %}
+        </div>
+    </div>
+    
+    <div class="mt-3">
+        <a href="{% url 'produtos_lista' %}" class="btn btn-secondary">Voltar</a>
+    </div>
+</div>
+{% endblock %}

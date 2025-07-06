@@ -35,6 +35,35 @@
         margin-bottom: 0.75rem;
         font-weight: 500;
     }
+    .btn-add-image {
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border: 2px solid #0d6efd;
+        background: #fff;
+        color: #0d6efd;
+        transition: all 0.3s ease;
+        position: relative;
+    }
+    .btn-add-image:hover {
+        background: #0d6efd;
+        color: #fff;
+        transform: scale(1.1);
+    }
+    .btn-add-image .bi-camera-fill {
+        font-size: 14px;
+    }
+    .btn-add-image .bi-plus-circle-fill {
+        position: absolute;
+        top: -2px;
+        right: -2px;
+        background: #fff;
+        border-radius: 50%;
+        color: #28a745;
+    }
 </style>
 {% endblock %}
 
@@ -45,9 +74,16 @@
             <h1 class="h2 mb-0">
                 <i class="bi bi-chair"></i> {{ title }}
             </h1>
-            <a href="{% url 'produtos_lista' %}" class="btn btn-outline-secondary">
-                <i class="bi bi-arrow-left"></i> Voltar
-            </a>
+            <div>
+                {% if banqueta %}
+                    <a href="{% url 'banqueta_detalhes' banqueta.id %}" class="btn btn-outline-info">
+                        <i class="bi bi-eye"></i> Ver Detalhes
+                    </a>
+                {% endif %}
+                <a href="{% url 'produtos_lista' %}" class="btn btn-outline-secondary">
+                    <i class="bi bi-arrow-left"></i> Voltar
+                </a>
+            </div>
         </div>
     </div>
 </div>
@@ -227,40 +263,80 @@
                 </div>
             </div>
             
-            <!-- Imagens -->
-            <div class="form-section">
-                <h6><i class="bi bi-images"></i> Imagens</h6>
-                <div class="row">
-                    <div class="col-md-6">
-                        <div class="mb-3">
-                            <label for="{{ form.imagem_principal.id_for_label }}" class="form-label">
-                                <strong>{{ form.imagem_principal.label }}:</strong>
-                            </label>
-                            {{ form.imagem_principal }}
-                            {% if form.imagem_principal.errors %}
-                                <div class="text-danger small">{{ form.imagem_principal.errors }}</div>
-                            {% endif %}
-                            {% if banqueta and banqueta.imagem_principal %}
-                                <div class="mt-2">
-                                    <img src="{{ banqueta.imagem_principal.url }}" alt="Imagem atual" class="image-preview">
-                                </div>
-                            {% endif %}
+            <!-- Imagens do Produto -->
+            <div class="row mb-4">
+                <div class="col-12">
+                    <div class="card border-primary">
+                        <div class="card-header bg-primary text-white">
+                            <h5 class="mb-0">
+                                <i class="bi bi-images"></i> Imagens do Produto
+                            </h5>
                         </div>
-                    </div>
-                    <div class="col-md-6">
-                        <div class="mb-3">
-                            <label for="{{ form.imagem_secundaria.id_for_label }}" class="form-label">
-                                <strong>{{ form.imagem_secundaria.label }}:</strong>
-                            </label>
-                            {{ form.imagem_secundaria }}
-                            {% if form.imagem_secundaria.errors %}
-                                <div class="text-danger small">{{ form.imagem_secundaria.errors }}</div>
-                            {% endif %}
-                            {% if banqueta and banqueta.imagem_secundaria %}
-                                <div class="mt-2">
-                                    <img src="{{ banqueta.imagem_secundaria.url }}" alt="Imagem secundária atual" class="image-preview">
+                        <div class="card-body">
+                            <div class="row">
+                                <!-- Imagem Principal -->
+                                <div class="col-md-8">
+                                    <div class="mb-3">
+                                        <label for="{{ form.imagem_principal.id_for_label }}" class="form-label fw-bold">
+                                            <i class="bi bi-image"></i> Imagem Principal
+                                        </label>
+                                        {% if banqueta and banqueta.imagem_principal %}
+                                            <div class="mb-2">
+                                                <img src="{{ banqueta.imagem_principal.url }}" alt="Imagem Atual" 
+                                                     class="img-thumbnail border border-info" style="max-width: 200px; max-height: 200px;">
+                                                <div class="form-text text-info">Imagem atual</div>
+                                            </div>
+                                        {% endif %}
+                                        <input type="file" class="form-control form-control-lg" 
+                                               id="{{ form.imagem_principal.id_for_label }}" 
+                                               name="{{ form.imagem_principal.name }}" 
+                                               accept="image/*">
+                                        <div class="form-text">JPG, PNG, GIF (máx. 5MB)</div>
+                                        {% if form.imagem_principal.errors %}
+                                            <div class="text-danger small">{{ form.imagem_principal.errors }}</div>
+                                        {% endif %}
+                                    </div>
                                 </div>
-                            {% endif %}
+                                
+                                <!-- Segunda Imagem - Botão Compacto -->
+                                <div class="col-md-4">
+                                    <div class="mb-3">
+                                        {% if banqueta and banqueta.imagem_secundaria %}
+                                            <div class="mb-2">
+                                                <label class="form-label fw-bold">
+                                                    <i class="bi bi-image"></i> Segunda Imagem Atual
+                                                </label>
+                                                <div>
+                                                    <img src="{{ banqueta.imagem_secundaria.url }}" alt="Segunda Imagem Atual" 
+                                                         class="img-thumbnail border border-info" style="max-width: 150px; max-height: 150px;">
+                                                    <div class="form-text text-info">Segunda imagem atual</div>
+                                                </div>
+                                            </div>
+                                        {% endif %}
+                                        <div id="segunda_imagem_area" style="display: none;">
+                                            <label for="{{ form.imagem_secundaria.id_for_label }}" class="form-label fw-bold">
+                                                <i class="bi bi-image"></i> Segunda Imagem
+                                            </label>
+                                            <input type="file" class="form-control" 
+                                                   id="{{ form.imagem_secundaria.id_for_label }}" 
+                                                   name="{{ form.imagem_secundaria.name }}" 
+                                                   accept="image/*">
+                                            <div class="form-text">Formatos aceitos: JPG, PNG, GIF (máx. 5MB)</div>
+                                            {% if form.imagem_secundaria.errors %}
+                                                <div class="text-danger small">{{ form.imagem_secundaria.errors }}</div>
+                                            {% endif %}
+                                        </div>
+                                        <div class="text-end mt-3">
+                                            <button type="button" class="btn btn-outline-primary btn-sm btn-add-image" 
+                                                    id="btn_adicionar_segunda_imagem" 
+                                                    onclick="mostrarSegundaImagem()" 
+                                                    title="Adicionar outra imagem">
+                                                <i class="bi bi-camera-fill"></i><i class="bi bi-plus-circle-fill" style="font-size: 0.7em; margin-left: -3px;"></i>
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -292,4 +368,36 @@
         </form>
     </div>
 </div>
+
+{% block extra_js %}
+<script>
+function mostrarSegundaImagem() {
+    document.getElementById('segunda_imagem_area').style.display = 'block';
+    document.getElementById('btn_adicionar_segunda_imagem').style.display = 'none';
+}
+
+function previewImage(input, previewId) {
+    if (input.files && input.files[0]) {
+        var reader = new FileReader();
+        reader.onload = function(e) {
+            document.getElementById('img_' + previewId).src = e.target.result;
+            document.getElementById(previewId).style.display = 'block';
+        }
+        reader.readAsDataURL(input.files[0]);
+    }
+}
+
+function removeImage(previewId, inputId) {
+    document.getElementById(previewId).style.display = 'none';
+    document.getElementById('img_' + previewId).src = '';
+    document.getElementById(inputId).value = '';
+    
+    if (inputId === 'imagem_secundaria') {
+        document.getElementById('segunda_imagem_area').style.display = 'none';
+        document.getElementById('btn_adicionar_segunda_imagem').style.display = 'block';
+    }
+}
+</script>
+{% endblock %}
+
 {% endblock %}
