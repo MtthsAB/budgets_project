@@ -23,4 +23,11 @@ urlpatterns = [
     path('acessorios/<int:acessorio_id>/', views.acessorio_detalhes_view, name='acessorio_detalhes'),
     path('acessorios/<int:acessorio_id>/editar/', views.acessorio_editar_view, name='acessorio_editar'),
     path('acessorios/<int:acessorio_id>/excluir/', views.acessorio_excluir_view, name='acessorio_excluir'),
+    
+    # URLs para banquetas - COMENTADAS: agora integradas na listagem de produtos
+    # path('banquetas/', views.banquetas_list_view, name='banquetas_lista'),
+    path('banquetas/cadastro/', views.banqueta_cadastro_view, name='banqueta_cadastro'),
+    path('banquetas/<int:banqueta_id>/', views.banqueta_detalhes_view, name='banqueta_detalhes'),
+    path('banquetas/<int:banqueta_id>/editar/', views.banqueta_editar_view, name='banqueta_editar'),
+    path('banquetas/<int:banqueta_id>/excluir/', views.banqueta_excluir_view, name='banqueta_excluir'),
 ]

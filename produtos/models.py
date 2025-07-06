@@ -1,4 +1,5 @@
 from django.db import models
+from django.core.exceptions import ValidationError
 from sistema_produtos.base_models import BaseModel
 
 class TipoItem(BaseModel):
@@ -199,6 +200,12 @@ class Modulo(BaseModel):
         null=True,
         verbose_name="Imagem Principal"
     )
+    imagem_secundaria = models.ImageField(
+        upload_to='produtos/modulos/',
+        blank=True,
+        null=True,
+        verbose_name="Imagem Secundária"
+    )
     
     class Meta:
         verbose_name = "Módulo"
@@ -342,3 +349,117 @@ class PrecosBase(BaseModel):
     
     def __str__(self):
         return f"{self.id_item.ref_produto} - {self.id_faixa_tecido.nome} - R$ {self.preco_base}"
+
+class Banqueta(BaseModel):
+    """Modelo específico para Banquetas"""
+    ref_banqueta = models.CharField(
+        max_length=50, 
+        unique=True, 
+        verbose_name="Referência da Banqueta",
+        help_text="Ex: BQ13, BQ249, etc."
+    )
+    nome = models.CharField(
+        max_length=100, 
+        verbose_name="Nome da Banqueta",
+        help_text="Ex: CERES, GIO, etc."
+    )
+    
+    # Dimensões separadas como solicitado
+    largura = models.DecimalField(
+        max_digits=10, 
+        decimal_places=2, 
+        verbose_name="Largura (cm)",
+        help_text="Largura em centímetros"
+    )
+    profundidade = models.DecimalField(
+        max_digits=10, 
+        decimal_places=2, 
+        verbose_name="Profundidade (cm)",
+        help_text="Profundidade em centímetros"
+    )
+    altura = models.DecimalField(
+        max_digits=10, 
+        decimal_places=2, 
+        verbose_name="Altura (cm)",
+        help_text="Altura em centímetros"
+    )
+    
+    # Especificações técnicas
+    tecido_metros = models.DecimalField(
+        max_digits=10, 
+        decimal_places=2, 
+        verbose_name="Tecido (m)",
+        help_text="Quantidade de tecido necessária em metros"
+    )
+    volume_m3 = models.DecimalField(
+        max_digits=10, 
+        decimal_places=3, 
+        verbose_name="Volume (m³)",
+        help_text="Volume para cálculo de frete em metros cúbicos"
+    )
+    peso_kg = models.DecimalField(
+        max_digits=10, 
+        decimal_places=2, 
+        verbose_name="Peso (kg)",
+        help_text="Peso para cálculo de frete em quilogramas"
+    )
+    preco = models.DecimalField(
+        max_digits=10, 
+        decimal_places=2, 
+        verbose_name="Preço (R$)",
+        help_text="Preço em reais"
+    )
+    
+    # Status e imagens
+    ativo = models.BooleanField(default=True, verbose_name="Ativo")
+    imagem_principal = models.ImageField(
+        upload_to='produtos/banquetas/',
+        blank=True,
+        null=True,
+        verbose_name="Imagem Principal"
+    )
+    imagem_secundaria = models.ImageField(
+        upload_to='produtos/banquetas/',
+        blank=True,
+        null=True,
+        verbose_name="Imagem Secundária"
+    )
+    descricao = models.TextField(
+        blank=True, 
+        null=True, 
+        verbose_name="Descrição"
+    )
+    
+    class Meta:
+        verbose_name = "Banqueta"
+        verbose_name_plural = "Banquetas"
+        ordering = ['ref_banqueta']
+    
+    def __str__(self):
+        return f"{self.ref_banqueta} - {self.nome}"
+    
+    def get_dimensoes_formatadas(self):
+        """Retorna as dimensões formatadas como L x P x A"""
+        return f"{self.largura} x {self.profundidade} x {self.altura}"
+    
+    def clean(self):
+        """Validações customizadas do modelo"""
+        super().clean()
+        
+        # Validar se as dimensões são positivas
+        if self.largura and self.largura <= 0:
+            raise ValidationError("A largura deve ser maior que zero.")
+        if self.profundidade and self.profundidade <= 0:
+            raise ValidationError("A profundidade deve ser maior que zero.")
+        if self.altura and self.altura <= 0:
+            raise ValidationError("A altura deve ser maior que zero.")
+        
+        # Validar valores monetários e quantidades
+        if self.tecido_metros and self.tecido_metros <= 0:
+            raise ValidationError("A quantidade de tecido deve ser maior que zero.")
+        if self.volume_m3 and self.volume_m3 <= 0:
+            raise ValidationError("O volume deve ser maior que zero.")
+        if self.peso_kg and self.peso_kg <= 0:
+            raise ValidationError("O peso deve ser maior que zero.")
+        if self.preco and self.preco <= 0:
+            raise ValidationError("O preço deve ser maior que zero.")

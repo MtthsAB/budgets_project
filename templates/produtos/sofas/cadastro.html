@@ -171,7 +171,95 @@
                         <div class="col-md-9">
                             <div class="alert alert-info mb-0">
                                 <i class="bi bi-info-circle"></i> 
-                                Campos específicos para este tipo de produto (Almofadas, Banquetas, Cadeiras, Poltronas, Pufes) serão implementados em breve.
+                                Campos específicos para este tipo de produto (Almofadas, Cadeiras, Poltronas, Pufes) serão implementados em breve.
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Campos específicos para Banquetas -->
+                    <div class="row" id="campos-banqueta" style="display: none;">
+                        <div class="col-md-3">
+                            <div class="form-check form-switch mb-3">
+                                <input class="form-check-input" type="checkbox" id="ativo_banqueta" name="ativo_banqueta" checked>
+                                <label class="form-check-label" for="ativo_banqueta">
+                                    Banqueta Ativa
+                                </label>
+                            </div>
+                        </div>
+                        <div class="col-md-9">
+                            <p class="text-muted mb-3">
+                                <i class="bi bi-info-circle"></i> 
+                                Preencha as especificações técnicas da banqueta.
+                            </p>
+                        </div>
+                    </div>
+                    
+                    <!-- Dimensões da Banqueta -->
+                    <div id="dimensoes-banqueta" style="display: none;">
+                        <div class="row">
+                            <div class="col-md-4">
+                                <div class="form-floating mb-3">
+                                    <input type="number" step="0.01" class="form-control" id="largura_banqueta" 
+                                           name="largura_banqueta" placeholder="0.00" min="0.01">
+                                    <label for="largura_banqueta">Largura (cm) *</label>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="form-floating mb-3">
+                                    <input type="number" step="0.01" class="form-control" id="profundidade_banqueta" 
+                                           name="profundidade_banqueta" placeholder="0.00" min="0.01">
+                                    <label for="profundidade_banqueta">Profundidade (cm) *</label>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="form-floating mb-3">
+                                    <input type="number" step="0.01" class="form-control" id="altura_banqueta" 
+                                           name="altura_banqueta" placeholder="0.00" min="0.01">
+                                    <label for="altura_banqueta">Altura (cm) *</label>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Especificações Técnicas -->
+                        <div class="row">
+                            <div class="col-md-3">
+                                <div class="form-floating mb-3">
+                                    <input type="number" step="0.01" class="form-control" id="tecido_metros_banqueta" 
+                                           name="tecido_metros_banqueta" placeholder="0.00" min="0.01">
+                                    <label for="tecido_metros_banqueta">Tecido (m) *</label>
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="form-floating mb-3">
+                                    <input type="number" step="0.001" class="form-control" id="volume_m3_banqueta" 
+                                           name="volume_m3_banqueta" placeholder="0.000" min="0.001">
+                                    <label for="volume_m3_banqueta">Volume (m³) *</label>
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="form-floating mb-3">
+                                    <input type="number" step="0.01" class="form-control" id="peso_kg_banqueta" 
+                                           name="peso_kg_banqueta" placeholder="0.00" min="0.01">
+                                    <label for="peso_kg_banqueta">Peso (kg) *</label>
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="form-floating mb-3">
+                                    <input type="number" step="0.01" class="form-control" id="preco_banqueta" 
+                                           name="preco_banqueta" placeholder="0.00" min="0.01">
+                                    <label for="preco_banqueta">Preço (R$) *</label>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Descrição -->
+                        <div class="row">
+                            <div class="col-12">
+                                <div class="form-floating mb-3">
+                                    <textarea class="form-control" id="descricao_banqueta" name="descricao_banqueta" 
+                                             placeholder="Descrição da banqueta" style="height: 80px;"></textarea>
+                                    <label for="descricao_banqueta">Descrição (opcional)</label>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -384,6 +472,8 @@ function toggleCamposPorTipo() {
     const camposSofa = document.getElementById('campos-sofa');
     const camposAcessorio = document.getElementById('campos-acessorio');
     const camposOutros = document.getElementById('campos-outros');
+    const camposBanqueta = document.getElementById('campos-banqueta');
+    const dimensoesBanqueta = document.getElementById('dimensoes-banqueta');
     const secaoModulos = document.getElementById('secao-modulos');
     const vinculacaoProdutos = document.getElementById('vinculacao-produtos');
     
@@ -391,6 +481,8 @@ function toggleCamposPorTipo() {
     camposSofa.style.display = 'none';
     camposAcessorio.style.display = 'none';
     camposOutros.style.display = 'none';
+    camposBanqueta.style.display = 'none';
+    dimensoesBanqueta.style.display = 'none';
     secaoModulos.style.display = 'none';
     vinculacaoProdutos.style.display = 'none';
     
@@ -405,8 +497,11 @@ function toggleCamposPorTipo() {
     } else if (tipoNome === 'Acessórios') {
         camposAcessorio.style.display = 'flex';
         vinculacaoProdutos.style.display = 'block';
+    } else if (tipoNome === 'Banquetas') {
+        camposBanqueta.style.display = 'flex';
+        dimensoesBanqueta.style.display = 'block';
     } else {
-        // Para outros tipos (Almofadas, Banquetas, Cadeiras, Poltronas, Pufes), mostrar apenas campos básicos
+        // Para outros tipos (Almofadas, Cadeiras, Poltronas, Pufes), mostrar apenas campos básicos
         camposOutros.style.display = 'flex';
     }
 }

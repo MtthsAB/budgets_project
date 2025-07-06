@@ -145,8 +145,28 @@
                                 <td>{{ produto.created_at|date:"d/m/Y H:i" }}</td>
                             </tr>
                             <tr>
+                                <td><strong>Criado por:</strong></td>
+                                <td>
+                                    {% if produto.created_by %}
+                                        <span class="badge bg-primary">{{ produto.created_by.get_full_name|default:produto.created_by.email }}</span>
+                                    {% else %}
+                                        <span class="badge bg-secondary">Sistema</span>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            <tr>
                                 <td><strong>Atualizado em:</strong></td>
                                 <td>{{ produto.updated_at|date:"d/m/Y H:i" }}</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Atualizado por:</strong></td>
+                                <td>
+                                    {% if produto.updated_by %}
+                                        <span class="badge bg-info">{{ produto.updated_by.get_full_name|default:produto.updated_by.email }}</span>
+                                    {% else %}
+                                        <span class="badge bg-secondary">Sistema</span>
+                                    {% endif %}
+                                </td>
                             </tr>
                         </table>
                     </div>

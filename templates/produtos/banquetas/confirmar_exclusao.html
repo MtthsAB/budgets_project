@@ -1,0 +1,79 @@
+{% extends 'base.html' %}
+
+{% block title %}Excluir Banqueta - Sistema de Produtos{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="d-flex justify-content-between align-items-center">
+            <h1 class="h2 mb-0">
+                <i class="bi bi-exclamation-triangle text-danger"></i> Excluir Banqueta
+            </h1>
+            <a href="{% url 'banqueta_detalhes' banqueta.id %}" class="btn btn-outline-secondary">
+                <i class="bi bi-arrow-left"></i> Voltar
+            </a>
+        </div>
+    </div>
+</div>
+
+<div class="row justify-content-center">
+    <div class="col-md-8">
+        <div class="card border-danger">
+            <div class="card-header bg-danger text-white">
+                <h5 class="mb-0">
+                    <i class="bi bi-exclamation-triangle"></i> Confirmar Exclusão
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="alert alert-warning" role="alert">
+                    <i class="bi bi-exclamation-triangle"></i>
+                    <strong>Atenção!</strong> Esta ação não pode ser desfeita.
+                </div>
+                
+                <p class="mb-4">Tem certeza que deseja excluir a banqueta abaixo?</p>
+                
+                <!-- Dados da Banqueta -->
+                <div class="border rounded p-3 mb-4 bg-light">
+                    <div class="row">
+                        {% if banqueta.imagem_principal %}
+                        <div class="col-md-3">
+                            <img src="{{ banqueta.imagem_principal.url }}" 
+                                 alt="{{ banqueta.nome }}" 
+                                 class="img-fluid rounded">
+                        </div>
+                        <div class="col-md-9">
+                        {% else %}
+                        <div class="col-12">
+                        {% endif %}
+                            <h6><strong>{{ banqueta.ref_banqueta }} - {{ banqueta.nome }}</strong></h6>
+                            <div class="row">
+                                <div class="col-sm-6">
+                                    <p class="mb-1"><strong>Dimensões:</strong> {{ banqueta.get_dimensoes_formatadas }} cm</p>
+                                    <p class="mb-1"><strong>Tecido:</strong> {{ banqueta.tecido_metros|floatformat:2 }} m</p>
+                                </div>
+                                <div class="col-sm-6">
+                                    <p class="mb-1"><strong>Volume:</strong> {{ banqueta.volume_m3|floatformat:3 }} m³</p>
+                                    <p class="mb-1"><strong>Peso:</strong> {{ banqueta.peso_kg|floatformat:1 }} kg</p>
+                                </div>
+                            </div>
+                            <p class="mb-0"><strong>Preço:</strong> R$ {{ banqueta.preco|floatformat:2 }}</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <form method="post">
+                    {% csrf_token %}
+                    <div class="d-flex justify-content-end gap-2">
+                        <a href="{% url 'banqueta_detalhes' banqueta.id %}" class="btn btn-outline-secondary">
+                            <i class="bi bi-x-circle"></i> Cancelar
+                        </a>
+                        <button type="submit" class="btn btn-danger">
+                            <i class="bi bi-trash"></i> Sim, excluir banqueta
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

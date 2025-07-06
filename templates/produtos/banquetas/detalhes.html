@@ -1,0 +1,245 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ banqueta.ref_banqueta }} - {{ banqueta.nome }} - Sistema de Produtos{% endblock %}
+
+{% block extra_css %}
+<style>
+    .detail-section {
+        background: #fff;
+        border: 1px solid #dee2e6;
+        border-radius: 8px;
+        padding: 1.5rem;
+        margin-bottom: 1.5rem;
+        box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+    }
+    .detail-section h6 {
+        color: #495057;
+        margin-bottom: 1rem;
+        font-weight: 600;
+        border-bottom: 2px solid #007bff;
+        padding-bottom: 0.5rem;
+    }
+    .detail-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 1rem;
+    }
+    .detail-item {
+        background: #f8f9fa;
+        padding: 1rem;
+        border-radius: 6px;
+        border-left: 3px solid #007bff;
+    }
+    .detail-label {
+        font-weight: 600;
+        color: #495057;
+        margin-bottom: 0.25rem;
+        font-size: 0.875rem;
+    }
+    .detail-value {
+        color: #212529;
+        font-size: 1rem;
+    }
+    .image-gallery {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+        gap: 1rem;
+    }
+    .image-item {
+        text-align: center;
+    }
+    .image-item img {
+        max-width: 100%;
+        height: auto;
+        border-radius: 8px;
+        border: 2px solid #dee2e6;
+        max-height: 300px;
+        object-fit: contain;
+    }
+    .no-image {
+        background: #f8f9fa;
+        border: 2px dashed #dee2e6;
+        border-radius: 8px;
+        padding: 2rem;
+        text-align: center;
+        color: #6c757d;
+        height: 200px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-direction: column;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="d-flex justify-content-between align-items-center">
+            <h1 class="h2 mb-0">
+                <i class="bi bi-chair"></i> {{ banqueta.ref_banqueta }} - {{ banqueta.nome }}
+                {% if banqueta.ativo %}
+                    <span class="badge bg-success ms-2">Ativo</span>
+                {% else %}
+                    <span class="badge bg-secondary ms-2">Inativo</span>
+                {% endif %}
+            </h1>
+            <div class="btn-group" role="group">
+                <a href="{% url 'produtos_lista' %}" class="btn btn-outline-secondary">
+                    <i class="bi bi-arrow-left"></i> Voltar
+                </a>
+                <a href="{% url 'banqueta_editar' banqueta.id %}" class="btn btn-warning">
+                    <i class="bi bi-pencil"></i> Editar
+                </a>
+                <a href="{% url 'banqueta_excluir' banqueta.id %}" class="btn btn-danger">
+                    <i class="bi bi-trash"></i> Excluir
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Informações Básicas -->
+<div class="detail-section">
+    <h6><i class="bi bi-info-circle"></i> Informações Básicas</h6>
+    <div class="detail-grid">
+        <div class="detail-item">
+            <div class="detail-label">Referência</div>
+            <div class="detail-value"><strong>{{ banqueta.ref_banqueta }}</strong></div>
+        </div>
+        <div class="detail-item">
+            <div class="detail-label">Nome</div>
+            <div class="detail-value">{{ banqueta.nome }}</div>
+        </div>
+        <div class="detail-item">
+            <div class="detail-label">Status</div>
+            <div class="detail-value">
+                {% if banqueta.ativo %}
+                    <span class="badge bg-success">Ativo</span>
+                {% else %}
+                    <span class="badge bg-secondary">Inativo</span>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Dimensões -->
+<div class="detail-section">
+    <h6><i class="bi bi-rulers"></i> Dimensões</h6>
+    <div class="detail-grid">
+        <div class="detail-item">
+            <div class="detail-label">Largura</div>
+            <div class="detail-value">{{ banqueta.largura|floatformat:2 }} cm</div>
+        </div>
+        <div class="detail-item">
+            <div class="detail-label">Profundidade</div>
+            <div class="detail-value">{{ banqueta.profundidade|floatformat:2 }} cm</div>
+        </div>
+        <div class="detail-item">
+            <div class="detail-label">Altura</div>
+            <div class="detail-value">{{ banqueta.altura|floatformat:2 }} cm</div>
+        </div>
+        <div class="detail-item">
+            <div class="detail-label">Dimensões (L × P × A)</div>
+            <div class="detail-value"><strong>{{ banqueta.get_dimensoes_formatadas }} cm</strong></div>
+        </div>
+    </div>
+</div>
+
+<!-- Especificações Técnicas -->
+<div class="detail-section">
+    <h6><i class="bi bi-gear"></i> Especificações Técnicas</h6>
+    <div class="detail-grid">
+        <div class="detail-item">
+            <div class="detail-label">Tecido</div>
+            <div class="detail-value">{{ banqueta.tecido_metros|floatformat:2 }} m</div>
+        </div>
+        <div class="detail-item">
+            <div class="detail-label">Volume</div>
+            <div class="detail-value">{{ banqueta.volume_m3|floatformat:3 }} m³</div>
+        </div>
+        <div class="detail-item">
+            <div class="detail-label">Peso</div>
+            <div class="detail-value">{{ banqueta.peso_kg|floatformat:1 }} kg</div>
+        </div>
+        <div class="detail-item">
+            <div class="detail-label">Preço</div>
+            <div class="detail-value"><strong>R$ {{ banqueta.preco|floatformat:2 }}</strong></div>
+        </div>
+    </div>
+</div>
+
+<!-- Imagens -->
+<div class="detail-section">
+    <h6><i class="bi bi-images"></i> Imagens</h6>
+    <div class="image-gallery">
+        {% if banqueta.imagem_principal %}
+            <div class="image-item">
+                <h6 class="text-muted mb-2">Imagem Principal</h6>
+                <img src="{{ banqueta.imagem_principal.url }}" alt="{{ banqueta.nome }} - Principal">
+            </div>
+        {% else %}
+            <div class="image-item">
+                <h6 class="text-muted mb-2">Imagem Principal</h6>
+                <div class="no-image">
+                    <i class="bi bi-image" style="font-size: 3rem;"></i>
+                    <p class="mb-0 mt-2">Nenhuma imagem principal</p>
+                </div>
+            </div>
+        {% endif %}
+        
+        {% if banqueta.imagem_secundaria %}
+            <div class="image-item">
+                <h6 class="text-muted mb-2">Imagem Secundária</h6>
+                <img src="{{ banqueta.imagem_secundaria.url }}" alt="{{ banqueta.nome }} - Secundária">
+            </div>
+        {% else %}
+            <div class="image-item">
+                <h6 class="text-muted mb-2">Imagem Secundária</h6>
+                <div class="no-image">
+                    <i class="bi bi-image" style="font-size: 3rem;"></i>
+                    <p class="mb-0 mt-2">Nenhuma imagem secundária</p>
+                </div>
+            </div>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Descrição -->
+{% if banqueta.descricao %}
+<div class="detail-section">
+    <h6><i class="bi bi-text-paragraph"></i> Descrição</h6>
+    <div class="bg-light p-3 rounded">
+        {{ banqueta.descricao|linebreaks }}
+    </div>
+</div>
+{% endif %}
+
+<!-- Informações do Sistema -->
+<div class="detail-section">
+    <h6><i class="bi bi-clock-history"></i> Informações do Sistema</h6>
+    <div class="detail-grid">
+        <div class="detail-item">
+            <div class="detail-label">Criado em</div>
+            <div class="detail-value">{{ banqueta.created_at|date:"d/m/Y H:i" }}</div>
+        </div>
+        <div class="detail-item">
+            <div class="detail-label">Atualizado em</div>
+            <div class="detail-value">{{ banqueta.updated_at|date:"d/m/Y H:i" }}</div>
+        </div>
+        {% if banqueta.created_by %}
+        <div class="detail-item">
+            <div class="detail-label">Criado por</div>
+            <div class="detail-value">{{ banqueta.created_by.get_full_name|default:banqueta.created_by.username }}</div>
+        </div>
+        {% endif %}
+        {% if banqueta.updated_by %}
+        <div class="detail-item">
+            <div class="detail-label">Atualizado por</div>
+            <div class="detail-value">{{ banqueta.updated_by.get_full_name|default:banqueta.updated_by.username }}</div>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

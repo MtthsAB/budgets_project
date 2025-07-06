@@ -1,8 +1,9 @@
 from django.db import models
 from django.core.validators import RegexValidator
+from sistema_produtos.base_models import BaseModel
 
 
-class Cliente(models.Model):
+class Cliente(BaseModel):
     # Dados da empresa
     nome_empresa = models.CharField(
         max_length=200,
@@ -115,16 +116,6 @@ class Cliente(models.Model):
         null=True,
         verbose_name="Conta Corrente",
         help_text="Número da conta corrente"
-    )
-    
-    # Timestamps automáticos
-    created_at = models.DateTimeField(
-        auto_now_add=True,
-        verbose_name="Criado em"
-    )
-    updated_at = models.DateTimeField(
-        auto_now=True,
-        verbose_name="Atualizado em"
     )
     
     class Meta:

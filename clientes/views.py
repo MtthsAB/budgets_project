@@ -3,6 +3,7 @@ from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from django.core.paginator import Paginator
 from django.db.models import Q
+from sistema_produtos.mixins import track_user_changes
 from .models import Cliente
 from .forms import ClienteForm
 
@@ -40,7 +41,10 @@ def cliente_cadastro(request):
     if request.method == 'POST':
         form = ClienteForm(request.POST)
         if form.is_valid():
-            cliente = form.save()
+            cliente = form.save(commit=False)
+            # Rastrear usuário
+            track_user_changes(cliente, request.user)
+            cliente.save()
             messages.success(request, f'Cliente {cliente.nome_empresa} cadastrado com sucesso!')
             return redirect('cliente_detalhes', pk=cliente.pk)
     else:
@@ -71,7 +75,10 @@ def cliente_editar(request, pk):
     if request.method == 'POST':
         form = ClienteForm(request.POST, instance=cliente)
         if form.is_valid():
-            cliente = form.save()
+            cliente = form.save(commit=False)
+            # Rastrear usuário na edição
+            track_user_changes(cliente, request.user)
+            cliente.save()
             messages.success(request, f'Cliente {cliente.nome_empresa} atualizado com sucesso!')
             return redirect('cliente_detalhes', pk=cliente.pk)
     else:

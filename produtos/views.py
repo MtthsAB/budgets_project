@@ -9,11 +9,13 @@ from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 import logging
+from sistema_produtos.mixins import track_user_changes
 from .models import (
     Item, TipoItem, Linha, Modulo, Acessorio, 
-    TamanhosModulos, TamanhosModulosDetalhado, FaixaTecido, PrecosBase
+    TamanhosModulos, TamanhosModulosDetalhado, FaixaTecido, PrecosBase,
+    Banqueta
 )
-from .forms import AcessorioForm
+from .forms import AcessorioForm, BanquetaForm
 
 logger = logging.getLogger(__name__)
 
@@ -30,8 +32,12 @@ def home_view(request):
 
 @login_required
 def produtos_list_view(request):
-    """View para listagem de produtos"""
+    """View para listagem de produtos unificada (inclui banquetas)"""
+    # Buscar produtos da tabela Item
     produtos = Item.objects.select_related('id_tipo_produto').prefetch_related('modulos').all()
+    
+    # Buscar banquetas da tabela Banqueta
+    banquetas = Banqueta.objects.filter(ativo=True).all()
     
     # Filtros
     tipo_filtro = request.GET.get('tipo')
@@ -39,10 +45,18 @@ def produtos_list_view(request):
     busca = request.GET.get('busca')
     
     if tipo_filtro:
+        # Filtrar produtos por tipo
         produtos = produtos.filter(id_tipo_produto__id=tipo_filtro)
+        
+        # Se o filtro for por "Banquetas" (id=4), mostrar apenas banquetas
+        if tipo_filtro == '4':
+            produtos = Item.objects.none()  # Não mostrar produtos da tabela Item
+        else:
+            banquetas = Banqueta.objects.none()  # Não mostrar banquetas se filtro não for banquetas
     
     if ativo_filtro:
         produtos = produtos.filter(ativo=ativo_filtro == 'true')
+        banquetas = banquetas.filter(ativo=ativo_filtro == 'true')
     
     if busca:
         produtos = produtos.filter(
@@ -50,9 +64,16 @@ def produtos_list_view(request):
         ) | produtos.filter(
             ref_produto__icontains=busca
         )
+        banquetas = banquetas.filter(
+            nome__icontains=busca
+        ) | banquetas.filter(
+            ref_banqueta__icontains=busca
+        )
     
     context = {
         'produtos': produtos,
+        'banquetas': banquetas,
+        'total_itens': produtos.count() + banquetas.count(),
         'tipos': TipoItem.objects.all(),
         'filtros': {
             'tipo': tipo_filtro,
@@ -87,8 +108,49 @@ def produto_cadastro_view(request):
                 # Verificar tipo de produto
                 tipo_produto = get_object_or_404(TipoItem, id=tipo_produto_id)
                 eh_acessorio = tipo_produto.nome.lower() == 'acessórios'
+                eh_banqueta = tipo_produto.nome.lower() == 'banquetas'
                 
-                if eh_acessorio:
+                if eh_banqueta:
+                    # Processar como banqueta usando o modelo específico
+                    largura = request.POST.get('largura_banqueta')
+                    profundidade = request.POST.get('profundidade_banqueta')
+                    altura = request.POST.get('altura_banqueta')
+                    tecido_metros = request.POST.get('tecido_metros_banqueta')
+                    volume_m3 = request.POST.get('volume_m3_banqueta')
+                    peso_kg = request.POST.get('peso_kg_banqueta')
+                    preco = request.POST.get('preco_banqueta')
+                    ativo = request.POST.get('ativo_banqueta') == 'on'
+                    descricao = request.POST.get('descricao_banqueta')
+                    
+                    # Validar campos obrigatórios para banquetas
+                    if not all([largura, profundidade, altura, tecido_metros, volume_m3, peso_kg, preco]):
+                        messages.error(request, 'Por favor, preencha todos os campos obrigatórios para banquetas.')
+                        raise ValueError('Campos obrigatórios da banqueta não preenchidos')
+                    
+                    # Criar banqueta
+                    banqueta = Banqueta(
+                        ref_banqueta=ref_produto,
+                        nome=nome_produto,
+                        largura=float(largura),
+                        profundidade=float(profundidade),
+                        altura=float(altura),
+                        tecido_metros=float(tecido_metros),
+                        volume_m3=float(volume_m3),
+                        peso_kg=float(peso_kg),
+                        preco=float(preco),
+                        ativo=ativo,
+                        imagem_principal=request.FILES.get('imagem_principal'),
+                        imagem_secundaria=request.FILES.get('imagem_secundaria'),
+                        descricao=descricao if descricao else None
+                    )
+                    # Rastrear usuário
+                    track_user_changes(banqueta, request.user)
+                    banqueta.save()
+                    
+                    messages.success(request, f'Banqueta "{banqueta.ref_banqueta} - {banqueta.nome}" cadastrada com sucesso!')
+                    return redirect('banquetas_lista')
+                    
+                elif eh_acessorio:
                     # Processar como acessório usando o modelo Item unificado
                     ativo = request.POST.get('ativo_acessorio') == 'on'
                     preco = request.POST.get('preco_acessorio')
@@ -96,7 +158,7 @@ def produto_cadastro_view(request):
                     produtos_vinculados = request.POST.getlist('produtos_vinculados')
                     
                     # Criar produto/acessório
-                    produto = Item.objects.create(
+                    produto = Item(
                         ref_produto=ref_produto,
                         nome_produto=nome_produto,
                         id_tipo_produto_id=tipo_produto_id,
@@ -110,6 +172,9 @@ def produto_cadastro_view(request):
                         tem_difer_desenho_lado_dir_esq=False,
                         tem_difer_desenho_tamanho=False
                     )
+                    # Rastrear usuário
+                    track_user_changes(produto, request.user)
+                    produto.save()
                     
                     # Vincular produtos se selecionados
                     if produtos_vinculados:
@@ -132,7 +197,7 @@ def produto_cadastro_view(request):
                     tem_difer_desenho_tamanho = request.POST.get('tem_difer_desenho_tamanho') == 'on'
                     
                     # Criar o produto
-                    produto = Item.objects.create(
+                    produto = Item(
                         ref_produto=ref_produto,
                         nome_produto=nome_produto,
                         id_tipo_produto_id=tipo_produto_id,
@@ -146,6 +211,9 @@ def produto_cadastro_view(request):
                         preco_acessorio=None,
                         descricao_acessorio=None
                     )
+                    # Rastrear usuário
+                    track_user_changes(produto, request.user)
+                    produto.save()
                 
                 # Processar módulos (apenas para não-acessórios)
                 modulos_nomes = request.POST.getlist('modulo_nome')
@@ -161,7 +229,7 @@ def produto_cadastro_view(request):
                         
                         logger.info(f"Criando módulo {i+1}: {nome_modulo}")
                         
-                        modulo = Modulo.objects.create(
+                        modulo = Modulo(
                             item=produto,
                             nome=nome_modulo,
                             profundidade=float(profundidade) if profundidade else None,
@@ -170,6 +238,9 @@ def produto_cadastro_view(request):
                             descricao=descricao if descricao else None,
                             imagem_principal=request.FILES.get(f'modulo_imagem_principal_{i+1}')
                         )
+                        # Rastrear usuário
+                        track_user_changes(modulo, request.user)
+                        modulo.save()
                         
                         # Processar tamanhos deste módulo
                         modulo_id = i + 1
@@ -199,7 +270,7 @@ def produto_cadastro_view(request):
                                         except (ValueError, TypeError):
                                             return None
                                     
-                                    TamanhosModulosDetalhado.objects.create(
+                                    tamanho_detalhado = TamanhosModulosDetalhado(
                                         id_modulo=modulo,
                                         largura_total=safe_float(tamanhos_largura_total[j] if j < len(tamanhos_largura_total) else None),
                                         largura_assento=safe_float(tamanhos_largura_assento[j] if j < len(tamanhos_largura_assento) else None),
@@ -209,6 +280,9 @@ def produto_cadastro_view(request):
                                         preco=safe_float(tamanhos_preco[j] if j < len(tamanhos_preco) else None),
                                         descricao=tamanhos_descricao[j] if j < len(tamanhos_descricao) and tamanhos_descricao[j] else None
                                     )
+                                    # Rastrear usuário
+                                    track_user_changes(tamanho_detalhado, request.user)
+                                    tamanho_detalhado.save()
                 
                 messages.success(request, f'Produto "{produto.nome_produto}" cadastrado com sucesso!')
                 return redirect('produtos_lista')
@@ -224,7 +298,7 @@ def produto_cadastro_view(request):
         'tipos': TipoItem.objects.all(),
         'produtos_disponiveis': Item.objects.filter(ativo=True).order_by('ref_produto'),
     }
-    return render(request, 'produtos/cadastro.html', context)
+    return render(request, 'produtos/sofas/cadastro.html', context)
 
 @login_required
 def produto_editar_view(request, produto_id):
@@ -241,13 +315,95 @@ def produto_editar_view(request, produto_id):
                 tipo_produto_id = request.POST.get('tipo_produto')
                 tipo_produto = get_object_or_404(TipoItem, id=tipo_produto_id)
                 eh_acessorio = tipo_produto.nome.lower() == 'acessórios'
+                eh_banqueta = tipo_produto.nome.lower() == 'banquetas'
                 
                 # Atualizar dados básicos
                 produto.ref_produto = request.POST.get('ref_produto')
                 produto.nome_produto = request.POST.get('nome_produto')
                 produto.id_tipo_produto_id = request.POST.get('tipo_produto')
                 
-                if eh_acessorio:
+                if eh_banqueta:
+                    # Se o produto foi convertido para banqueta, criar nova entrada na tabela Banqueta
+                    # e manter a entrada em Item apenas para histórico/compatibilidade
+                    largura = request.POST.get('largura_banqueta')
+                    profundidade = request.POST.get('profundidade_banqueta')
+                    altura = request.POST.get('altura_banqueta')
+                    tecido_metros = request.POST.get('tecido_metros_banqueta')
+                    volume_m3 = request.POST.get('volume_m3_banqueta')
+                    peso_kg = request.POST.get('peso_kg_banqueta')
+                    preco = request.POST.get('preco_banqueta')
+                    ativo = request.POST.get('ativo_banqueta') == 'on'
+                    descricao = request.POST.get('descricao_banqueta')
+                    
+                    # Validar campos obrigatórios para banquetas
+                    if not all([largura, profundidade, altura, tecido_metros, volume_m3, peso_kg, preco]):
+                        messages.error(request, 'Por favor, preencha todos os campos obrigatórios para banquetas.')
+                        raise ValueError('Campos obrigatórios da banqueta não preenchidos')
+                    
+                    # Verificar se já existe uma banqueta com esta referência
+                    banqueta_existente = Banqueta.objects.filter(ref_banqueta=produto.ref_produto).first()
+                    
+                    if banqueta_existente:
+                        # Atualizar banqueta existente
+                        banqueta_existente.nome = produto.nome_produto
+                        banqueta_existente.largura = float(largura)
+                        banqueta_existente.profundidade = float(profundidade)
+                        banqueta_existente.altura = float(altura)
+                        banqueta_existente.tecido_metros = float(tecido_metros)
+                        banqueta_existente.volume_m3 = float(volume_m3)
+                        banqueta_existente.peso_kg = float(peso_kg)
+                        banqueta_existente.preco = float(preco)
+                        banqueta_existente.ativo = ativo
+                        banqueta_existente.descricao = descricao if descricao else None
+                        
+                        # Atualizar imagens se fornecidas
+                        if 'imagem_principal' in request.FILES:
+                            banqueta_existente.imagem_principal = request.FILES['imagem_principal']
+                        if 'imagem_secundaria' in request.FILES:
+                            banqueta_existente.imagem_secundaria = request.FILES['imagem_secundaria']
+                        
+                        track_user_changes(banqueta_existente, request.user)
+                        banqueta_existente.save()
+                        banqueta = banqueta_existente
+                    else:
+                        # Criar nova banqueta
+                        banqueta = Banqueta(
+                            ref_banqueta=produto.ref_produto,
+                            nome=produto.nome_produto,
+                            largura=float(largura),
+                            profundidade=float(profundidade),
+                            altura=float(altura),
+                            tecido_metros=float(tecido_metros),
+                            volume_m3=float(volume_m3),
+                            peso_kg=float(peso_kg),
+                            preco=float(preco),
+                            ativo=ativo,
+                            imagem_principal=request.FILES.get('imagem_principal'),
+                            imagem_secundaria=request.FILES.get('imagem_secundaria'),
+                            descricao=descricao if descricao else None
+                        )
+                        track_user_changes(banqueta, request.user)
+                        banqueta.save()
+                    
+                    # Atualizar o produto Item para manter compatibilidade
+                    produto.ativo = ativo
+                    produto.tem_cor_tecido = False
+                    produto.tem_difer_desenho_lado_dir_esq = False
+                    produto.tem_difer_desenho_tamanho = False
+                    produto.preco_acessorio = None
+                    produto.descricao_acessorio = None
+                    
+                    # Limpar módulos e vinculações
+                    produto.modulos.all().delete()
+                    produto.produtos_vinculados.clear()
+                    
+                    track_user_changes(produto, request.user)
+                    produto.save()
+                    
+                    messages.success(request, f'Banqueta "{banqueta.ref_banqueta} - {banqueta.nome}" atualizada com sucesso!')
+                    return redirect('banqueta_detalhes', banqueta_id=banqueta.id)
+                    
+                elif eh_acessorio:
                     # Atualizar como acessório
                     produto.ativo = request.POST.get('ativo') == 'on'
                     preco = request.POST.get('preco_acessorio')
@@ -265,6 +421,8 @@ def produto_editar_view(request, produto_id):
                     if 'imagem_secundaria' in request.FILES:
                         produto.imagem_secundaria = request.FILES['imagem_secundaria']
                     
+                    # Rastrear usuário na edição
+                    track_user_changes(produto, request.user)
                     produto.save()
                     
                     # Atualizar vinculações
@@ -308,6 +466,8 @@ def produto_editar_view(request, produto_id):
                     if 'imagem_secundaria' in request.FILES:
                         produto.imagem_secundaria = request.FILES['imagem_secundaria']
                         
+                    # Rastrear usuário na edição
+                    track_user_changes(produto, request.user)
                     produto.save()
                     logger.info(f"Produto básico atualizado: {produto.ref_produto}")
                     
@@ -344,15 +504,22 @@ def produto_editar_view(request, produto_id):
                         if not imagem_modulo:
                             imagem_modulo = modulos_anteriores.get(nome_modulo)
 
-                        modulo = Modulo.objects.create(
+                        # Processar imagem secundária do módulo
+                        imagem_secundaria_modulo = request.FILES.get(f'modulo_imagem_secundaria_{modulo_counter}')
+
+                        modulo = Modulo(
                             item=produto,
                             nome=nome_modulo,
                             profundidade=safe_float(profundidade),
                             altura=safe_float(altura),
                             braco=safe_float(braco),
                             descricao=descricao if descricao else None,
-                            imagem_principal=imagem_modulo
+                            imagem_principal=imagem_modulo,
+                            imagem_secundaria=imagem_secundaria_modulo
                         )
+                        # Rastrear usuário
+                        track_user_changes(modulo, request.user)
+                        modulo.save()
                         logger.info(f"Módulo criado: {modulo.nome}")
 
                         # Processar tamanhos deste módulo
@@ -381,7 +548,7 @@ def produto_editar_view(request, produto_id):
                             preco = tamanhos_preco[i] if i < len(tamanhos_preco) else ''
                             descricao = tamanhos_descricao[i] if i < len(tamanhos_descricao) else ''
                             
-                            TamanhosModulosDetalhado.objects.create(
+                            tamanho_detalhado = TamanhosModulosDetalhado(
                                 id_modulo=modulo,
                                 largura_total=safe_float(largura_total),
                                 largura_assento=safe_float(largura_assento),
@@ -391,6 +558,9 @@ def produto_editar_view(request, produto_id):
                                 preco=safe_float(preco),
                                 descricao=descricao.strip() if descricao else None
                             )
+                            # Rastrear usuário
+                            track_user_changes(tamanho_detalhado, request.user)
+                            tamanho_detalhado.save()
                             logger.info(f"Tamanho {i+1} criado para módulo {modulo.nome}")
                     
                     modulo_counter += 1
@@ -410,7 +580,7 @@ def produto_editar_view(request, produto_id):
         'produtos_disponiveis': Item.objects.filter(ativo=True).exclude(id=produto.id).order_by('ref_produto'),
         'produtos_vinculados_ids': list(produto.produtos_vinculados.values_list('id', flat=True)),
     }
-    return render(request, 'produtos/editar_unificado.html', context)
+    return render(request, 'produtos/sofas/editar_unificado.html', context)
 
 @login_required
 def produto_excluir_view(request, produto_id):
@@ -537,7 +707,10 @@ def acessorio_cadastro_view(request):
         if form.is_valid():
             try:
                 with transaction.atomic():
-                    acessorio = form.save()
+                    acessorio = form.save(commit=False)
+                    # Rastrear usuário
+                    track_user_changes(acessorio, request.user)
+                    acessorio.save()
                     messages.success(
                         request, 
                         f'Acessório "{acessorio.ref_acessorio} - {acessorio.nome}" cadastrado com sucesso!'
@@ -582,7 +755,10 @@ def acessorio_editar_view(request, acessorio_id):
         if form.is_valid():
             try:
                 with transaction.atomic():
-                    acessorio = form.save()
+                    acessorio = form.save(commit=False)
+                    # Rastrear usuário na edição
+                    track_user_changes(acessorio, request.user)
+                    acessorio.save()
                     messages.success(
                         request, 
                         f'Acessório "{acessorio.ref_acessorio} - {acessorio.nome}" atualizado com sucesso!'
@@ -627,3 +803,124 @@ def acessorio_excluir_view(request, acessorio_id):
         'acessorio': acessorio,
     }
     return render(request, 'produtos/acessorios/confirmar_exclusao.html', context)
+
+# ===== VIEWS PARA BANQUETAS =====
+
+@login_required
+def banquetas_list_view(request):
+    """View para listagem de banquetas"""
+    banquetas = Banqueta.objects.all()
+    
+    # Filtros
+    ativo_filtro = request.GET.get('ativo')
+    busca = request.GET.get('busca')
+    
+    if ativo_filtro:
+        banquetas = banquetas.filter(ativo=ativo_filtro == 'true')
+    
+    if busca:
+        banquetas = banquetas.filter(
+            nome__icontains=busca
+        ) | banquetas.filter(
+            ref_banqueta__icontains=busca
+        )
+    
+    context = {
+        'banquetas': banquetas,
+        'filtros': {
+            'ativo': ativo_filtro,
+            'busca': busca,
+        }
+    }
+    return render(request, 'produtos/banquetas/lista.html', context)
+
+@login_required
+@csrf_protect
+def banqueta_cadastro_view(request):
+    """View para cadastro de banquetas"""
+    if request.method == 'POST':
+        form = BanquetaForm(request.POST, request.FILES)
+        if form.is_valid():
+            try:
+                with transaction.atomic():
+                    banqueta = form.save(commit=False)
+                    # Rastrear usuário
+                    track_user_changes(banqueta, request.user)
+                    banqueta.save()
+                    
+                    messages.success(request, f'Banqueta "{banqueta.ref_banqueta} - {banqueta.nome}" cadastrada com sucesso!')
+                    return redirect('banquetas_lista')
+            except Exception as e:
+                logger.error(f"Erro ao cadastrar banqueta: {str(e)}")
+                messages.error(request, f'Erro ao cadastrar banqueta: {str(e)}')
+    else:
+        form = BanquetaForm()
+    
+    context = {
+        'form': form,
+        'title': 'Cadastrar Nova Banqueta'
+    }
+    return render(request, 'produtos/banquetas/cadastro.html', context)
+
+@login_required
+def banqueta_detalhes_view(request, banqueta_id):
+    """View para exibir detalhes de uma banqueta"""
+    banqueta = get_object_or_404(Banqueta, id=banqueta_id)
+    
+    context = {
+        'banqueta': banqueta,
+    }
+    return render(request, 'produtos/banquetas/detalhes.html', context)
+
+@login_required
+@csrf_protect
+def banqueta_editar_view(request, banqueta_id):
+    """View para editar banquetas"""
+    banqueta = get_object_or_404(Banqueta, id=banqueta_id)
+    
+    if request.method == 'POST':
+        form = BanquetaForm(request.POST, request.FILES, instance=banqueta)
+        if form.is_valid():
+            try:
+                with transaction.atomic():
+                    banqueta = form.save(commit=False)
+                    # Rastrear usuário
+                    track_user_changes(banqueta, request.user)
+                    banqueta.save()
+                    
+                    messages.success(request, f'Banqueta "{banqueta.ref_banqueta} - {banqueta.nome}" atualizada com sucesso!')
+                    return redirect('banqueta_detalhes', banqueta_id=banqueta.id)
+            except Exception as e:
+                logger.error(f"Erro ao editar banqueta: {str(e)}")
+                messages.error(request, f'Erro ao editar banqueta: {str(e)}')
+    else:
+        form = BanquetaForm(instance=banqueta)
+    
+    context = {
+        'form': form,
+        'banqueta': banqueta,
+        'title': f'Editar Banqueta {banqueta.ref_banqueta}'
+    }
+    return render(request, 'produtos/banquetas/editar.html', context)
+
+@login_required
+@csrf_protect
+def banqueta_excluir_view(request, banqueta_id):
+    """View para excluir banquetas"""
+    banqueta = get_object_or_404(Banqueta, id=banqueta_id)
+    
+    if request.method == 'POST':
+        try:
+            nome_banqueta = f"{banqueta.ref_banqueta} - {banqueta.nome}"
+            banqueta.delete()
+            messages.success(request, f'Banqueta "{nome_banqueta}" excluída com sucesso!')
+            return redirect('banquetas_lista')
+        except Exception as e:
+            logger.error(f"Erro ao excluir banqueta: {str(e)}")
+            messages.error(request, f'Erro ao excluir banqueta: {str(e)}')
+            return redirect('banqueta_detalhes', banqueta_id=banqueta.id)
+    
+    context = {
+        'banqueta': banqueta,
+    }
+    return render(request, 'produtos/banquetas/confirmar_exclusao.html', context)

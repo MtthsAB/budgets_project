@@ -6,14 +6,14 @@ from .models import Cliente
 class ClienteAdmin(admin.ModelAdmin):
     list_display = [
         'nome_empresa', 'representante', 'cnpj', 'cidade', 
-        'estado', 'telefone', 'email', 'created_at'
+        'estado', 'telefone', 'email', 'created_at', 'created_by'
     ]
-    list_filter = ['estado', 'cidade', 'created_at']
+    list_filter = ['estado', 'cidade', 'created_at', 'created_by']
     search_fields = [
         'nome_empresa', 'representante', 'cnpj', 'email', 
         'cidade', 'bairro'
     ]
-    readonly_fields = ['created_at', 'updated_at']
+    readonly_fields = ['created_at', 'updated_at', 'created_by', 'updated_by']
     
     fieldsets = (
         ('Dados da Empresa', {
@@ -35,8 +35,8 @@ class ClienteAdmin(admin.ModelAdmin):
             'fields': ('banco', 'agencia', 'conta_corrente'),
             'classes': ('collapse',)
         }),
-        ('Timestamps', {
-            'fields': ('created_at', 'updated_at'),
+        ('Auditoria', {
+            'fields': ('created_at', 'updated_at', 'created_by', 'updated_by'),
             'classes': ('collapse',)
         }),
     )
