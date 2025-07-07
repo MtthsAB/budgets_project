@@ -13,7 +13,7 @@ from rest_framework.response import Response
 import logging
 from sistema_produtos.mixins import track_user_changes
 from .models import (
-    Item, TipoItem, Linha, Modulo, Acessorio, 
+    Produto, TipoItem, Linha, Modulo, Acessorio, 
     TamanhosModulos, TamanhosModulosDetalhado, FaixaTecido, PrecosBase,
     Banqueta, Cadeira, Poltrona, Pufe, Almofada
 )
@@ -25,18 +25,18 @@ logger = logging.getLogger(__name__)
 def home_view(request):
     """View da página inicial do sistema"""
     context = {
-        'total_produtos': Item.objects.count(),
+        'total_produtos': Produto.objects.count(),
         'total_tipos': TipoItem.objects.count(),
         'total_modulos': Modulo.objects.count(),
-        'produtos_recentes': Item.objects.select_related('id_tipo_produto').order_by('-created_at')[:5],
+        'produtos_recentes': Produto.objects.select_related('id_tipo_produto').order_by('-created_at')[:5],
     }
     return render(request, 'produtos/home.html', context)
 
 @login_required
 def produtos_list_view(request):
     """View para listagem de produtos unificada (inclui todos os tipos)"""
-    # Buscar produtos da tabela Item
-    produtos = Item.objects.select_related('id_tipo_produto').prefetch_related('modulos').all()
+    # Buscar produtos da nova tabela Produto (apenas dados básicos)
+    produtos = Produto.objects.select_related('id_tipo_produto').all()
     
     # Buscar produtos das tabelas específicas
     banquetas = Banqueta.objects.filter(ativo=True).all()
@@ -60,31 +60,31 @@ def produtos_list_view(request):
         
         # Se o filtro for por tipo específico, mostrar apenas esse tipo
         if tipo_filtro == '4':  # Banquetas
-            produtos = Item.objects.none()
+            produtos = Produto.objects.none()
             cadeiras = Cadeira.objects.none()
             poltronas = Poltrona.objects.none()
             pufes = Pufe.objects.none()
             almofadas = Almofada.objects.none()
         elif tipo_filtro == '3':  # Cadeiras
-            produtos = Item.objects.none()
+            produtos = Produto.objects.none()
             banquetas = Banqueta.objects.none()
             poltronas = Poltrona.objects.none()
             pufes = Pufe.objects.none()
             almofadas = Almofada.objects.none()
         elif tipo_filtro == '5':  # Poltronas (assumindo ID 5)
-            produtos = Item.objects.none()
+            produtos = Produto.objects.none()
             banquetas = Banqueta.objects.none()
             cadeiras = Cadeira.objects.none()
             pufes = Pufe.objects.none()
             almofadas = Almofada.objects.none()
         elif tipo_filtro == '6':  # Pufes (assumindo ID 6)
-            produtos = Item.objects.none()
+            produtos = Produto.objects.none()
             banquetas = Banqueta.objects.none()
             cadeiras = Cadeira.objects.none()
             poltronas = Poltrona.objects.none()
             almofadas = Almofada.objects.none()
         elif tipo_filtro == '7':  # Almofadas (assumindo ID 7)
-            produtos = Item.objects.none()
+            produtos = Produto.objects.none()
             banquetas = Banqueta.objects.none()
             cadeiras = Cadeira.objects.none()
             poltronas = Poltrona.objects.none()
@@ -141,7 +141,7 @@ def produtos_list_view(request):
     # Mapeamento de campos para ordenação
     campos_ordenacao = {
         'referencia': {
-            'Item': 'ref_produto',
+            'Produto': 'ref_produto',
             'Banqueta': 'ref_banqueta', 
             'Cadeira': 'ref_cadeira',
             'Poltrona': 'ref_poltrona',
@@ -149,7 +149,7 @@ def produtos_list_view(request):
             'Almofada': 'ref_almofada'
         },
         'nome': {
-            'Item': 'nome_produto',
+            'Produto': 'nome_produto',
             'Banqueta': 'nome',
             'Cadeira': 'nome', 
             'Poltrona': 'nome',
@@ -157,7 +157,7 @@ def produtos_list_view(request):
             'Almofada': 'nome'
         },
         'tipo': {
-            'Item': 'id_tipo_produto__nome',
+            'Produto': 'id_tipo_produto__nome',
             'Banqueta': 'created_at',  # Banquetas sempre terão tipo fixo
             'Cadeira': 'created_at',   # Cadeiras sempre terão tipo fixo
             'Poltrona': 'created_at',  # Poltronas sempre terão tipo fixo
@@ -165,7 +165,7 @@ def produtos_list_view(request):
             'Almofada': 'created_at'   # Almofadas sempre terão tipo fixo
         },
         'status': {
-            'Item': 'ativo',
+            'Produto': 'ativo',
             'Banqueta': 'ativo',
             'Cadeira': 'ativo',
             'Poltrona': 'ativo', 
@@ -173,7 +173,7 @@ def produtos_list_view(request):
             'Almofada': 'ativo'
         },
         'created_at': {
-            'Item': 'created_at',
+            'Produto': 'created_at',
             'Banqueta': 'created_at',
             'Cadeira': 'created_at',
             'Poltrona': 'created_at',
@@ -181,7 +181,7 @@ def produtos_list_view(request):
             'Almofada': 'created_at'
         },
         'created_by': {
-            'Item': 'created_by__email',
+            'Produto': 'created_by__email',
             'Banqueta': 'created_by__email',
             'Cadeira': 'created_by__email',
             'Poltrona': 'created_by__email',
@@ -192,7 +192,7 @@ def produtos_list_view(request):
     
     if ordenar_por in campos_ordenacao:
         # Aplicar ordenação para cada tipo de produto
-        campo_item = campos_ordenacao[ordenar_por]['Item']
+        campo_produto = campos_ordenacao[ordenar_por]['Produto']
         campo_banqueta = campos_ordenacao[ordenar_por]['Banqueta']
         campo_cadeira = campos_ordenacao[ordenar_por]['Cadeira']
         campo_poltrona = campos_ordenacao[ordenar_por]['Poltrona']
@@ -200,14 +200,14 @@ def produtos_list_view(request):
         campo_almofada = campos_ordenacao[ordenar_por]['Almofada']
         
         if direcao == 'desc':
-            campo_item = '-' + campo_item
+            campo_produto = '-' + campo_produto
             campo_banqueta = '-' + campo_banqueta
             campo_cadeira = '-' + campo_cadeira
             campo_poltrona = '-' + campo_poltrona
             campo_pufe = '-' + campo_pufe
             campo_almofada = '-' + campo_almofada
         
-        produtos = produtos.order_by(campo_item)
+        produtos = produtos.order_by(campo_produto)
         banquetas = banquetas.order_by(campo_banqueta)
         cadeiras = cadeiras.order_by(campo_cadeira)
         poltronas = poltronas.order_by(campo_poltrona)
@@ -253,7 +253,7 @@ def produto_cadastro_view(request):
                     raise ValueError('Campos obrigatórios não preenchidos')
                 
                 # Verificar se já existe produto com esta referência
-                if Item.objects.filter(ref_produto=ref_produto).exists():
+                if Produto.objects.filter(ref_produto=ref_produto).exists():
                     messages.error(request, 'Já existe um produto com esta referência.')
                     raise ValueError('Referência duplicada')
                 
@@ -465,39 +465,45 @@ def produto_cadastro_view(request):
                     return redirect('produtos_lista')
                     
                 elif eh_acessorio:
-                    # Processar como acessório usando o modelo Item unificado
+                    # Processar como acessório usando os modelos separados
                     ativo = request.POST.get('ativo_acessorio') == 'on'
                     preco = request.POST.get('preco_acessorio')
                     descricao = request.POST.get('descricao_acessorio')
                     produtos_vinculados = request.POST.getlist('produtos_vinculados')
                     
-                    # Criar produto/acessório
-                    produto = Item(
+                    # Criar produto básico primeiro
+                    produto = Produto(
                         ref_produto=ref_produto,
                         nome_produto=nome_produto,
                         id_tipo_produto_id=tipo_produto_id,
                         ativo=ativo,
-                        preco_acessorio=float(preco) if preco else None,
-                        descricao_acessorio=descricao if descricao else None,
                         imagem_principal=request.FILES.get('imagem_principal'),
-                        imagem_secundaria=request.FILES.get('imagem_secundaria'),
-                        # Campos específicos de sofás são False para acessórios
-                        tem_cor_tecido=False,
-                        tem_difer_desenho_lado_dir_esq=False,
-                        tem_difer_desenho_tamanho=False
+                        imagem_secundaria=request.FILES.get('imagem_secundaria')
                     )
-                    # Rastrear usuário
                     track_user_changes(produto, request.user)
                     produto.save()
+                    
+                    # Criar acessório vinculado
+                    acessorio = Acessorio(
+                        ref_acessorio=ref_produto,
+                        nome=nome_produto,
+                        ativo=ativo,
+                        preco=float(preco) if preco else None,
+                        descricao=descricao if descricao else None,
+                        imagem_principal=request.FILES.get('imagem_principal'),
+                        imagem_secundaria=request.FILES.get('imagem_secundaria')
+                    )
+                    track_user_changes(acessorio, request.user)
+                    acessorio.save()
                     
                     # Vincular produtos se selecionados
                     if produtos_vinculados:
                         for produto_id in produtos_vinculados:
                             if produto_id:
                                 try:
-                                    produto_vinculado = Item.objects.get(id=produto_id)
-                                    produto.produtos_vinculados.add(produto_vinculado)
-                                except Item.DoesNotExist:
+                                    produto_vinculado = Produto.objects.get(id=produto_id)
+                                    acessorio.produtos_vinculados.add(produto_vinculado)
+                                except Produto.DoesNotExist:
                                     continue
                     
                     messages.success(request, f'Acessório "{produto.ref_produto} - {produto.nome_produto}" cadastrado com sucesso!')
@@ -506,24 +512,15 @@ def produto_cadastro_view(request):
                 else:
                     # Processar como produto normal (sofá, cadeira, etc.)
                     ativo = request.POST.get('ativo') == 'on'
-                    tem_cor_tecido = request.POST.get('tem_cor_tecido') == 'on'
-                    tem_difer_desenho_lado = request.POST.get('tem_difer_desenho_lado') == 'on'
-                    tem_difer_desenho_tamanho = request.POST.get('tem_difer_desenho_tamanho') == 'on'
                     
-                    # Criar o produto
-                    produto = Item(
+                    # Criar o produto básico (sem campos específicos de Item)
+                    produto = Produto(
                         ref_produto=ref_produto,
                         nome_produto=nome_produto,
                         id_tipo_produto_id=tipo_produto_id,
                         ativo=ativo,
-                        tem_cor_tecido=tem_cor_tecido,
-                        tem_difer_desenho_lado_dir_esq=tem_difer_desenho_lado,
-                        tem_difer_desenho_tamanho=tem_difer_desenho_tamanho,
                         imagem_principal=request.FILES.get('imagem_principal'),
-                        imagem_secundaria=request.FILES.get('imagem_secundaria'),
-                        # Campos específicos de acessórios são None para produtos normais
-                        preco_acessorio=None,
-                        descricao_acessorio=None
+                        imagem_secundaria=request.FILES.get('imagem_secundaria')
                     )
                     # Rastrear usuário
                     track_user_changes(produto, request.user)
@@ -610,14 +607,14 @@ def produto_cadastro_view(request):
     
     context = {
         'tipos': TipoItem.objects.all(),
-        'produtos_disponiveis': Item.objects.filter(ativo=True).order_by('ref_produto'),
+        'produtos_disponiveis': Produto.objects.filter(ativo=True).order_by('ref_produto'),
     }
     return render(request, 'produtos/cadastro_unificado.html', context)
 
 @login_required
 def produto_editar_view(request, produto_id):
     """View para edição de produtos (incluindo acessórios)"""
-    produto = get_object_or_404(Item, id=produto_id)
+    produto = get_object_or_404(Produto, id=produto_id)
     
     if request.method == 'POST':
         try:
@@ -747,10 +744,10 @@ def produto_editar_view(request, produto_id):
                         for produto_id_vinc in produtos_vinculados:
                             if produto_id_vinc:
                                 try:
-                                    produto_vinculado = Item.objects.get(id=produto_id_vinc)
+                                    produto_vinculado = Produto.objects.get(id=produto_id_vinc)
                                     produto.produtos_vinculados.add(produto_vinculado)
                                     logger.info(f"Produto {produto_vinculado.ref_produto} vinculado com sucesso")
-                                except Item.DoesNotExist:
+                                except Produto.DoesNotExist:
                                     logger.warning(f"Produto com ID {produto_id_vinc} não encontrado")
                                     continue
                     logger.info(f"Total de produtos vinculados após atualização: {produto.produtos_vinculados.count()}")
@@ -891,7 +888,7 @@ def produto_editar_view(request, produto_id):
         'produto': produto,
         'modulos': produto.modulos.prefetch_related('tamanhos_detalhados').all(),
         'tipos': TipoItem.objects.all(),
-        'produtos_disponiveis': Item.objects.filter(ativo=True).exclude(id=produto.id).order_by('ref_produto'),
+        'produtos_disponiveis': Produto.objects.filter(ativo=True).exclude(id=produto.id).order_by('ref_produto'),
         'produtos_vinculados_ids': list(produto.produtos_vinculados.values_list('id', flat=True)),
     }
     return render(request, 'produtos/sofas/editar_unificado.html', context)
@@ -899,7 +896,7 @@ def produto_editar_view(request, produto_id):
 @login_required
 def produto_excluir_view(request, produto_id):
     """View para exclusão de produtos"""
-    produto = get_object_or_404(Item, id=produto_id)
+    produto = get_object_or_404(Produto, id=produto_id)
     
     if request.method == 'POST':
         try:
@@ -914,9 +911,9 @@ def produto_excluir_view(request, produto_id):
 @login_required
 def produto_detalhes_view(request, produto_id):
     """View para visualização detalhada de um produto (inclui banquetas)"""
-    # Primeiro, tentar buscar na tabela Item
+    # Primeiro, tentar buscar na tabela Produto
     try:
-        produto = Item.objects.select_related('id_tipo_produto').get(id=produto_id)
+        produto = Produto.objects.select_related('id_tipo_produto').get(id=produto_id)
         modulos = produto.modulos.prefetch_related('tamanhos_detalhados').all()
         
         # Buscar acessórios vinculados a este produto
@@ -934,7 +931,7 @@ def produto_detalhes_view(request, produto_id):
         }
         return render(request, 'produtos/detalhes.html', context)
         
-    except Item.DoesNotExist:
+    except Produto.DoesNotExist:
         # Se não encontrou na tabela Item, tentar buscar na tabela Banqueta
         try:
             banqueta = Banqueta.objects.get(id=produto_id)
@@ -997,7 +994,7 @@ def teste_tamanhos_edicao_view(request):
 @login_required
 def api_produtos_disponiveis(request):
     """API para carregar produtos disponíveis para vinculação"""
-    produtos = Item.objects.filter(ativo=True).exclude(
+    produtos = Produto.objects.filter(ativo=True).exclude(
         id_tipo_produto__nome__iexact='acessórios'
     ).values('id', 'ref_produto', 'nome_produto').order_by('ref_produto')
     
@@ -1078,8 +1075,23 @@ def acessorio_detalhes_view(request, acessorio_id):
 @login_required
 @csrf_protect
 def acessorio_editar_view(request, acessorio_id):
-    """View para editar um acessório"""
-    acessorio = get_object_or_404(Acessorio, id=acessorio_id)
+    """View para editar um acessório - busca por ID do Produto"""
+    # Primeiro buscar o produto correspondente
+    produto = get_object_or_404(Produto, id=acessorio_id)
+    
+    # Depois buscar o acessório correspondente
+    try:
+        acessorio = Acessorio.objects.get(ref_acessorio=produto.ref_produto)
+    except Acessorio.DoesNotExist:
+        # Se não existir acessório, criar um baseado no produto
+        acessorio = Acessorio.objects.create(
+            ref_acessorio=produto.ref_produto,
+            nome=produto.nome_produto,
+            ativo=produto.ativo,
+            imagem_principal=produto.imagem_principal,
+            imagem_secundaria=produto.imagem_secundaria
+        )
+        messages.info(request, f'Acessório criado automaticamente para {produto.ref_produto}')
     
     if request.method == 'POST':
         form = AcessorioForm(request.POST, request.FILES, instance=acessorio)
@@ -1111,7 +1123,7 @@ def acessorio_editar_view(request, acessorio_id):
         'action_url': 'acessorio_editar',
         'action_id': acessorio.id,
     }
-    return render(request, 'produtos/acessorios/formulario.html', context)
+    return render(request, 'produtos/acessorios/editar.html', context)
 
 @login_required
 @csrf_protect
@@ -1724,7 +1736,7 @@ def almofada_teste_imagem_view(request, almofada_id):
 @login_required
 def sofas_list_view(request):
     """View para listagem específica de sofás"""
-    sofas = Item.objects.filter(id_tipo_produto__nome__icontains='sofá').order_by('ref_produto')
+    sofas = Produto.objects.filter(id_tipo_produto__nome__icontains='sofá').order_by('ref_produto')
     
     context = {
         'sofas': sofas,
@@ -1740,7 +1752,7 @@ def sofa_cadastro_view(request):
 @login_required
 def sofa_detalhes_view(request, sofa_id):
     """View para detalhes específicos de sofás"""
-    sofa = get_object_or_404(Item, id=sofa_id, id_tipo_produto__nome__icontains='sofá')
+    sofa = get_object_or_404(Produto, id=sofa_id, id_tipo_produto__nome__icontains='sofá')
     modulos = sofa.modulos.prefetch_related('tamanhos_detalhados').all()
     
     # Buscar acessórios vinculados a este sofá
@@ -1758,16 +1770,84 @@ def sofa_detalhes_view(request, sofa_id):
 @login_required
 def sofa_editar_view(request, sofa_id):
     """View para edição específica de sofás"""
-    sofa = get_object_or_404(Item, id=sofa_id, id_tipo_produto__nome__icontains='sofá')
+    sofa = get_object_or_404(Produto, id=sofa_id, id_tipo_produto__nome__icontains='sofá')
+    modulos = sofa.modulos.all() if hasattr(sofa, 'modulos') else []
     
-    # Por enquanto, redireciona para a view genérica de edição
-    # TODO: Implementar view específica de edição de sofás
-    return redirect('produto_editar', produto_id=sofa_id)
+    # Buscar tamanhos detalhados de todos os módulos
+    tamanhos_detalhados = []
+    for modulo in modulos:
+        tamanhos_detalhados.extend(modulo.tamanhos_detalhados.all())
+    
+    if request.method == 'POST':
+        try:
+            with transaction.atomic():
+                # Atualizar dados básicos do produto
+                sofa.ref_produto = request.POST.get('ref_produto')
+                sofa.nome_produto = request.POST.get('nome_produto')
+                sofa.id_tipo_produto_id = request.POST.get('tipo_produto')
+                sofa.ativo = request.POST.get('ativo') == 'on'
+                
+                # Atualizar campos específicos de sofás
+                sofa.tem_cor_tecido = request.POST.get('tem_cor_tecido') == 'on'
+                sofa.tem_difer_desenho_lado_dir_esq = request.POST.get('tem_difer_desenho_lado') == 'on'
+                sofa.tem_difer_desenho_tamanho = request.POST.get('tem_difer_desenho_tamanho') == 'on'
+                
+                # Atualizar imagens se fornecidas
+                if 'imagem_principal' in request.FILES:
+                    sofa.imagem_principal = request.FILES['imagem_principal']
+                if 'imagem_secundaria' in request.FILES:
+                    sofa.imagem_secundaria = request.FILES['imagem_secundaria']
+                
+                track_user_changes(sofa, request.user)
+                sofa.save()
+                
+                # Processar módulos (se houver)
+                modulos_nomes = request.POST.getlist('modulo_nome')
+                if modulos_nomes:
+                    # Remover módulos existentes para recriar
+                    sofa.modulos.all().delete()
+                    
+                    for i, nome_modulo in enumerate(modulos_nomes):
+                        if nome_modulo.strip():  # Se o nome do módulo não estiver vazio
+                            # Obter dados do módulo
+                            profundidade = request.POST.get(f'modulo_profundidade_{i+1}')
+                            altura = request.POST.get(f'modulo_altura_{i+1}')
+                            braco = request.POST.get(f'modulo_braco_{i+1}')
+                            descricao = request.POST.get(f'modulo_descricao_{i+1}')
+                            
+                            modulo = Modulo(
+                                produto=sofa,
+                                nome=nome_modulo,
+                                profundidade=float(profundidade) if profundidade else None,
+                                altura=float(altura) if altura else None,
+                                braco=float(braco) if braco else None,
+                                descricao=descricao if descricao else None,
+                                imagem_principal=request.FILES.get(f'modulo_imagem_principal_{i+1}')
+                            )
+                            track_user_changes(modulo, request.user)
+                            modulo.save()
+                
+                messages.success(request, f'Sofá "{sofa.ref_produto} - {sofa.nome_produto}" atualizado com sucesso!')
+                return redirect('sofa_detalhes', sofa_id=sofa.id)
+        except Exception as e:
+            logger.error(f"Erro ao editar sofá: {str(e)}")
+            messages.error(request, f'Erro ao editar sofá: {str(e)}')
+    
+    context = {
+        'sofa': sofa,
+        'produto': sofa,  # Para compatibilidade com templates
+        'modulos': modulos,
+        'tamanhos_detalhados': tamanhos_detalhados,
+        'tipos': TipoItem.objects.all(),
+        'eh_edicao': True,
+        'produto_id': sofa.id
+    }
+    return render(request, 'produtos/sofas/editar.html', context)
 
 @login_required
 def sofa_excluir_view(request, sofa_id):
     """View para exclusão específica de sofás"""
-    sofa = get_object_or_404(Item, id=sofa_id, id_tipo_produto__nome__icontains='sofá')
+    sofa = get_object_or_404(Produto, id=sofa_id, id_tipo_produto__nome__icontains='sofá')
     
     if request.method == 'POST':
         try:

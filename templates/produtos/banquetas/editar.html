@@ -1,3 +1,141 @@
-{% extends 'produtos/banquetas/cadastro.html' %}
+{% extends 'produtos/includes/editar_base.html' %}
 
-{% block title %}{{ title }} - Sistema de Produtos{% endblock %}
+{% block edit_title %}Editar Banqueta{% endblock %}
+{% block page_title %}Editar Banqueta - {{ banqueta.ref_banqueta }}{% endblock %}
+{% block section_title %}Dados da Banqueta{% endblock %}
+
+{% block edit_message %}
+Você está editando a banqueta <strong>{{ banqueta.ref_banqueta }} - {{ banqueta.nome }}</strong>.
+{% endblock %}
+
+{% block back_url %}{% url 'produtos_lista' %}{% endblock %}
+{% block cancel_url %}{% url 'banqueta_detalhes' banqueta.id %}{% endblock %}
+
+{% block extra_buttons %}
+<a href="{% url 'banqueta_detalhes' banqueta.id %}" class="btn btn-outline-info">
+    <i class="bi bi-eye"></i> Ver Detalhes
+</a>
+{% endblock %}
+
+{% block form_content %}
+<div class="row">
+    <div class="col-md-6">
+        <div class="form-floating mb-3">
+            {{ form.ref_banqueta }}
+            <label for="{{ form.ref_banqueta.id_for_label }}">{{ form.ref_banqueta.label }}</label>
+        </div>
+    </div>
+    <div class="col-md-6">
+        <div class="form-floating mb-3">
+            {{ form.nome }}
+            <label for="{{ form.nome.id_for_label }}">{{ form.nome.label }}</label>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-4">
+        <div class="form-floating mb-3">
+            {{ form.largura }}
+            <label for="{{ form.largura.id_for_label }}">{{ form.largura.label }}</label>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="form-floating mb-3">
+            {{ form.profundidade }}
+            <label for="{{ form.profundidade.id_for_label }}">{{ form.profundidade.label }}</label>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="form-floating mb-3">
+            {{ form.altura }}
+            <label for="{{ form.altura.id_for_label }}">{{ form.altura.label }}</label>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-4">
+        <div class="form-floating mb-3">
+            {{ form.tecido_metros }}
+            <label for="{{ form.tecido_metros.id_for_label }}">{{ form.tecido_metros.label }}</label>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="form-floating mb-3">
+            {{ form.volume_m3 }}
+            <label for="{{ form.volume_m3.id_for_label }}">{{ form.volume_m3.label }}</label>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="form-floating mb-3">
+            {{ form.peso_kg }}
+            <label for="{{ form.peso_kg.id_for_label }}">{{ form.peso_kg.label }}</label>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-6">
+        <div class="form-floating mb-3">
+            {{ form.preco }}
+            <label for="{{ form.preco.id_for_label }}">{{ form.preco.label }}</label>
+        </div>
+    </div>
+    <div class="col-md-6">
+        <div class="form-check form-switch mt-3">
+            {{ form.ativo }}
+            <label class="form-check-label" for="{{ form.ativo.id_for_label }}">
+                {{ form.ativo.label }}
+            </label>
+        </div>
+    </div>
+</div>
+
+{% if form.descricao %}
+<div class="row">
+    <div class="col-12">
+        <div class="form-floating mb-3">
+            {{ form.descricao }}
+            <label for="{{ form.descricao.id_for_label }}">{{ form.descricao.label }}</label>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+<!-- Seção de Imagens -->
+<div class="row mt-4">
+    <div class="col-12">
+        <h6 class="mb-3">
+            <i class="bi bi-images"></i> Imagens
+        </h6>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-6">
+        <div class="mb-3">
+            <label for="{{ form.imagem_principal.id_for_label }}" class="form-label">{{ form.imagem_principal.label }}</label>
+            {{ form.imagem_principal }}
+            {% if banqueta.imagem_principal %}
+                <div class="mt-2">
+                    <img src="{{ banqueta.imagem_principal.url }}" alt="Imagem atual" class="img-thumbnail" style="max-height: 100px;">
+                    <small class="text-muted d-block">Imagem atual</small>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+    <div class="col-md-6">
+        <div class="mb-3">
+            <label for="{{ form.imagem_secundaria.id_for_label }}" class="form-label">{{ form.imagem_secundaria.label }}</label>
+            {{ form.imagem_secundaria }}
+            {% if banqueta.imagem_secundaria %}
+                <div class="mt-2">
+                    <img src="{{ banqueta.imagem_secundaria.url }}" alt="Imagem atual" class="img-thumbnail" style="max-height: 100px;">
+                    <small class="text-muted d-block">Imagem atual</small>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

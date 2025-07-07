@@ -155,12 +155,10 @@ function toggleModulo(moduloId, tipo) {
     if (content && icon) {
         if (content.style.display === 'none') {
             content.style.display = 'block';
-            icon.style.transform = 'rotate(90deg)';
-            icon.className = 'bi bi-chevron-down ms-2 toggle-icon text-primary';
+            icon.style.transform = 'rotate(180deg)';
         } else {
             content.style.display = 'none';
             icon.style.transform = 'rotate(0deg)';
-            icon.className = 'bi bi-chevron-right ms-2 toggle-icon text-primary';
         }
     }
 }
@@ -184,11 +182,9 @@ function toggleTodosModulos() {
             if (modulosColapsados) {
                 content.style.display = 'none';
                 icon.style.transform = 'rotate(0deg)';
-                icon.className = 'bi bi-chevron-right ms-2 toggle-icon text-primary';
             } else {
                 content.style.display = 'block';
-                icon.style.transform = 'rotate(90deg)';
-                icon.className = 'bi bi-chevron-down ms-2 toggle-icon text-primary';
+                icon.style.transform = 'rotate(180deg)';
             }
         }
     });
@@ -203,63 +199,6 @@ function toggleTodosModulos() {
     }
 }
 
-// Função para alternar visibilidade de um tamanho
-function toggleTamanho(moduloId, tamanhoId, tipo) {
-    const content = document.getElementById(`content-tamanho-${tipo}-${moduloId}_${tamanhoId}`);
-    const icon = document.getElementById(`toggle-tamanho-${tipo}-${moduloId}_${tamanhoId}`);
-    
-    if (content && icon) {
-        if (content.style.display === 'none') {
-            content.style.display = 'block';
-            icon.style.transform = 'rotate(90deg)';
-            icon.className = 'bi bi-chevron-down ms-2 toggle-icon text-success';
-        } else {
-            content.style.display = 'none';
-            icon.style.transform = 'rotate(0deg)';
-            icon.className = 'bi bi-chevron-right ms-2 toggle-icon text-success';
-        }
-    }
-}
-
-// Função para expandir/recolher todos os tamanhos de um módulo
-function toggleTodosTamanhos(moduloId) {
-    const btn = document.getElementById(`toggleTamanhosBtn_${moduloId}`);
-    const btnText = document.getElementById(`toggleTamanhosText_${moduloId}`);
-    const btnIcon = btn.querySelector('i');
-    
-    // Determinar estado atual baseado no texto do botão
-    const isCollapsed = btnText.textContent.includes('Expandir');
-    
-    // Buscar todos os tamanhos deste módulo
-    const tamanhos = document.querySelectorAll(`#tamanhosContainer_${moduloId} .card`);
-    
-    tamanhos.forEach(tamanho => {
-        const content = tamanho.querySelector('.tamanho-content');
-        const icon = tamanho.querySelector('.toggle-icon');
-        
-        if (content && icon) {
-            if (isCollapsed) {
-                content.style.display = 'block';
-                icon.style.transform = 'rotate(90deg)';
-                icon.className = 'bi bi-chevron-down ms-2 toggle-icon text-success';
-            } else {
-                content.style.display = 'none';
-                icon.style.transform = 'rotate(0deg)';
-                icon.className = 'bi bi-chevron-right ms-2 toggle-icon text-success';
-            }
-        }
-    });
-    
-    // Atualizar botão
-    if (isCollapsed) {
-        btnText.textContent = 'Recolher Todos';
-        btnIcon.className = 'bi bi-arrows-collapse';
-    } else {
-        btnText.textContent = 'Expandir Todos';
-        btnIcon.className = 'bi bi-arrows-expand';
-    }
-}
-
 // Função para adicionar tamanho
 function adicionarTamanho(moduloId) {
     const container = document.getElementById(`tamanhosContainer_${moduloId}`);
@@ -269,23 +208,15 @@ function adicionarTamanho(moduloId) {
     
     const tamanhoHTML = `
         <div class="card mb-2" id="tamanho_${moduloId}_${tamanhoCount}">
-            <div class="card-header d-flex justify-content-between align-items-center p-2 bg-success bg-opacity-10" 
-                 style="cursor: pointer; transition: background-color 0.2s; user-select: none;" 
-                 onclick="toggleTamanho(${moduloId}, ${tamanhoCount}, 'novo')"
-                 onmouseover="this.style.backgroundColor='rgba(25, 135, 84, 0.15)'"
-                 onmouseout="this.style.backgroundColor='rgba(25, 135, 84, 0.1)'">
-                <h6 class="mb-0 d-flex align-items-center">
-                    <i class="bi bi-rulers text-success me-2"></i> 
-                    <span class="fw-semibold">Tamanho ${tamanhoCount}</span>
-                    <i class="bi bi-chevron-right ms-2 toggle-icon text-success" id="toggle-tamanho-novo-${moduloId}_${tamanhoCount}" 
-                       style="transition: transform 0.2s;"></i>
-                </h6>
-                <button type="button" class="btn btn-sm btn-outline-danger" 
-                        onclick="event.stopPropagation(); removerTamanho('tamanho_${moduloId}_${tamanhoCount}')">
-                    <i class="bi bi-trash"></i>
-                </button>
-            </div>
-            <div class="card-body tamanho-content" id="content-tamanho-novo-${moduloId}_${tamanhoCount}" style="display: none;">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center mb-2">
+                    <h6 class="mb-0">
+                        <i class="bi bi-rulers text-success"></i> 
+                        Tamanho ${tamanhoCount}
+                    </h6>
+                    <button type="button" class="btn btn-sm btn-outline-danger" 
+                            onclick="removerTamanho('tamanho_${moduloId}_${tamanhoCount}')">
+                        <i class="bi bi-trash"></i>
                     </button>
                 </div>
                 <div class="row">
@@ -356,37 +287,30 @@ function removerTamanho(tamanhoId) {
 
 // Inicializar interface de módulos ao carregar a página
 document.addEventListener('DOMContentLoaded', function() {
-    // Inicializar estado dos módulos existentes como recolhidos
+    // Inicializar estado dos módulos existentes
     const modulosExistentes = document.querySelectorAll('.modulo-item');
     modulosExistentes.forEach(modulo => {
         const content = modulo.querySelector('.modulo-content');
         const icon = modulo.querySelector('.toggle-icon');
         
         if (content && icon) {
-            // Começar com módulos recolhidos
-            content.style.display = 'none';
-            icon.style.transform = 'rotate(0deg)';
-            icon.className = 'bi bi-chevron-right ms-2 toggle-icon text-primary';
+            // Começar com módulos expandidos
+            content.style.display = 'block';
+            icon.style.transform = 'rotate(180deg)';
         }
-    });
-    
-    // Inicializar estado dos tamanhos existentes como recolhidos
-    const tamanhosExistentes = document.querySelectorAll('.tamanho-content');
-    tamanhosExistentes.forEach(tamanho => {
-        tamanho.style.display = 'none';
     });
     
     // Atualizar contador de módulos baseado nos existentes
     moduloCount = modulosExistentes.length;
     
-    // Definir estado inicial como recolhido
-    modulosColapsados = true;
+    // Definir estado inicial como expandido
+    modulosColapsados = false;
     const btnText = document.getElementById('toggleModulosText');
     const btn = document.getElementById('toggleModulosBtn');
-    if (btnText) btnText.textContent = 'Expandir Todos';
+    if (btnText) btnText.textContent = 'Recolher Todos';
     if (btn) {
         const btnIcon = btn.querySelector('i');
-        if (btnIcon) btnIcon.className = 'bi bi-arrows-expand';
+        if (btnIcon) btnIcon.className = 'bi bi-arrows-collapse';
     }
 });
 </script>

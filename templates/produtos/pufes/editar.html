@@ -1,18 +1,18 @@
 {% extends 'produtos/includes/editar_base.html' %}
 
-{% block edit_title %}Editar Poltrona{% endblock %}
-{% block page_title %}Editar Poltrona - {{ poltrona.ref_poltrona }}{% endblock %}
-{% block section_title %}Dados da Poltrona{% endblock %}
+{% block edit_title %}Editar Pufe{% endblock %}
+{% block page_title %}Editar Pufe - {{ pufe.ref_pufe }}{% endblock %}
+{% block section_title %}Dados do Pufe{% endblock %}
 
 {% block edit_message %}
-Você está editando a poltrona <strong>{{ poltrona.ref_poltrona }} - {{ poltrona.nome }}</strong>.
+Você está editando o pufe <strong>{{ pufe.ref_pufe }} - {{ pufe.nome }}</strong>.
 {% endblock %}
 
 {% block back_url %}{% url 'produtos_lista' %}{% endblock %}
-{% block cancel_url %}{% url 'poltrona_detalhes' poltrona.id %}{% endblock %}
+{% block cancel_url %}{% url 'pufe_detalhes' pufe.id %}{% endblock %}
 
 {% block extra_buttons %}
-<a href="{% url 'poltrona_detalhes' poltrona.id %}" class="btn btn-outline-info">
+<a href="{% url 'pufe_detalhes' pufe.id %}" class="btn btn-outline-info">
     <i class="bi bi-eye"></i> Ver Detalhes
 </a>
 {% endblock %}
@@ -21,8 +21,8 @@ Você está editando a poltrona <strong>{{ poltrona.ref_poltrona }} - {{ poltron
 <div class="row">
     <div class="col-md-6">
         <div class="form-floating mb-3">
-            {{ form.ref_poltrona }}
-            <label for="{{ form.ref_poltrona.id_for_label }}">{{ form.ref_poltrona.label }}</label>
+            {{ form.ref_pufe }}
+            <label for="{{ form.ref_pufe.id_for_label }}">{{ form.ref_pufe.label }}</label>
         </div>
     </div>
     <div class="col-md-6">
@@ -117,9 +117,9 @@ Você está editando a poltrona <strong>{{ poltrona.ref_poltrona }} - {{ poltron
         <div class="mb-3">
             <label for="{{ form.imagem_principal.id_for_label }}" class="form-label">{{ form.imagem_principal.label }}</label>
             {{ form.imagem_principal }}
-            {% if poltrona.imagem_principal %}
+            {% if pufe.imagem_principal %}
                 <div class="mt-2">
-                    <img src="{{ poltrona.imagem_principal.url }}" alt="Imagem atual" class="img-thumbnail" style="max-height: 100px;">
+                    <img src="{{ pufe.imagem_principal.url }}" alt="Imagem atual" class="img-thumbnail" style="max-height: 100px;">
                     <small class="text-muted d-block">Imagem atual</small>
                 </div>
             {% endif %}
@@ -129,9 +129,9 @@ Você está editando a poltrona <strong>{{ poltrona.ref_poltrona }} - {{ poltron
         <div class="mb-3">
             <label for="{{ form.imagem_secundaria.id_for_label }}" class="form-label">{{ form.imagem_secundaria.label }}</label>
             {{ form.imagem_secundaria }}
-            {% if poltrona.imagem_secundaria %}
+            {% if pufe.imagem_secundaria %}
                 <div class="mt-2">
-                    <img src="{{ poltrona.imagem_secundaria.url }}" alt="Imagem atual" class="img-thumbnail" style="max-height: 100px;">
+                    <img src="{{ pufe.imagem_secundaria.url }}" alt="Imagem atual" class="img-thumbnail" style="max-height: 100px;">
                     <small class="text-muted d-block">Imagem atual</small>
                 </div>
             {% endif %}

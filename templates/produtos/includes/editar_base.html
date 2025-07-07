@@ -1,0 +1,152 @@
+{% extends 'base.html' %}
+
+{% block title %}{% block edit_title %}Editar Produto{% endblock %} - Sistema de Produtos{% endblock %}
+
+{% block extra_css %}
+<style>
+.btn-add-image {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 2px solid #0d6efd;
+    background: #fff;
+    color: #0d6efd;
+    transition: all 0.3s ease;
+    position: relative;
+}
+
+.btn-add-image:hover {
+    background: #0d6efd;
+    color: #fff;
+    transform: scale(1.1);
+}
+
+.btn-add-image .bi-camera-fill {
+    font-size: 14px;
+}
+
+.btn-add-image .bi-plus-circle-fill {
+    position: absolute;
+    top: -2px;
+    right: -2px;
+    background: #fff;
+    border-radius: 50%;
+    color: #28a745;
+}
+
+.edit-header {
+    background: linear-gradient(135deg, #ffc107 0%, #fd7e14 100%);
+    color: white;
+    border-radius: 10px 10px 0 0;
+    padding: 1rem;
+    margin-bottom: 0;
+}
+
+.edit-alert {
+    background: linear-gradient(135deg, #e3f2fd 0%, #bbdefb 100%);
+    border: 1px solid #2196f3;
+    border-radius: 8px;
+    color: #1976d2;
+}
+
+.checkbox-grid {
+    max-height: 300px;
+    overflow-y: auto;
+    border: 1px solid #dee2e6;
+    border-radius: 8px;
+    padding: 1rem;
+}
+
+.checkbox-grid .form-check {
+    margin-bottom: 0.5rem;
+}
+
+.checkbox-grid .form-check-input:checked {
+    background-color: #007bff;
+    border-color: #007bff;
+}
+
+.invalid-feedback {
+    color: #dc3545;
+    font-size: 0.875rem;
+    margin-top: 0.25rem;
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="d-flex justify-content-between align-items-center">
+            <h1 class="h2 mb-0">
+                <i class="bi bi-pencil"></i> {% block page_title %}Editar Produto{% endblock %}
+            </h1>
+            <div class="btn-group">
+                {% block extra_buttons %}{% endblock %}
+                <a href="{% block back_url %}{% url 'produtos_lista' %}{% endblock %}" class="btn btn-outline-secondary">
+                    <i class="bi bi-arrow-left"></i> Voltar
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% block edit_alert %}
+<div class="row mb-3">
+    <div class="col-12">
+        <div class="alert edit-alert">
+            <i class="bi bi-info-circle"></i>
+            <strong>Modo de Edição:</strong> {% block edit_message %}Você está editando um produto existente.{% endblock %}
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+<form method="post" enctype="multipart/form-data" id="produtoForm">
+    {% csrf_token %}
+    
+    <!-- Dados Básicos -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header edit-header">
+                    <h6 class="mb-0">
+                        <i class="bi bi-info-circle"></i> {% block section_title %}Dados do Produto{% endblock %}
+                    </h6>
+                </div>
+                <div class="card-body">
+                    {% block form_content %}
+                    {{ form.as_p }}
+                    {% endblock %}
+                    
+                    {% block extra_content %}{% endblock %}
+                    
+                    <!-- Botões de Ação -->
+                    <div class="row mt-4">
+                        <div class="col-12">
+                            <div class="d-flex gap-2">
+                                <button type="submit" class="btn btn-warning">
+                                    <i class="bi bi-check-circle"></i> {% block submit_text %}Salvar Alterações{% endblock %}
+                                </button>
+                                <a href="{% block cancel_url %}{% url 'produtos_lista' %}{% endblock %}" class="btn btn-outline-secondary">
+                                    <i class="bi bi-x-circle"></i> Cancelar
+                                </a>
+                                {% block action_buttons %}{% endblock %}
+                            </div>
+                        </div>
+                    </div>
+                    
+                </div>
+            </div>
+        </div>
+    </div>
+</form>
+
+{% block extra_js %}
+{% include 'produtos/includes/cadastro_base_js.html' %}
+{% block extra_scripts %}{% endblock %}
+{% endblock %}
+{% endblock %}

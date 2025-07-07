@@ -1,0 +1,148 @@
+{% extends 'produtos/includes/editar_base.html' %}
+
+{% block edit_title %}Editar Sofá{% endblock %}
+{% block page_title %}Editar Sofá - {{ sofa.ref_produto }}{% endblock %}
+{% block section_title %}Dados do Sofá{% endblock %}
+
+{% block edit_message %}
+Você está editando o sofá <strong>{{ sofa.ref_produto }} - {{ sofa.nome_produto }}</strong>.
+{% endblock %}
+
+{% block back_url %}{% url 'produtos_lista' %}{% endblock %}
+{% block cancel_url %}{% url 'sofa_detalhes' sofa.id %}{% endblock %}
+
+{% block extra_buttons %}
+<a href="{% url 'sofa_detalhes' sofa.id %}" class="btn btn-outline-info">
+    <i class="bi bi-eye"></i> Ver Detalhes
+</a>
+{% endblock %}
+
+{% block form_content %}
+<div class="row">
+    <div class="col-md-6">
+        <div class="form-floating mb-3">
+            <input type="text" class="form-control" id="ref_produto" name="ref_produto" 
+                   value="{{ sofa.ref_produto }}" placeholder="Referência" required>
+            <label for="ref_produto">Referência do Produto *</label>
+        </div>
+    </div>
+    <div class="col-md-6">
+        <div class="form-floating mb-3">
+            <input type="text" class="form-control" id="nome_produto" name="nome_produto" 
+                   value="{{ sofa.nome_produto }}" placeholder="Nome" required>
+            <label for="nome_produto">Nome do Produto *</label>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-6">
+        <div class="form-floating mb-3">
+            <select class="form-select" id="tipo_produto" name="tipo_produto" required>
+                <option value="">Selecione o tipo</option>
+                {% for tipo in tipos %}
+                    <option value="{{ tipo.id }}" 
+                            {% if sofa.id_tipo_produto.id == tipo.id %}selected{% endif %}>
+                        {{ tipo.nome }}
+                    </option>
+                {% endfor %}
+            </select>
+            <label for="tipo_produto">Tipo de Produto *</label>
+        </div>
+    </div>
+</div>
+
+<!-- Características do Sofá -->
+<div class="row mt-4">
+    <div class="col-12">
+        <h6 class="mb-3">
+            <i class="bi bi-gear"></i> Características do Sofá
+        </h6>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-4">
+        <div class="form-check form-switch mb-3">
+            <input class="form-check-input" type="checkbox" id="tem_cor_tecido" name="tem_cor_tecido" 
+                   {% if sofa.tem_cor_tecido %}checked{% endif %}>
+            <label class="form-check-label" for="tem_cor_tecido">
+                Tem Cor Tecido
+            </label>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="form-check form-switch mb-3">
+            <input class="form-check-input" type="checkbox" id="tem_difer_desenho_lado" name="tem_difer_desenho_lado" 
+                   {% if sofa.tem_difer_desenho_lado_dir_esq %}checked{% endif %}>
+            <label class="form-check-label" for="tem_difer_desenho_lado">
+                Diferencia Desenho por Lado
+            </label>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="form-check form-switch mb-3">
+            <input class="form-check-input" type="checkbox" id="tem_difer_desenho_tamanho" name="tem_difer_desenho_tamanho" 
+                   {% if sofa.tem_difer_desenho_tamanho %}checked{% endif %}>
+            <label class="form-check-label" for="tem_difer_desenho_tamanho">
+                Diferencia Desenho por Tamanho
+            </label>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-12">
+        <div class="form-check form-switch mb-3">
+            <input class="form-check-input" type="checkbox" id="ativo" name="ativo" 
+                   {% if sofa.ativo %}checked{% endif %}>
+            <label class="form-check-label" for="ativo">
+                Produto Ativo
+            </label>
+        </div>
+    </div>
+</div>
+
+<!-- Seção de Imagens -->
+<div class="row mt-4">
+    <div class="col-12">
+        <h6 class="mb-3">
+            <i class="bi bi-images"></i> Imagens
+        </h6>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-6">
+        <div class="mb-3">
+            <label for="imagem_principal" class="form-label">Imagem Principal</label>
+            <input type="file" class="form-control" id="imagem_principal" name="imagem_principal" accept="image/*">
+            {% if sofa.imagem_principal %}
+                <div class="mt-2">
+                    <img src="{{ sofa.imagem_principal.url }}" alt="Imagem atual" class="img-thumbnail" style="max-height: 100px;">
+                    <small class="text-muted d-block">Imagem atual</small>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+    <div class="col-md-6">
+        <div class="mb-3">
+            <label for="imagem_secundaria" class="form-label">Imagem Secundária</label>
+            <input type="file" class="form-control" id="imagem_secundaria" name="imagem_secundaria" accept="image/*">
+            {% if sofa.imagem_secundaria %}
+                <div class="mt-2">
+                    <img src="{{ sofa.imagem_secundaria.url }}" alt="Imagem atual" class="img-thumbnail" style="max-height: 100px;">
+                    <small class="text-muted d-block">Imagem atual</small>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<!-- Módulos do Sofá -->
+{% include 'produtos/includes/secao_modulos_sofa.html' %}
+{% endblock %}
+
+{% block extra_scripts %}
+{% include 'produtos/includes/sofa_js.html' %}
+{% endblock %}

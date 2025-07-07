@@ -1,6 +1,6 @@
 from django import forms
 from .models import (
-    Item, TipoItem, Modulo, TamanhosModulosDetalhado, 
+    Item, Produto, TipoItem, Modulo, TamanhosModulosDetalhado, 
     Acessorio, FaixaTecido, PrecosBase, Banqueta, Cadeira, Poltrona, Pufe, Almofada
 )
 
@@ -55,7 +55,7 @@ class ModuloForm(forms.ModelForm):
     class Meta:
         model = Modulo
         fields = [
-            'item',
+            'produto',
             'nome',
             'profundidade',
             'altura',
@@ -193,8 +193,25 @@ class AcessorioForm(forms.ModelForm):
         self.fields['preco'].help_text = "Preço do acessório em reais (R$)"
         self.fields['produtos_vinculados'].help_text = "Selecione os produtos aos quais este acessório pode ser vinculado"
         
-        # Filtrar apenas produtos ativos para vinculação
-        self.fields['produtos_vinculados'].queryset = Item.objects.filter(ativo=True).order_by('ref_produto')
+        # Filtrar APENAS sofás ativos para vinculação
+        try:
+            tipo_sofa = TipoItem.objects.filter(nome__icontains='sofá').first()
+            if tipo_sofa:
+                # Mostrar apenas sofás
+                sofas_ativos = Produto.objects.filter(
+                    ativo=True, 
+                    id_tipo_produto=tipo_sofa
+                ).order_by('ref_produto')
+                self.fields['produtos_vinculados'].queryset = sofas_ativos
+                self.fields['produtos_vinculados'].label = "Sofás Compatíveis"
+                self.fields['produtos_vinculados'].help_text = "Selecione os sofás aos quais este acessório pode ser vinculado"
+            else:
+                # Se não encontrar tipo sofá, usar queryset vazio
+                self.fields['produtos_vinculados'].queryset = Produto.objects.none()
+                self.fields['produtos_vinculados'].help_text = "Nenhum sofá encontrado para vinculação"
+        except:
+            # Fallback: queryset vazio se houver erro
+            self.fields['produtos_vinculados'].queryset = Produto.objects.none()
     
     def clean_ref_acessorio(self):
         ref_acessorio = self.cleaned_data.get('ref_acessorio')

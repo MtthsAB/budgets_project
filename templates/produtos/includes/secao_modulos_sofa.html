@@ -1,18 +1,201 @@
 <!-- Seção de Módulos para Sofás -->
-<div id="secao-modulos" style="display: none;">
+<div id="secao-modulos" style="display: block;">
     <hr class="my-4">
     <div class="d-flex justify-content-between align-items-center mb-3">
         <h6 class="mb-0">
             <i class="bi bi-grid-3x3 text-primary"></i> Módulos (Opcional)
         </h6>
-        <button type="button" class="btn btn-sm btn-success" onclick="adicionarModulo()">
-            <i class="bi bi-plus"></i> Adicionar Módulo
-        </button>
+        <div class="btn-group" role="group">
+            <button type="button" class="btn btn-sm btn-primary" onclick="toggleTodosModulos()" id="toggleModulosBtn" 
+                    style="font-weight: 500;">
+                <i class="bi bi-arrows-expand"></i> <span id="toggleModulosText">Expandir Todos</span>
+            </button>
+            <button type="button" class="btn btn-sm btn-success" onclick="adicionarModulo()">
+                <i class="bi bi-plus"></i> Adicionar Módulo
+            </button>
+        </div>
     </div>
     <div id="modulosContainer">
-        <!-- Módulos serão adicionados aqui via JavaScript -->
+        {% if modulos %}
+            {% for modulo in modulos %}
+                <div class="modulo-item border rounded mb-3" id="modulo-existente-{{ forloop.counter }}">
+                    <div class="modulo-header d-flex justify-content-between align-items-center p-3 bg-primary bg-opacity-10 rounded-top border-bottom" 
+                         style="cursor: pointer; transition: background-color 0.2s; user-select: none;" 
+                         onclick="toggleModulo({{ forloop.counter }}, 'existente')"
+                         onmouseover="this.style.backgroundColor='rgba(13, 110, 253, 0.15)'"
+                         onmouseout="this.style.backgroundColor='rgba(13, 110, 253, 0.1)'">
+                        <h6 class="mb-0 d-flex align-items-center">
+                            <i class="bi bi-cube text-primary me-2"></i> 
+                            <span class="fw-semibold">{{ modulo.nome }}</span>
+                            <i class="bi bi-chevron-right ms-2 toggle-icon text-primary" id="toggle-existente-{{ forloop.counter }}" 
+                               style="transition: transform 0.2s;"></i>
+                        </h6>
+                        <button type="button" class="btn btn-sm btn-outline-danger" 
+                                onclick="event.stopPropagation(); removerModuloExistente({{ forloop.counter }})"
+                                title="Remover módulo">
+                            <i class="bi bi-trash"></i> Remover
+                        </button>
+                    </div>
+                    
+                    <div class="modulo-content p-3" id="content-existente-{{ forloop.counter }}" style="display: none;">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-floating mb-3">
+                                    <input type="text" class="form-control" name="modulo_nome" 
+                                           value="{{ modulo.nome }}" placeholder="Nome do módulo" required>
+                                    <label>Nome do Módulo</label>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-floating mb-3">
+                                    <input type="number" step="0.01" class="form-control" name="modulo_profundidade_{{ forloop.counter }}" 
+                                           value="{{ modulo.profundidade|default:'' }}" placeholder="Profundidade">
+                                    <label>Profundidade (cm)</label>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-md-4">
+                                <div class="form-floating mb-3">
+                                    <input type="number" step="0.01" class="form-control" name="modulo_altura_{{ forloop.counter }}" 
+                                           value="{{ modulo.altura|default:'' }}" placeholder="Altura">
+                                    <label>Altura (cm)</label>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="form-floating mb-3">
+                                    <input type="number" step="0.01" class="form-control" name="modulo_braco_{{ forloop.counter }}" 
+                                           value="{{ modulo.braco|default:'' }}" placeholder="Braço">
+                                    <label>Braço (cm)</label>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="mb-3">
+                                    <label class="form-label">Imagem do Módulo</label>
+                                    <input type="file" class="form-control" name="modulo_imagem_principal_{{ forloop.counter }}" 
+                                           accept="image/*">
+                                    {% if modulo.imagem_principal %}
+                                        <small class="text-muted">Imagem atual: {{ modulo.imagem_principal.name }}</small>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label class="form-label">Descrição</label>
+                            <textarea class="form-control" name="modulo_descricao_{{ forloop.counter }}" 
+                                      rows="2" placeholder="Descrição do módulo">{{ modulo.descricao|default:'' }}</textarea>
+                        </div>
+                        
+                        <!-- Tamanhos do Módulo -->
+                        <div class="mt-4">
+                            <div class="d-flex justify-content-between align-items-center mb-3">
+                                <h6 class="mb-0">
+                                    <i class="bi bi-rulers text-success"></i> Tamanhos (Opcional)
+                                </h6>
+                                <div class="btn-group" role="group">
+                                    <button type="button" class="btn btn-sm btn-outline-secondary" onclick="toggleTodosTamanhos({{ forloop.counter }})" id="toggleTamanhosBtn_{{ forloop.counter }}">
+                                        <i class="bi bi-arrows-expand"></i> <span id="toggleTamanhosText_{{ forloop.counter }}">Expandir Todos</span>
+                                    </button>
+                                    <button type="button" class="btn btn-sm btn-outline-success" onclick="adicionarTamanho({{ forloop.counter }})">
+                                        <i class="bi bi-plus"></i> Adicionar Tamanho
+                                    </button>
+                                </div>
+                            </div>
+                            <div id="tamanhosContainer_{{ forloop.counter }}">
+                                {% if modulo.tamanhos_detalhados.all %}
+                                    {% for tamanho in modulo.tamanhos_detalhados.all %}
+                                        <div class="card mb-2" id="tamanho_existente_{{ forloop.parentloop.counter }}_{{ forloop.counter }}">
+                                            <div class="card-header d-flex justify-content-between align-items-center p-2 bg-success bg-opacity-10" 
+                                                 style="cursor: pointer; transition: background-color 0.2s; user-select: none;" 
+                                                 onclick="toggleTamanho({{ forloop.parentloop.counter }}, {{ forloop.counter }}, 'existente')"
+                                                 onmouseover="this.style.backgroundColor='rgba(25, 135, 84, 0.15)'"
+                                                 onmouseout="this.style.backgroundColor='rgba(25, 135, 84, 0.1)'">
+                                                <h6 class="mb-0 d-flex align-items-center">
+                                                    <i class="bi bi-rulers text-success me-2"></i> 
+                                                    <span class="fw-semibold">Tamanho {{ forloop.counter }}</span>
+                                                    <i class="bi bi-chevron-right ms-2 toggle-icon text-success" id="toggle-tamanho-existente-{{ forloop.parentloop.counter }}_{{ forloop.counter }}" 
+                                                       style="transition: transform 0.2s;"></i>
+                                                </h6>
+                                                <button type="button" class="btn btn-sm btn-outline-danger" 
+                                                        onclick="event.stopPropagation(); removerTamanho('tamanho_existente_{{ forloop.parentloop.counter }}_{{ forloop.counter }}')">
+                                                    <i class="bi bi-trash"></i>
+                                                </button>
+                                            </div>
+                                            <div class="card-body tamanho-content" id="content-tamanho-existente-{{ forloop.parentloop.counter }}_{{ forloop.counter }}" style="display: none;">
+                                                <div class="row">
+                                                    <div class="col-md-3">
+                                                        <div class="form-floating mb-2">
+                                                            <input type="number" step="0.01" class="form-control" 
+                                                                   name="tamanho_largura_total_{{ forloop.parentloop.counter }}_{{ forloop.counter }}" 
+                                                                   value="{{ tamanho.largura_total|default:'' }}" placeholder="Largura Total">
+                                                            <label>Largura Total (cm)</label>
+                                                        </div>
+                                                    </div>
+                                                    <div class="col-md-3">
+                                                        <div class="form-floating mb-2">
+                                                            <input type="number" step="0.01" class="form-control" 
+                                                                   name="tamanho_largura_assento_{{ forloop.parentloop.counter }}_{{ forloop.counter }}" 
+                                                                   value="{{ tamanho.largura_assento|default:'' }}" placeholder="Largura Assento">
+                                                            <label>Largura Assento (cm)</label>
+                                                        </div>
+                                                    </div>
+                                                    <div class="col-md-3">
+                                                        <div class="form-floating mb-2">
+                                                            <input type="number" step="0.01" class="form-control" 
+                                                                   name="tamanho_tecido_{{ forloop.parentloop.counter }}_{{ forloop.counter }}" 
+                                                                   value="{{ tamanho.tecido_metros|default:'' }}" placeholder="Tecido">
+                                                            <label>Tecido (metros)</label>
+                                                        </div>
+                                                    </div>
+                                                    <div class="col-md-3">
+                                                        <div class="form-floating mb-2">
+                                                            <input type="number" step="0.001" class="form-control" 
+                                                                   name="tamanho_volume_{{ forloop.parentloop.counter }}_{{ forloop.counter }}" 
+                                                                   value="{{ tamanho.volume_m3|default:'' }}" placeholder="Volume">
+                                                            <label>Volume (m³)</label>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                <div class="row">
+                                                    <div class="col-md-3">
+                                                        <div class="form-floating mb-2">
+                                                            <input type="number" step="0.01" class="form-control" 
+                                                                   name="tamanho_peso_{{ forloop.parentloop.counter }}_{{ forloop.counter }}" 
+                                                                   value="{{ tamanho.peso_kg|default:'' }}" placeholder="Peso">
+                                                            <label>Peso (kg)</label>
+                                                        </div>
+                                                    </div>
+                                                    <div class="col-md-3">
+                                                        <div class="form-floating mb-2">
+                                                            <input type="number" step="0.01" class="form-control" 
+                                                                   name="tamanho_preco_{{ forloop.parentloop.counter }}_{{ forloop.counter }}" 
+                                                                   value="{{ tamanho.preco|default:'' }}" placeholder="Preço">
+                                                            <label>Preço (R$)</label>
+                                                        </div>
+                                                    </div>
+                                                    <div class="col-md-6">
+                                                        <div class="form-floating mb-2">
+                                                            <textarea class="form-control" 
+                                                                      name="tamanho_descricao_{{ forloop.parentloop.counter }}_{{ forloop.counter }}" 
+                                                                      placeholder="Descrição" style="height: 58px;">{{ tamanho.descricao|default:'' }}</textarea>
+                                                            <label>Descrição</label>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    {% endfor %}
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            {% endfor %}
+        {% endif %}
     </div>
-    <div class="alert alert-info mb-0" id="noModulosAlert">
+    <div class="alert alert-info mb-0" id="noModulosAlert"{% if modulos %} style="display: none;"{% endif %}>
         <i class="bi bi-info-circle"></i> 
         Os módulos são opcionais. Clique em "Adicionar Módulo" se desejar adicionar módulos ao produto.
     </div>

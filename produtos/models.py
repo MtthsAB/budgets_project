@@ -27,8 +27,76 @@ class Linha(BaseModel):
     def __str__(self):
         return self.nome
 
+class Produto(BaseModel):
+    """Produto base do sistema - informações básicas e campos específicos para sofás"""
+    ref_produto = models.CharField(max_length=50, unique=True, verbose_name="Referência do Produto")
+    nome_produto = models.CharField(max_length=200, verbose_name="Nome do Produto")
+    id_tipo_produto = models.ForeignKey(
+        TipoItem, 
+        on_delete=models.PROTECT, 
+        verbose_name="Tipo de Produto"
+    )
+    ativo = models.BooleanField(default=True, verbose_name="Ativo")
+    
+    # Imagens básicas
+    imagem_principal = models.ImageField(
+        upload_to='produtos/',
+        blank=True,
+        null=True,
+        verbose_name="Imagem Principal"
+    )
+    imagem_secundaria = models.ImageField(
+        upload_to='produtos/',
+        blank=True,
+        null=True,
+        verbose_name="Imagem Secundária"
+    )
+    
+    # Campos específicos para sofás (opcionais para outros tipos)
+    tem_cor_tecido = models.BooleanField(
+        default=False, 
+        verbose_name="Tem Cor Tecido",
+        help_text="Apenas para sofás e produtos similares"
+    )
+    tem_difer_desenho_lado_dir_esq = models.BooleanField(
+        default=False, 
+        verbose_name="Diferencia Desenho Lado Direito/Esquerdo",
+        help_text="Apenas para sofás e produtos similares"
+    )
+    tem_difer_desenho_tamanho = models.BooleanField(
+        default=False, 
+        verbose_name="Diferencia Desenho por Tamanho",
+        help_text="Apenas para sofás e produtos similares"
+    )
+    
+    class Meta:
+        verbose_name = "Produto"
+        verbose_name_plural = "Produtos"
+        ordering = ['ref_produto']
+        db_table = 'produtos_produto'  # Define o nome da tabela
+    
+    def __str__(self):
+        return f"{self.ref_produto} - {self.nome_produto}"
+    
+    def eh_sofa(self):
+        """Verifica se o produto é um sofá"""
+        return self.id_tipo_produto.nome.lower() in ['sofá', 'sofas', 'sofa']
+    
+    def clean(self):
+        """Validações customizadas do modelo"""
+        super().clean()
+        
+        # Para produtos que não são sofás, forçar valores False nos campos específicos
+        if not self.eh_sofa():
+            self.tem_cor_tecido = False
+            self.tem_difer_desenho_lado_dir_esq = False
+            self.tem_difer_desenho_tamanho = False
+
+
+# Classe Item mantida temporariamente para compatibilidade
+# TODO: Remover após migração completa para Produto
 class Item(BaseModel):
-    """Produto principal do sistema - inclui sofás, acessórios e outros tipos"""
+    """DEPRECATED: Use Produto em vez desta classe. Mantida apenas para compatibilidade."""
     ref_produto = models.CharField(max_length=50, unique=True, verbose_name="Referência do Produto")
     nome_produto = models.CharField(max_length=200, verbose_name="Nome do Produto")
     id_tipo_produto = models.ForeignKey(
@@ -89,8 +157,8 @@ class Item(BaseModel):
     )
     
     class Meta:
-        verbose_name = "Item"
-        verbose_name_plural = "Itens"
+        verbose_name = "Item (Deprecated)"
+        verbose_name_plural = "Itens (Deprecated)"
         ordering = ['ref_produto']
     
     def __str__(self):
@@ -142,7 +210,7 @@ class Acessorio(BaseModel):
         verbose_name="Imagem Adicional"
     )
     produtos_vinculados = models.ManyToManyField(
-        'Item',
+        'Produto',
         blank=True,
         verbose_name="Produtos Vinculados",
         help_text="Produtos aos quais este acessório pode ser vinculado"
@@ -160,12 +228,12 @@ class Acessorio(BaseModel):
         return self.nome
 
 class Modulo(BaseModel):
-    """Módulos dos produtos"""
-    item = models.ForeignKey(
-        Item, 
+    """Módulos dos produtos (apenas para sofás)"""
+    produto = models.ForeignKey(
+        Produto, 
         on_delete=models.CASCADE, 
         related_name='modulos',
-        verbose_name="Item"
+        verbose_name="Produto"
     )
     nome = models.CharField(max_length=100, verbose_name="Nome do Módulo")
     profundidade = models.DecimalField(
@@ -210,10 +278,10 @@ class Modulo(BaseModel):
     class Meta:
         verbose_name = "Módulo"
         verbose_name_plural = "Módulos"
-        ordering = ['item', 'nome']
+        ordering = ['produto', 'nome']
     
     def __str__(self):
-        return f"{self.item.ref_produto} - {self.nome}"
+        return f"{self.produto.ref_produto} - {self.nome}"
 
 class TamanhosModulos(BaseModel):
     """Tamanhos dos módulos"""
