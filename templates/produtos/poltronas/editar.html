@@ -1,0 +1,12 @@
+{% extends 'produtos/poltronas/cadastro.html' %}
+
+{% block page_title %}Editar Poltrona - {{ poltrona.ref_poltrona }}{% endblock %}
+
+{% block submit_text %}Salvar Alterações{% endblock %}
+
+{% block extra_content %}
+<div class="alert alert-info">
+    <i class="bi bi-info-circle"></i>
+    Editando a poltrona <strong>{{ poltrona.ref_poltrona }} - {{ poltrona.nome }}</strong>
+</div>
+{% endblock %}

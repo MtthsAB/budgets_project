@@ -1,0 +1,108 @@
+{% extends 'base.html' %}
+
+{% block title %}Cadastrar Produto - Sistema de Produtos{% endblock %}
+
+{% block extra_css %}
+<style>
+.btn-add-image {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 2px solid #0d6efd;
+    background: #fff;
+    color: #0d6efd;
+    transition: all 0.3s ease;
+    position: relative;
+}
+
+.btn-add-image:hover {
+    background: #0d6efd;
+    color: #fff;
+    transform: scale(1.1);
+}
+
+.btn-add-image .bi-camera-fill {
+    font-size: 14px;
+}
+
+.btn-add-image .bi-plus-circle-fill {
+    position: absolute;
+    top: -2px;
+    right: -2px;
+    background: #fff;
+    border-radius: 50%;
+    color: #28a745;
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="d-flex justify-content-between align-items-center">
+            <h1 class="h2 mb-0">
+                <i class="bi bi-plus-circle"></i> {% block page_title %}Cadastrar Produto{% endblock %}
+            </h1>
+            <a href="{% url 'produtos_lista' %}" class="btn btn-outline-secondary">
+                <i class="bi bi-arrow-left"></i> Voltar
+            </a>
+        </div>
+    </div>
+</div>
+
+<form method="post" enctype="multipart/form-data" id="produtoForm">
+    {% csrf_token %}
+    
+    <!-- Dados Básicos -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h6 class="mb-0">
+                        <i class="bi bi-info-circle"></i> Dados Básicos
+                    </h6>
+                </div>
+                <div class="card-body">
+                    {% include 'produtos/includes/campos_basicos.html' %}
+                    
+                    {% block campos_especificos %}
+                    <!-- Campos específicos do tipo de produto serão inseridos aqui -->
+                    {% endblock %}
+                    
+                    <!-- Seção de Imagens Reutilizável -->
+                    <div id="secao-imagens" style="display: none;">
+                        {% include 'produtos/includes/secao_imagens.html' with objeto=None %}
+                    </div>
+                    
+                    {% block secoes_especificas %}
+                    <!-- Seções específicas como módulos, vinculações etc. -->
+                    {% endblock %}
+                    
+                    <!-- Botões de Ação -->
+                    <div class="row mt-4">
+                        <div class="col-12">
+                            <div class="d-flex gap-2">
+                                <button type="submit" class="btn btn-primary">
+                                    <i class="bi bi-check-circle"></i> {% block submit_text %}Cadastrar Produto{% endblock %}
+                                </button>
+                                <a href="{% url 'produtos_lista' %}" class="btn btn-outline-secondary">
+                                    <i class="bi bi-x-circle"></i> Cancelar
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                    
+                </div>
+            </div>
+        </div>
+    </div>
+</form>
+{% endblock %}
+
+{% block extra_js %}
+{% include 'produtos/includes/cadastro_base_js.html' %}
+{% block extra_product_js %}{% endblock %}
+{% endblock %}

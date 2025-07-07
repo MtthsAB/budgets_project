@@ -1,0 +1,87 @@
+<!-- Campos específicos para Cadeiras -->
+<div class="row" id="campos-cadeira" style="display: none;">
+    <div class="col-md-3">
+        <div class="form-check form-switch mb-3">
+            <input class="form-check-input" type="checkbox" id="ativo_cadeira" name="ativo_cadeira" checked>
+            <label class="form-check-label" for="ativo_cadeira">
+                Cadeira Ativa
+            </label>
+        </div>
+    </div>
+    <div class="col-md-9">
+        <p class="text-muted mb-3">
+            <i class="bi bi-info-circle"></i> 
+            Preencha as especificações técnicas da cadeira.
+        </p>
+    </div>
+</div>
+
+<!-- Dimensões da Cadeira -->
+<div id="dimensoes-cadeira" style="display: none;">
+    <div class="row">
+        <div class="col-md-4">
+            <div class="form-floating mb-3">
+                <input type="number" step="0.01" class="form-control" id="largura_cadeira" 
+                       name="largura_cadeira" placeholder="0.00" min="0.01">
+                <label for="largura_cadeira">Largura (cm) *</label>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="form-floating mb-3">
+                <input type="number" step="0.01" class="form-control" id="profundidade_cadeira" 
+                       name="profundidade_cadeira" placeholder="0.00" min="0.01">
+                <label for="profundidade_cadeira">Profundidade (cm) *</label>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="form-floating mb-3">
+                <input type="number" step="0.01" class="form-control" id="altura_cadeira" 
+                       name="altura_cadeira" placeholder="0.00" min="0.01">
+                <label for="altura_cadeira">Altura (cm) *</label>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Especificações Técnicas -->
+    <div class="row">
+        <div class="col-md-3">
+            <div class="form-floating mb-3">
+                <input type="number" step="0.01" class="form-control" id="tecido_metros_cadeira" 
+                       name="tecido_metros_cadeira" placeholder="0.00" min="0.01">
+                <label for="tecido_metros_cadeira">Tecido (m) *</label>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="form-floating mb-3">
+                <input type="number" step="0.001" class="form-control" id="volume_m3_cadeira" 
+                       name="volume_m3_cadeira" placeholder="0.000" min="0.001">
+                <label for="volume_m3_cadeira">Volume (m³) *</label>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="form-floating mb-3">
+                <input type="number" step="0.01" class="form-control" id="peso_kg_cadeira" 
+                       name="peso_kg_cadeira" placeholder="0.00" min="0.01">
+                <label for="peso_kg_cadeira">Peso (kg) *</label>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="form-floating mb-3">
+                <input type="number" step="0.01" class="form-control" id="preco_cadeira" 
+                       name="preco_cadeira" placeholder="0.00" min="0.01">
+                <label for="preco_cadeira">Preço (R$) *</label>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Descrição -->
+    <div class="row">
+        <div class="col-12">
+            <div class="form-floating mb-3">
+                <textarea class="form-control" id="descricao_cadeira" name="descricao_cadeira" 
+                         placeholder="Descrição da cadeira" style="height: 80px;"></textarea>
+                <label for="descricao_cadeira">Descrição (opcional)</label>
+            </div>
+        </div>
+    </div>
+</div>

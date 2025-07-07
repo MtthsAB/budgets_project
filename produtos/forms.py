@@ -1,7 +1,7 @@
 from django import forms
 from .models import (
     Item, TipoItem, Modulo, TamanhosModulosDetalhado, 
-    Acessorio, FaixaTecido, PrecosBase, Banqueta, Cadeira
+    Acessorio, FaixaTecido, PrecosBase, Banqueta, Cadeira, Poltrona, Pufe, Almofada
 )
 
 class TamanhosModulosDetalhadoForm(forms.ModelForm):
@@ -395,6 +395,284 @@ class CadeiraForm(forms.ModelForm):
         
         # Validações específicas para campos numéricos
         campos_numericos = ['largura', 'profundidade', 'altura', 'tecido_metros', 'volume_m3', 'peso_kg', 'preco']
+        
+        for campo in campos_numericos:
+            valor = cleaned_data.get(campo)
+            if valor is not None and valor <= 0:
+                self.add_error(campo, f'{campo.replace("_", " ").title()} deve ser maior que zero.')
+        
+        return cleaned_data
+
+
+class PoltronaForm(forms.ModelForm):
+    """
+    Formulário específico para Poltronas.
+    """
+    
+    class Meta:
+        model = Poltrona
+        fields = [
+            'ref_poltrona',
+            'nome',
+            'largura',
+            'profundidade', 
+            'altura',
+            'tecido_metros',
+            'volume_m3',
+            'peso_kg',
+            'preco',
+            'ativo',
+            'imagem_principal',
+            'imagem_secundaria',
+            'descricao'
+        ]
+        widgets = {
+            'descricao': forms.Textarea(attrs={'rows': 3}),
+            'largura': forms.NumberInput(attrs={'step': '0.01', 'min': '0.01'}),
+            'profundidade': forms.NumberInput(attrs={'step': '0.01', 'min': '0.01'}),
+            'altura': forms.NumberInput(attrs={'step': '0.01', 'min': '0.01'}),
+            'tecido_metros': forms.NumberInput(attrs={'step': '0.01', 'min': '0.01'}),
+            'volume_m3': forms.NumberInput(attrs={'step': '0.001', 'min': '0.001'}),
+            'peso_kg': forms.NumberInput(attrs={'step': '0.01', 'min': '0.01'}),
+            'preco': forms.NumberInput(attrs={'step': '0.01', 'min': '0.01'}),
+        }
+        
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        
+        # Adicionar classes CSS
+        for field_name, field in self.fields.items():
+            if isinstance(field.widget, forms.CheckboxInput):
+                field.widget.attrs.update({'class': 'form-check-input'})
+            elif field_name not in ['imagem_principal', 'imagem_secundaria']:
+                field.widget.attrs.update({'class': 'form-control'})
+        
+        # Adicionar help_text e placeholder
+        self.fields['ref_poltrona'].help_text = "Código único da poltrona (ex: PL243, PL246, PL105)"
+        self.fields['nome'].help_text = "Nome da poltrona (ex: ARIA, ARISTOCRATA, CERNE)"
+        self.fields['largura'].help_text = "Largura em centímetros"
+        self.fields['profundidade'].help_text = "Profundidade em centímetros"
+        self.fields['altura'].help_text = "Altura em centímetros"
+        self.fields['tecido_metros'].help_text = "Quantidade de tecido em metros"
+        self.fields['volume_m3'].help_text = "Volume em metros cúbicos (m³)"
+        self.fields['peso_kg'].help_text = "Peso em quilogramas (kg)"
+        self.fields['preco'].help_text = "Preço em reais (R$)"
+        
+        # Adicionar placeholders
+        self.fields['ref_poltrona'].widget.attrs['placeholder'] = 'Ex: PL243'
+        self.fields['nome'].widget.attrs['placeholder'] = 'Ex: ARIA'
+        self.fields['largura'].widget.attrs['placeholder'] = '82,00'
+        self.fields['profundidade'].widget.attrs['placeholder'] = '81,00'
+        self.fields['altura'].widget.attrs['placeholder'] = '84,00'
+        self.fields['tecido_metros'].widget.attrs['placeholder'] = '4,60'
+        self.fields['volume_m3'].widget.attrs['placeholder'] = '0,60'
+        self.fields['peso_kg'].widget.attrs['placeholder'] = '25'
+        self.fields['preco'].widget.attrs['placeholder'] = '1301,00'
+    
+    def clean_ref_poltrona(self):
+        ref_poltrona = self.cleaned_data.get('ref_poltrona')
+        if ref_poltrona:
+            ref_poltrona = ref_poltrona.strip().upper()
+            
+            # Verificar se já existe (exceto para o próprio objeto na edição)
+            qs = Poltrona.objects.filter(ref_poltrona=ref_poltrona)
+            if self.instance.pk:
+                qs = qs.exclude(pk=self.instance.pk)
+            
+            if qs.exists():
+                raise forms.ValidationError("Já existe uma poltrona com esta referência.")
+        
+        return ref_poltrona
+    
+    def clean(self):
+        cleaned_data = super().clean()
+        
+        # Validações específicas para campos numéricos
+        campos_numericos = ['largura', 'profundidade', 'altura', 'tecido_metros', 'volume_m3', 'peso_kg', 'preco']
+        
+        for campo in campos_numericos:
+            valor = cleaned_data.get(campo)
+            if valor is not None and valor <= 0:
+                self.add_error(campo, f'O valor deve ser maior que zero.')
+        
+        return cleaned_data
+
+
+class PufeForm(forms.ModelForm):
+    """
+    Formulário específico para Pufes.
+    """
+    
+    class Meta:
+        model = Pufe
+        fields = [
+            'ref_pufe',
+            'nome',
+            'largura',
+            'profundidade', 
+            'altura',
+            'tecido_metros',
+            'volume_m3',
+            'peso_kg',
+            'preco',
+            'ativo',
+            'imagem_principal',
+            'imagem_secundaria',
+            'descricao'
+        ]
+        widgets = {
+            'descricao': forms.Textarea(attrs={'rows': 3}),
+            'largura': forms.NumberInput(attrs={'step': '0.01', 'min': '0.01'}),
+            'profundidade': forms.NumberInput(attrs={'step': '0.01', 'min': '0.01'}),
+            'altura': forms.NumberInput(attrs={'step': '0.01', 'min': '0.01'}),
+            'tecido_metros': forms.NumberInput(attrs={'step': '0.01', 'min': '0.01'}),
+            'volume_m3': forms.NumberInput(attrs={'step': '0.001', 'min': '0.001'}),
+            'peso_kg': forms.NumberInput(attrs={'step': '0.01', 'min': '0.01'}),
+            'preco': forms.NumberInput(attrs={'step': '0.01', 'min': '0.01'}),
+        }
+        
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        
+        # Adicionar classes CSS
+        for field_name, field in self.fields.items():
+            if isinstance(field.widget, forms.CheckboxInput):
+                field.widget.attrs.update({'class': 'form-check-input'})
+            elif field_name not in ['imagem_principal', 'imagem_secundaria']:
+                field.widget.attrs.update({'class': 'form-control'})
+        
+        # Adicionar help_text e placeholder
+        self.fields['ref_pufe'].help_text = "Código único do pufe (ex: PF13, PF249)"
+        self.fields['nome'].help_text = "Nome do pufe (ex: ROUND, SQUARE)"
+        self.fields['largura'].help_text = "Largura em centímetros"
+        self.fields['profundidade'].help_text = "Profundidade em centímetros"
+        self.fields['altura'].help_text = "Altura em centímetros"
+        self.fields['tecido_metros'].help_text = "Quantidade de tecido em metros"
+        self.fields['volume_m3'].help_text = "Volume em metros cúbicos (m³)"
+        self.fields['peso_kg'].help_text = "Peso em quilogramas (kg)"
+        self.fields['preco'].help_text = "Preço em reais (R$)"
+        
+        # Adicionar placeholders
+        self.fields['ref_pufe'].widget.attrs['placeholder'] = 'Ex: PF249'
+        self.fields['nome'].widget.attrs['placeholder'] = 'Ex: ROUND'
+        self.fields['largura'].widget.attrs['placeholder'] = '40,00'
+        self.fields['profundidade'].widget.attrs['placeholder'] = '40,00'
+        self.fields['altura'].widget.attrs['placeholder'] = '35,00'
+        self.fields['tecido_metros'].widget.attrs['placeholder'] = '0,80'
+        self.fields['volume_m3'].widget.attrs['placeholder'] = '0,20'
+        self.fields['peso_kg'].widget.attrs['placeholder'] = '6'
+        self.fields['preco'].widget.attrs['placeholder'] = '450,00'
+    
+    def clean_ref_pufe(self):
+        ref_pufe = self.cleaned_data.get('ref_pufe')
+        if ref_pufe:
+            ref_pufe = ref_pufe.strip().upper()
+            
+            # Verificar se já existe (exceto para o próprio objeto na edição)
+            qs = Pufe.objects.filter(ref_pufe=ref_pufe)
+            if self.instance.pk:
+                qs = qs.exclude(pk=self.instance.pk)
+            
+            if qs.exists():
+                raise forms.ValidationError("Já existe um pufe com esta referência.")
+        
+        return ref_pufe
+    
+    def clean(self):
+        cleaned_data = super().clean()
+        
+        # Validações específicas para campos numéricos
+        campos_numericos = ['largura', 'profundidade', 'altura', 'tecido_metros', 'volume_m3', 'peso_kg', 'preco']
+        
+        for campo in campos_numericos:
+            valor = cleaned_data.get(campo)
+            if valor is not None and valor <= 0:
+                self.add_error(campo, f"O valor deve ser maior que zero.")
+        
+        return cleaned_data
+
+
+class AlmofadaForm(forms.ModelForm):
+    """
+    Formulário específico para Almofadas - só tem largura e altura.
+    """
+    
+    class Meta:
+        model = Almofada
+        fields = [
+            'ref_almofada',
+            'nome',
+            'largura',
+            'altura',
+            'tecido_metros',
+            'volume_m3',
+            'peso_kg',
+            'preco',
+            'ativo',
+            'imagem_principal',
+            'imagem_secundaria',
+            'descricao'
+        ]
+        widgets = {
+            'descricao': forms.Textarea(attrs={'rows': 3}),
+            'largura': forms.NumberInput(attrs={'step': '0.01', 'min': '0.01'}),
+            'altura': forms.NumberInput(attrs={'step': '0.01', 'min': '0.01'}),
+            'tecido_metros': forms.NumberInput(attrs={'step': '0.01', 'min': '0.01'}),
+            'volume_m3': forms.NumberInput(attrs={'step': '0.001', 'min': '0.001'}),
+            'peso_kg': forms.NumberInput(attrs={'step': '0.01', 'min': '0.01'}),
+            'preco': forms.NumberInput(attrs={'step': '0.01', 'min': '0.01'}),
+        }
+        
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        
+        # Adicionar classes CSS
+        for field_name, field in self.fields.items():
+            if isinstance(field.widget, forms.CheckboxInput):
+                field.widget.attrs.update({'class': 'form-check-input'})
+            elif field_name not in ['imagem_principal', 'imagem_secundaria']:
+                field.widget.attrs.update({'class': 'form-control'})
+        
+        # Adicionar help_text e placeholder
+        self.fields['ref_almofada'].help_text = "Código único da almofada (ex: AL001, AL250)"
+        self.fields['nome'].help_text = "Nome da almofada (ex: DECORATIVA, LOMBAR)"
+        self.fields['largura'].help_text = "Largura em centímetros"
+        self.fields['altura'].help_text = "Altura em centímetros"
+        self.fields['tecido_metros'].help_text = "Quantidade de tecido em metros"
+        self.fields['volume_m3'].help_text = "Volume em metros cúbicos (m³)"
+        self.fields['peso_kg'].help_text = "Peso em quilogramas (kg)"
+        self.fields['preco'].help_text = "Preço em reais (R$)"
+        
+        # Adicionar placeholders
+        self.fields['ref_almofada'].widget.attrs['placeholder'] = 'Ex: AL250'
+        self.fields['nome'].widget.attrs['placeholder'] = 'Ex: DECORATIVA'
+        self.fields['largura'].widget.attrs['placeholder'] = '50,00'
+        self.fields['altura'].widget.attrs['placeholder'] = '30,00'
+        self.fields['tecido_metros'].widget.attrs['placeholder'] = '0,25'
+        self.fields['volume_m3'].widget.attrs['placeholder'] = '0,05'
+        self.fields['peso_kg'].widget.attrs['placeholder'] = '1'
+        self.fields['preco'].widget.attrs['placeholder'] = '120,00'
+    
+    def clean_ref_almofada(self):
+        ref_almofada = self.cleaned_data.get('ref_almofada')
+        if ref_almofada:
+            ref_almofada = ref_almofada.strip().upper()
+            
+            # Verificar se já existe (exceto para o próprio objeto na edição)
+            qs = Almofada.objects.filter(ref_almofada=ref_almofada)
+            if self.instance.pk:
+                qs = qs.exclude(pk=self.instance.pk)
+            
+            if qs.exists():
+                raise forms.ValidationError("Já existe uma almofada com esta referência.")
+        
+        return ref_almofada
+    
+    def clean(self):
+        cleaned_data = super().clean()
+        
+        # Validações específicas para campos numéricos (sem profundidade para almofadas)
+        campos_numericos = ['largura', 'altura', 'tecido_metros', 'volume_m3', 'peso_kg', 'preco']
         
         for campo in campos_numericos:
             valor = cleaned_data.get(campo)

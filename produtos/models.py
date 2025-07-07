@@ -548,9 +548,234 @@ class Cadeira(BaseModel):
         verbose_name = "Cadeira"
         verbose_name_plural = "Cadeiras"
         ordering = ['ref_cadeira']
-    
+
+    def clean(self):
+        if self.largura and self.largura <= 0:
+            raise ValidationError({'largura': 'Largura deve ser maior que zero'})
+        if self.profundidade and self.profundidade <= 0:
+            raise ValidationError({'profundidade': 'Profundidade deve ser maior que zero'})
+        if self.altura and self.altura <= 0:
+            raise ValidationError({'altura': 'Altura deve ser maior que zero'})
+        if self.tecido_metros and self.tecido_metros <= 0:
+            raise ValidationError({'tecido_metros': 'Quantidade de tecido deve ser maior que zero'})
+        if self.volume_m3 and self.volume_m3 <= 0:
+            raise ValidationError({'volume_m3': 'Volume deve ser maior que zero'})
+        if self.peso_kg and self.peso_kg <= 0:
+            raise ValidationError({'peso_kg': 'Peso deve ser maior que zero'})
+        if self.preco and self.preco <= 0:
+            raise ValidationError({'preco': 'Preço deve ser maior que zero'})
+
+    def save(self, *args, **kwargs):
+        self.clean()
+        super().save(*args, **kwargs)
+
+    def get_dimensoes_formatadas(self):
+        """Retorna as dimensões formatadas como string"""
+        return f"{self.largura}×{self.profundidade}×{self.altura} cm"
+
     def __str__(self):
         return f"{self.ref_cadeira} - {self.nome}"
+
+
+class Poltrona(BaseModel):
+    """Modelo específico para Poltronas"""
+    ref_poltrona = models.CharField(
+        max_length=50, 
+        unique=True, 
+        verbose_name="Referência da Poltrona",
+        help_text="Ex: PL243, PL246, PL105, etc."
+    )
+    nome = models.CharField(
+        max_length=100, 
+        verbose_name="Nome da Poltrona",
+        help_text="Ex: ARIA, ARISTOCRATA, CERNE, etc."
+    )
+    
+    # Dimensões separadas como solicitado
+    largura = models.DecimalField(
+        max_digits=10, 
+        decimal_places=2, 
+        verbose_name="Largura (cm)",
+        help_text="Largura em centímetros"
+    )
+    profundidade = models.DecimalField(
+        max_digits=10, 
+        decimal_places=2, 
+        verbose_name="Profundidade (cm)",
+        help_text="Profundidade em centímetros"
+    )
+    altura = models.DecimalField(
+        max_digits=10, 
+        decimal_places=2, 
+        verbose_name="Altura (cm)",
+        help_text="Altura em centímetros"
+    )
+    
+    # Especificações técnicas
+    tecido_metros = models.DecimalField(
+        max_digits=10, 
+        decimal_places=2, 
+        verbose_name="Tecido (m)",
+        help_text="Quantidade de tecido necessária em metros"
+    )
+    volume_m3 = models.DecimalField(
+        max_digits=10, 
+        decimal_places=3, 
+        verbose_name="Volume (m³)",
+        help_text="Volume para cálculo de frete em metros cúbicos"
+    )
+    peso_kg = models.DecimalField(
+        max_digits=10, 
+        decimal_places=2, 
+        verbose_name="Peso (kg)",
+        help_text="Peso para cálculo de frete em quilogramas"
+    )
+    preco = models.DecimalField(
+        max_digits=10, 
+        decimal_places=2, 
+        verbose_name="Preço (R$)",
+        help_text="Preço em reais"
+    )
+    
+    # Status e imagens
+    ativo = models.BooleanField(default=True, verbose_name="Ativo")
+    imagem_principal = models.ImageField(
+        upload_to='produtos/poltronas/',
+        blank=True,
+        null=True,
+        verbose_name="Imagem Principal"
+    )
+    imagem_secundaria = models.ImageField(
+        upload_to='produtos/poltronas/',
+        blank=True,
+        null=True,
+        verbose_name="Imagem Secundária"
+    )
+    descricao = models.TextField(
+        blank=True, 
+        null=True, 
+        verbose_name="Descrição"
+    )
+    
+    class Meta:
+        verbose_name = "Poltrona"
+        verbose_name_plural = "Poltronas"
+        ordering = ['ref_poltrona']
+
+    def clean(self):
+        if self.largura and self.largura <= 0:
+            raise ValidationError({'largura': 'Largura deve ser maior que zero'})
+        if self.profundidade and self.profundidade <= 0:
+            raise ValidationError({'profundidade': 'Profundidade deve ser maior que zero'})
+        if self.altura and self.altura <= 0:
+            raise ValidationError({'altura': 'Altura deve ser maior que zero'})
+        if self.tecido_metros and self.tecido_metros <= 0:
+            raise ValidationError({'tecido_metros': 'Quantidade de tecido deve ser maior que zero'})
+        if self.volume_m3 and self.volume_m3 <= 0:
+            raise ValidationError({'volume_m3': 'Volume deve ser maior que zero'})
+        if self.peso_kg and self.peso_kg <= 0:
+            raise ValidationError({'peso_kg': 'Peso deve ser maior que zero'})
+        if self.preco and self.preco <= 0:
+            raise ValidationError({'preco': 'Preço deve ser maior que zero'})
+
+    def save(self, *args, **kwargs):
+        self.clean()
+        super().save(*args, **kwargs)
+
+    def get_dimensoes_formatadas(self):
+        """Retorna as dimensões formatadas como string"""
+        return f"{self.largura}×{self.profundidade}×{self.altura} cm"
+
+    def __str__(self):
+        return f"{self.ref_poltrona} - {self.nome}"
+
+class Pufe(BaseModel):
+    """Modelo específico para Pufes - mesmo padrão de Banquetas"""
+    ref_pufe = models.CharField(
+        max_length=50, 
+        unique=True, 
+        verbose_name="Referência do Pufe",
+        help_text="Ex: PF13, PF249, etc."
+    )
+    nome = models.CharField(
+        max_length=100, 
+        verbose_name="Nome do Pufe",
+        help_text="Ex: ROUND, SQUARE, CLASSIC, etc."
+    )
+    
+    # Dimensões separadas como solicitado
+    largura = models.DecimalField(
+        max_digits=10, 
+        decimal_places=2, 
+        verbose_name="Largura (cm)",
+        help_text="Largura em centímetros"
+    )
+    profundidade = models.DecimalField(
+        max_digits=10, 
+        decimal_places=2, 
+        verbose_name="Profundidade (cm)",
+        help_text="Profundidade em centímetros"
+    )
+    altura = models.DecimalField(
+        max_digits=10, 
+        decimal_places=2, 
+        verbose_name="Altura (cm)",
+        help_text="Altura em centímetros"
+    )
+    
+    # Especificações técnicas
+    tecido_metros = models.DecimalField(
+        max_digits=10, 
+        decimal_places=2, 
+        verbose_name="Tecido (m)",
+        help_text="Quantidade de tecido necessária em metros"
+    )
+    volume_m3 = models.DecimalField(
+        max_digits=10, 
+        decimal_places=3, 
+        verbose_name="Volume (m³)",
+        help_text="Volume para cálculo de frete em metros cúbicos"
+    )
+    peso_kg = models.DecimalField(
+        max_digits=10, 
+        decimal_places=2, 
+        verbose_name="Peso (kg)",
+        help_text="Peso para cálculo de frete em quilogramas"
+    )
+    preco = models.DecimalField(
+        max_digits=10, 
+        decimal_places=2, 
+        verbose_name="Preço (R$)",
+        help_text="Preço em reais"
+    )
+    
+    # Status e imagens
+    ativo = models.BooleanField(default=True, verbose_name="Ativo")
+    imagem_principal = models.ImageField(
+        upload_to='produtos/pufes/',
+        blank=True,
+        null=True,
+        verbose_name="Imagem Principal"
+    )
+    imagem_secundaria = models.ImageField(
+        upload_to='produtos/pufes/',
+        blank=True,
+        null=True,
+        verbose_name="Imagem Secundária"
+    )
+    descricao = models.TextField(
+        blank=True, 
+        null=True, 
+        verbose_name="Descrição"
+    )
+    
+    class Meta:
+        verbose_name = "Pufe"
+        verbose_name_plural = "Pufes"
+        ordering = ['ref_pufe']
+    
+    def __str__(self):
+        return f"{self.ref_pufe} - {self.nome}"
     
     def get_dimensoes_formatadas(self):
         """Retorna as dimensões formatadas como L x P x A"""
@@ -565,6 +790,112 @@ class Cadeira(BaseModel):
             raise ValidationError("A largura deve ser maior que zero.")
         if self.profundidade and self.profundidade <= 0:
             raise ValidationError("A profundidade deve ser maior que zero.")
+        if self.altura and self.altura <= 0:
+            raise ValidationError("A altura deve ser maior que zero.")
+        
+        # Validar valores monetários e quantidades
+        if self.tecido_metros and self.tecido_metros <= 0:
+            raise ValidationError("A quantidade de tecido deve ser maior que zero.")
+        if self.volume_m3 and self.volume_m3 <= 0:
+            raise ValidationError("O volume deve ser maior que zero.")
+        if self.peso_kg and self.peso_kg <= 0:
+            raise ValidationError("O peso deve ser maior que zero.")
+        if self.preco and self.preco <= 0:
+            raise ValidationError("O preço deve ser maior que zero.")
+
+class Almofada(BaseModel):
+    """Modelo específico para Almofadas - só tem largura e altura (sem profundidade)"""
+    ref_almofada = models.CharField(
+        max_length=50, 
+        unique=True, 
+        verbose_name="Referência da Almofada",
+        help_text="Ex: AL001, AL250, etc."
+    )
+    nome = models.CharField(
+        max_length=100, 
+        verbose_name="Nome da Almofada",
+        help_text="Ex: DECORATIVA, LOMBAR, CERVICAL, etc."
+    )
+    
+    # Dimensões - apenas largura e altura para almofadas
+    largura = models.DecimalField(
+        max_digits=10, 
+        decimal_places=2, 
+        verbose_name="Largura (cm)",
+        help_text="Largura em centímetros"
+    )
+    altura = models.DecimalField(
+        max_digits=10, 
+        decimal_places=2, 
+        verbose_name="Altura (cm)",
+        help_text="Altura em centímetros"
+    )
+    
+    # Especificações técnicas
+    tecido_metros = models.DecimalField(
+        max_digits=10, 
+        decimal_places=2, 
+        verbose_name="Tecido (m)",
+        help_text="Quantidade de tecido necessária em metros"
+    )
+    volume_m3 = models.DecimalField(
+        max_digits=10, 
+        decimal_places=3, 
+        verbose_name="Volume (m³)",
+        help_text="Volume para cálculo de frete em metros cúbicos"
+    )
+    peso_kg = models.DecimalField(
+        max_digits=10, 
+        decimal_places=2, 
+        verbose_name="Peso (kg)",
+        help_text="Peso para cálculo de frete em quilogramas"
+    )
+    preco = models.DecimalField(
+        max_digits=10, 
+        decimal_places=2, 
+        verbose_name="Preço (R$)",
+        help_text="Preço em reais"
+    )
+    
+    # Status e imagens
+    ativo = models.BooleanField(default=True, verbose_name="Ativo")
+    imagem_principal = models.ImageField(
+        upload_to='produtos/almofadas/',
+        blank=True,
+        null=True,
+        verbose_name="Imagem Principal"
+    )
+    imagem_secundaria = models.ImageField(
+        upload_to='produtos/almofadas/',
+        blank=True,
+        null=True,
+        verbose_name="Imagem Secundária"
+    )
+    descricao = models.TextField(
+        blank=True, 
+        null=True, 
+        verbose_name="Descrição"
+    )
+    
+    class Meta:
+        verbose_name = "Almofada"
+        verbose_name_plural = "Almofadas"
+        ordering = ['ref_almofada']
+    
+    def __str__(self):
+        return f"{self.ref_almofada} - {self.nome}"
+    
+    def get_dimensoes_formatadas(self):
+        """Retorna as dimensões formatadas como L x A (sem profundidade)"""
+        return f"{self.largura} x {self.altura}"
+    
+    def clean(self):
+        """Validações customizadas do modelo"""
+        super().clean()
+        
+        # Validar se as dimensões são positivas
+        if self.largura and self.largura <= 0:
+            raise ValidationError("A largura deve ser maior que zero.")
         if self.altura and self.altura <= 0:
             raise ValidationError("A altura deve ser maior que zero.")
         

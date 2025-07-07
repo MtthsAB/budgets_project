@@ -1,0 +1,318 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ poltrona.ref_poltrona }} - {{ poltrona.nome }} - Sistema de Produtos{% endblock %}
+
+{% block extra_css %}
+<style>
+    .spec-card {
+        background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+        border: 1px solid #dee2e6 !important;
+        transition: all 0.3s ease;
+        position: relative;
+        overflow: hidden;
+    }
+    .spec-card:hover {
+        box-shadow: 0 6px 20px rgba(0,0,0,0.15);
+        transform: translateY(-3px);
+        border-color: #007bff !important;
+    }
+    .spec-card::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 3px;
+        background: linear-gradient(90deg, #007bff, #28a745);
+        opacity: 0;
+        transition: opacity 0.3s ease;
+    }
+    .spec-card:hover::before {
+        opacity: 1;
+    }
+    .card-header {
+        border-bottom: 2px solid #007bff;
+    }
+    .card-header h5 {
+        color: #495057;
+        font-weight: 600;
+    }
+    .product-image {
+        max-height: 400px;
+        object-fit: contain;
+        border-radius: 8px;
+    }
+    .price-display {
+        font-size: 2rem;
+        font-weight: bold;
+        color: #28a745;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="d-flex justify-content-between align-items-center">
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb mb-0">
+                    <li class="breadcrumb-item"><a href="{% url 'produtos_lista' %}">Produtos</a></li>
+                    <li class="breadcrumb-item"><a href="{% url 'poltronas_lista' %}">Poltronas</a></li>
+                    <li class="breadcrumb-item active">{{ poltrona.ref_poltrona }}</li>
+                </ol>
+            </nav>
+            <div>
+                <a href="{% url 'poltrona_editar' poltrona.id %}" class="btn btn-warning">
+                    <i class="bi bi-pencil"></i> Editar
+                </a>
+                <a href="{% url 'poltronas_lista' %}" class="btn btn-outline-secondary">
+                    <i class="bi bi-arrow-left"></i> Voltar
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Cabeçalho da Poltrona -->
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h1 class="h3 mb-1">
+                            <i class="bi bi-chair-fill text-primary"></i> 
+                            {{ poltrona.ref_poltrona }} - {{ poltrona.nome }}
+                        </h1>
+                        <p class="text-muted mb-0">Poltrona</p>
+                    </div>
+                    <div class="text-end">
+                        {% if poltrona.ativo %}
+                            <span class="badge bg-success fs-6">Ativo</span>
+                        {% else %}
+                            <span class="badge bg-danger fs-6">Inativo</span>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Imagem e Informações Básicas -->
+<div class="row mb-4">
+    <div class="col-lg-6">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="bi bi-image"></i> Imagem Principal</h5>
+            </div>
+            <div class="card-body text-center">
+                {% if poltrona.imagem_principal %}
+                    <img src="{{ poltrona.imagem_principal.url }}" 
+                         class="img-fluid product-image" 
+                         alt="{{ poltrona.nome }}">
+                {% else %}
+                    <div class="d-flex align-items-center justify-content-center bg-light rounded" style="height: 300px;">
+                        <div class="text-center">
+                            <i class="bi bi-image text-muted" style="font-size: 3rem;"></i>
+                            <p class="text-muted mt-2">Nenhuma imagem disponível</p>
+                        </div>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-lg-6">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="bi bi-info-circle"></i> Informações Básicas</h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-6">
+                        <strong>Referência:</strong><br>
+                        <span class="text-primary fs-5">{{ poltrona.ref_poltrona }}</span>
+                    </div>
+                    <div class="col-6">
+                        <strong>Nome:</strong><br>
+                        <span class="fs-5">{{ poltrona.nome }}</span>
+                    </div>
+                </div>
+                
+                <hr>
+                
+                <div class="row">
+                    <div class="col-12 text-center">
+                        <strong>Preço:</strong><br>
+                        <span class="price-display">R$ {{ poltrona.preco|floatformat:2 }}</span>
+                    </div>
+                </div>
+                
+                {% if poltrona.descricao %}
+                <hr>
+                <div class="row">
+                    <div class="col-12">
+                        <strong>Descrição:</strong><br>
+                        <p class="text-muted">{{ poltrona.descricao }}</p>
+                    </div>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Especificações Técnicas -->
+<div class="row mb-4">
+    <div class="col-lg-4">
+        <div class="card spec-card">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="bi bi-rulers"></i> Dimensões</h5>
+            </div>
+            <div class="card-body">
+                <div class="row text-center">
+                    <div class="col-4">
+                        <div class="mb-2">
+                            <i class="bi bi-arrow-left-right text-primary" style="font-size: 1.5rem;"></i>
+                        </div>
+                        <strong>Largura</strong><br>
+                        <span class="text-primary fs-5">{{ poltrona.largura }} cm</span>
+                    </div>
+                    <div class="col-4">
+                        <div class="mb-2">
+                            <i class="bi bi-arrow-up-down text-success" style="font-size: 1.5rem;"></i>
+                        </div>
+                        <strong>Profundidade</strong><br>
+                        <span class="text-success fs-5">{{ poltrona.profundidade }} cm</span>
+                    </div>
+                    <div class="col-4">
+                        <div class="mb-2">
+                            <i class="bi bi-arrows-vertical text-warning" style="font-size: 1.5rem;"></i>
+                        </div>
+                        <strong>Altura</strong><br>
+                        <span class="text-warning fs-5">{{ poltrona.altura }} cm</span>
+                    </div>
+                </div>
+                
+                <hr>
+                
+                <div class="text-center">
+                    <strong>Dimensões Completas:</strong><br>
+                    <span class="badge bg-secondary fs-6">{{ poltrona.get_dimensoes_formatadas }}</span>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-lg-4">
+        <div class="card spec-card">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="bi bi-palette"></i> Materiais</h5>
+            </div>
+            <div class="card-body">
+                <div class="text-center">
+                    <div class="mb-3">
+                        <i class="bi bi-scissors text-info" style="font-size: 2rem;"></i>
+                    </div>
+                    <strong>Tecido Necessário</strong><br>
+                    <span class="text-info fs-4">{{ poltrona.tecido_metros }} metros</span>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-lg-4">
+        <div class="card spec-card">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="bi bi-truck"></i> Logística</h5>
+            </div>
+            <div class="card-body">
+                <div class="row text-center">
+                    <div class="col-6">
+                        <div class="mb-2">
+                            <i class="bi bi-box text-primary" style="font-size: 1.5rem;"></i>
+                        </div>
+                        <strong>Volume</strong><br>
+                        <span class="text-primary">{{ poltrona.volume_m3 }} m³</span>
+                    </div>
+                    <div class="col-6">
+                        <div class="mb-2">
+                            <i class="bi bi-speedometer2 text-danger" style="font-size: 1.5rem;"></i>
+                        </div>
+                        <strong>Peso</strong><br>
+                        <span class="text-danger">{{ poltrona.peso_kg }} kg</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Imagem Secundária (se existir) -->
+{% if poltrona.imagem_secundaria %}
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="bi bi-images"></i> Imagem Secundária</h5>
+            </div>
+            <div class="card-body text-center">
+                <img src="{{ poltrona.imagem_secundaria.url }}" 
+                     class="img-fluid product-image" 
+                     alt="{{ poltrona.nome }} - Imagem Secundária">
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+<!-- Ações -->
+<div class="row">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h6 class="mb-0">Ações Disponíveis</h6>
+                        <small class="text-muted">Gerenciar esta poltrona</small>
+                    </div>
+                    <div>
+                        <a href="{% url 'poltrona_editar' poltrona.id %}" class="btn btn-warning me-2">
+                            <i class="bi bi-pencil"></i> Editar Poltrona
+                        </a>
+                        <button type="button" class="btn btn-danger" data-bs-toggle="modal" data-bs-target="#excluirModal">
+                            <i class="bi bi-trash"></i> Excluir
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal de Confirmação de Exclusão -->
+<div class="modal fade" id="excluirModal" tabindex="-1" aria-labelledby="excluirModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header bg-danger text-white">
+                <h5 class="modal-title" id="excluirModalLabel">
+                    <i class="bi bi-exclamation-triangle"></i> Confirmar Exclusão
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p>Tem certeza que deseja excluir a poltrona <strong>{{ poltrona.ref_poltrona }} - {{ poltrona.nome }}</strong>?</p>
+                <p class="text-danger"><i class="bi bi-exclamation-triangle"></i> Esta ação não pode ser desfeita!</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <a href="{% url 'poltrona_excluir' poltrona.id %}" class="btn btn-danger">
+                    <i class="bi bi-trash"></i> Sim, Excluir
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}

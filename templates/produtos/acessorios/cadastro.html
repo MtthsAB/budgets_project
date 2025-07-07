@@ -1,0 +1,17 @@
+{% extends 'produtos/includes/cadastro_base.html' %}
+
+{% block page_title %}Cadastrar Acessório{% endblock %}
+
+{% block campos_especificos %}
+{% include 'produtos/includes/campos_acessorio.html' %}
+{% endblock %}
+
+{% block secoes_especificas %}
+{% include 'produtos/includes/secao_vinculacao_acessorio.html' %}
+{% endblock %}
+
+{% block submit_text %}Cadastrar Acessório{% endblock %}
+
+{% block extra_product_js %}
+{% include 'produtos/includes/acessorio_js.html' %}
+{% endblock %}

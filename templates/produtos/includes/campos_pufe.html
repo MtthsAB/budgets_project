@@ -1,0 +1,87 @@
+<!-- Campos específicos para Pufes -->
+<div class="row" id="campos-pufe" style="display: none;">
+    <div class="col-md-3">
+        <div class="form-check form-switch mb-3">
+            <input class="form-check-input" type="checkbox" id="ativo_pufe" name="ativo_pufe" checked>
+            <label class="form-check-label" for="ativo_pufe">
+                Pufe Ativo
+            </label>
+        </div>
+    </div>
+    <div class="col-md-9">
+        <p class="text-muted mb-3">
+            <i class="bi bi-info-circle"></i> 
+            Preencha as especificações técnicas do pufe.
+        </p>
+    </div>
+</div>
+
+<!-- Dimensões do Pufe -->
+<div id="dimensoes-pufe" style="display: none;">
+    <div class="row">
+        <div class="col-md-4">
+            <div class="form-floating mb-3">
+                <input type="number" step="0.01" class="form-control" id="largura_pufe" 
+                       name="largura_pufe" placeholder="0.00" min="0.01">
+                <label for="largura_pufe">Largura (cm) *</label>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="form-floating mb-3">
+                <input type="number" step="0.01" class="form-control" id="profundidade_pufe" 
+                       name="profundidade_pufe" placeholder="0.00" min="0.01">
+                <label for="profundidade_pufe">Profundidade (cm) *</label>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="form-floating mb-3">
+                <input type="number" step="0.01" class="form-control" id="altura_pufe" 
+                       name="altura_pufe" placeholder="0.00" min="0.01">
+                <label for="altura_pufe">Altura (cm) *</label>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Especificações Técnicas -->
+    <div class="row">
+        <div class="col-md-3">
+            <div class="form-floating mb-3">
+                <input type="number" step="0.01" class="form-control" id="tecido_metros_pufe" 
+                       name="tecido_metros_pufe" placeholder="0.00" min="0.01">
+                <label for="tecido_metros_pufe">Tecido (m) *</label>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="form-floating mb-3">
+                <input type="number" step="0.001" class="form-control" id="volume_m3_pufe" 
+                       name="volume_m3_pufe" placeholder="0.000" min="0.001">
+                <label for="volume_m3_pufe">Volume (m³) *</label>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="form-floating mb-3">
+                <input type="number" step="0.01" class="form-control" id="peso_kg_pufe" 
+                       name="peso_kg_pufe" placeholder="0.00" min="0.01">
+                <label for="peso_kg_pufe">Peso (kg) *</label>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="form-floating mb-3">
+                <input type="number" step="0.01" class="form-control" id="preco_pufe" 
+                       name="preco_pufe" placeholder="0.00" min="0.01">
+                <label for="preco_pufe">Preço (R$) *</label>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Descrição -->
+    <div class="row">
+        <div class="col-12">
+            <div class="form-floating mb-3">
+                <textarea class="form-control" id="descricao_pufe" name="descricao_pufe" 
+                         placeholder="Descrição do pufe" style="height: 80px;"></textarea>
+                <label for="descricao_pufe">Descrição (opcional)</label>
+            </div>
+        </div>
+    </div>
+</div>

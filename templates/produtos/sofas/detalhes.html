@@ -1,0 +1,308 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ sofa.ref_produto }} - Detalhes do Sofá{% endblock %}
+
+{% block extra_css %}
+<style>
+    .tamanho-card {
+        background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+        border: 1px solid #dee2e6 !important;
+        transition: all 0.3s ease;
+        position: relative;
+        overflow: hidden;
+    }
+    .tamanho-card:hover {
+        box-shadow: 0 6px 20px rgba(0,0,0,0.15);
+        transform: translateY(-3px);
+        border-color: #007bff !important;
+    }
+    .tamanho-card::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 3px;
+        background: linear-gradient(90deg, #007bff, #28a745);
+        opacity: 0;
+        transition: opacity 0.3s ease;
+    }
+    .tamanho-card:hover::before {
+        opacity: 1;
+    }
+    .tamanho-details small {
+        display: block;
+        line-height: 1.4;
+    }
+    .badge.bg-success {
+        font-size: 0.85rem;
+        padding: 0.4rem 0.6rem;
+    }
+    .card-header {
+        border-bottom: 2px solid #007bff;
+    }
+    .card-header h5 {
+        color: #495057;
+        font-weight: 600;
+    }
+    .tipo-sofas {
+        background: linear-gradient(135deg, #4f46e5, #7c3aed);
+        color: white;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <nav aria-label="breadcrumb">
+                        <ol class="breadcrumb">
+                            <li class="breadcrumb-item"><a href="{% url 'home' %}">Início</a></li>
+                            <li class="breadcrumb-item"><a href="{% url 'produtos_lista' %}">Produtos</a></li>
+                            <li class="breadcrumb-item"><a href="{% url 'sofas_lista' %}">Sofás</a></li>
+                            <li class="breadcrumb-item active">{{ sofa.ref_produto }}</li>
+                        </ol>
+                    </nav>
+                    <h1 class="h2 mb-0">
+                        <i class="bi bi-couch"></i> {{ sofa.ref_produto }} - {{ sofa.nome_produto }}
+                    </h1>
+                    <p class="text-muted mb-0">
+                        <span class="badge tipo-sofas">{{ sofa.id_tipo_produto.nome }}</span>
+                        {% if sofa.ativo %}
+                            <span class="badge bg-success ms-2">Ativo</span>
+                        {% else %}
+                            <span class="badge bg-danger ms-2">Inativo</span>
+                        {% endif %}
+                    </p>
+                </div>
+                <div class="btn-group" role="group">
+                    <a href="{% url 'sofa_editar' sofa.id %}" class="btn btn-warning">
+                        <i class="bi bi-pencil"></i> Editar
+                    </a>
+                    <a href="{% url 'sofas_lista' %}" class="btn btn-outline-secondary">
+                        <i class="bi bi-arrow-left"></i> Voltar
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- Informações Básicas -->
+        <div class="col-lg-8">
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="bi bi-info-circle"></i> Informações do Sofá
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <h6 class="text-muted">Referência</h6>
+                            <p class="fs-5 fw-bold text-primary">{{ sofa.ref_produto }}</p>
+                        </div>
+                        <div class="col-md-6">
+                            <h6 class="text-muted">Nome do Produto</h6>
+                            <p class="fs-5">{{ sofa.nome_produto }}</p>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <h6 class="text-muted">Tipo</h6>
+                            <p><span class="badge tipo-sofas">{{ sofa.id_tipo_produto.nome }}</span></p>
+                        </div>
+                        <div class="col-md-6">
+                            <h6 class="text-muted">Status</h6>
+                            <p>
+                                {% if sofa.ativo %}
+                                    <span class="badge bg-success">Ativo</span>
+                                {% else %}
+                                    <span class="badge bg-danger">Inativo</span>
+                                {% endif %}
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Características do Sofá -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="bi bi-gear"></i> Características
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-4">
+                            <div class="text-center p-3 border rounded">
+                                <i class="bi bi-palette fs-3 text-info mb-2"></i>
+                                <h6>Cor de Tecido</h6>
+                                <span class="badge {% if sofa.tem_cor_tecido %}bg-success{% else %}bg-secondary{% endif %}">
+                                    {% if sofa.tem_cor_tecido %}Sim{% else %}Não{% endif %}
+                                </span>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="text-center p-3 border rounded">
+                                <i class="bi bi-arrow-left-right fs-3 text-warning mb-2"></i>
+                                <h6>Diferença Lado Dir./Esq.</h6>
+                                <span class="badge {% if sofa.tem_difer_desenho_lado_dir_esq %}bg-success{% else %}bg-secondary{% endif %}">
+                                    {% if sofa.tem_difer_desenho_lado_dir_esq %}Sim{% else %}Não{% endif %}
+                                </span>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="text-center p-3 border rounded">
+                                <i class="bi bi-arrows-expand fs-3 text-primary mb-2"></i>
+                                <h6>Diferença por Tamanho</h6>
+                                <span class="badge {% if sofa.tem_difer_desenho_tamanho %}bg-success{% else %}bg-secondary{% endif %}">
+                                    {% if sofa.tem_difer_desenho_tamanho %}Sim{% else %}Não{% endif %}
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Módulos do Sofá -->
+            {% if modulos %}
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="bi bi-grid-3x3-gap"></i> Módulos ({{ modulos.count }})
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="row g-3">
+                        {% for modulo in modulos %}
+                        <div class="col-md-6">
+                            <div class="card tamanho-card h-100">
+                                <div class="card-body">
+                                    <h6 class="card-title text-primary">
+                                        <i class="bi bi-puzzle"></i> {{ modulo.nome_modulo }}
+                                    </h6>
+                                    <div class="tamanho-details">
+                                        <small class="text-muted">
+                                            <strong>Referência:</strong> {{ modulo.ref_modulo }}
+                                        </small>
+                                        {% if modulo.tamanhos_detalhados.exists %}
+                                            <small class="text-muted mt-2">
+                                                <strong>Tamanhos disponíveis:</strong> {{ modulo.tamanhos_detalhados.count }}
+                                            </small>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+
+        <!-- Sidebar -->
+        <div class="col-lg-4">
+            <!-- Imagens -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="bi bi-images"></i> Imagens
+                    </h5>
+                </div>
+                <div class="card-body">
+                    {% if sofa.imagem_principal %}
+                        <div class="mb-3">
+                            <h6 class="text-muted">Imagem Principal</h6>
+                            <img src="{{ sofa.imagem_principal.url }}" 
+                                 alt="Imagem principal de {{ sofa.nome_produto }}" 
+                                 class="img-fluid rounded border">
+                        </div>
+                    {% endif %}
+                    
+                    {% if sofa.imagem_secundaria %}
+                        <div class="mb-3">
+                            <h6 class="text-muted">Imagem Secundária</h6>
+                            <img src="{{ sofa.imagem_secundaria.url }}" 
+                                 alt="Imagem secundária de {{ sofa.nome_produto }}" 
+                                 class="img-fluid rounded border">
+                        </div>
+                    {% endif %}
+                    
+                    {% if not sofa.imagem_principal and not sofa.imagem_secundaria %}
+                        <div class="text-center py-4">
+                            <i class="bi bi-image text-muted" style="font-size: 3rem;"></i>
+                            <p class="text-muted mt-2">Nenhuma imagem disponível</p>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Acessórios Vinculados -->
+            {% if acessorios_vinculados %}
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="bi bi-plus-circle"></i> Acessórios Vinculados
+                    </h5>
+                </div>
+                <div class="card-body">
+                    {% for acessorio in acessorios_vinculados %}
+                        <div class="d-flex justify-content-between align-items-center border-bottom py-2">
+                            <div>
+                                <strong>{{ acessorio.ref_acessorio }}</strong><br>
+                                <small class="text-muted">{{ acessorio.nome }}</small>
+                            </div>
+                            <a href="{% url 'acessorio_detalhes' acessorio.id %}" 
+                               class="btn btn-sm btn-outline-primary">
+                                <i class="bi bi-eye"></i>
+                            </a>
+                        </div>
+                    {% endfor %}
+                </div>
+            </div>
+            {% endif %}
+
+            <!-- Informações do Sistema -->
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="bi bi-clock-history"></i> Informações do Sistema
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <small class="text-muted d-block mb-2">
+                        <strong>Criado em:</strong><br>
+                        {{ sofa.created_at|date:"d/m/Y H:i" }}
+                    </small>
+                    <small class="text-muted d-block mb-2">
+                        <strong>Criado por:</strong><br>
+                        {% if sofa.created_by %}
+                            {{ sofa.created_by.get_full_name|default:sofa.created_by.email }}
+                        {% else %}
+                            Sistema
+                        {% endif %}
+                    </small>
+                    {% if sofa.updated_at %}
+                    <small class="text-muted d-block mb-2">
+                        <strong>Última atualização:</strong><br>
+                        {{ sofa.updated_at|date:"d/m/Y H:i" }}
+                    </small>
+                    {% endif %}
+                    {% if sofa.updated_by %}
+                    <small class="text-muted d-block">
+                        <strong>Atualizado por:</strong><br>
+                        {{ sofa.updated_by.get_full_name|default:sofa.updated_by.email }}
+                    </small>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

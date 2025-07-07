@@ -1,0 +1,201 @@
+{% extends 'base.html' %}
+
+{% block title %}Poltronas - Sistema de Produtos{% endblock %}
+
+{% block extra_css %}
+<style>
+    .product-card {
+        transition: transform 0.2s ease, box-shadow 0.2s ease;
+        height: 100%;
+        border: 1px solid #e3e6f0;
+    }
+    .product-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        border-color: #007bff;
+    }
+    .product-image {
+        height: 200px;
+        object-fit: contain;
+        background: #f8f9fa;
+        padding: 10px;
+    }
+    .price-badge {
+        font-size: 1.1rem;
+        font-weight: 600;
+    }
+    .dimensions-text {
+        font-size: 0.9rem;
+        color: #6c757d;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="d-flex justify-content-between align-items-center">
+            <h1 class="h2 mb-0">
+                <i class="bi bi-chair-fill"></i> Poltronas
+                <span class="badge bg-secondary">{{ total_poltronas }}</span>
+            </h1>
+            <div>
+                <a href="{% url 'poltrona_cadastro' %}" class="btn btn-primary">
+                    <i class="bi bi-plus-circle"></i> Nova Poltrona
+                </a>
+                <a href="{% url 'produtos_lista' %}" class="btn btn-outline-secondary">
+                    <i class="bi bi-arrow-left"></i> Voltar
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Formulário de busca -->
+<div class="row mb-4">
+    <div class="col-md-6">
+        <form method="get" class="d-flex">
+            <input type="text" 
+                   name="busca" 
+                   class="form-control" 
+                   placeholder="Buscar por nome ou referência..." 
+                   value="{{ busca }}"
+                   autocomplete="off">
+            <button type="submit" class="btn btn-outline-primary ms-2">
+                <i class="bi bi-search"></i>
+            </button>
+            {% if busca %}
+            <a href="{% url 'poltronas_lista' %}" class="btn btn-outline-secondary ms-2">
+                <i class="bi bi-x-circle"></i>
+            </a>
+            {% endif %}
+        </form>
+    </div>
+</div>
+
+<!-- Lista de poltronas -->
+{% if poltronas %}
+    <div class="row">
+        {% for poltrona in poltronas %}
+        <div class="col-lg-4 col-md-6 mb-4">
+            <div class="card product-card h-100">
+                <div class="card-header bg-light py-2">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <strong class="text-primary">{{ poltrona.ref_poltrona }}</strong>
+                        {% if poltrona.ativo %}
+                            <span class="badge bg-success">Ativo</span>
+                        {% else %}
+                            <span class="badge bg-danger">Inativo</span>
+                        {% endif %}
+                    </div>
+                </div>
+                
+                <div class="card-body text-center p-3">
+                    {% if poltrona.imagem_principal %}
+                        <img src="{{ poltrona.imagem_principal.url }}" 
+                             class="img-fluid product-image mb-3" 
+                             alt="{{ poltrona.nome }}"
+                             style="max-height: 180px;">
+                    {% else %}
+                        <div class="product-image mb-3 d-flex align-items-center justify-content-center bg-light rounded">
+                            <i class="bi bi-image text-muted" style="font-size: 3rem;"></i>
+                        </div>
+                    {% endif %}
+                    
+                    <h5 class="card-title mb-2">{{ poltrona.nome }}</h5>
+                    
+                    <div class="mb-2">
+                        <span class="badge bg-primary price-badge">R$ {{ poltrona.preco|floatformat:2 }}</span>
+                    </div>
+                    
+                    <p class="dimensions-text mb-3">
+                        <i class="bi bi-rulers"></i> {{ poltrona.get_dimensoes_formatadas }}
+                    </p>
+                    
+                    <div class="row text-center small text-muted mb-3">
+                        <div class="col-4">
+                            <i class="bi bi-palette"></i><br>
+                            {{ poltrona.tecido_metros }}m
+                        </div>
+                        <div class="col-4">
+                            <i class="bi bi-box"></i><br>
+                            {{ poltrona.volume_m3 }}m³
+                        </div>
+                        <div class="col-4">
+                            <i class="bi bi-speedometer2"></i><br>
+                            {{ poltrona.peso_kg }}kg
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="card-footer bg-white">
+                    <div class="btn-group w-100">
+                        <a href="{% url 'poltrona_detalhes' poltrona.id %}" 
+                           class="btn btn-outline-primary btn-sm">
+                            <i class="bi bi-eye"></i> Ver
+                        </a>
+                        <a href="{% url 'poltrona_editar' poltrona.id %}" 
+                           class="btn btn-outline-warning btn-sm">
+                            <i class="bi bi-pencil"></i> Editar
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+
+    <!-- Paginação -->
+    {% if poltronas.has_other_pages %}
+    <nav aria-label="Navegação de poltronas">
+        <ul class="pagination justify-content-center">
+            {% if poltronas.has_previous %}
+                <li class="page-item">
+                    <a class="page-link" href="?page={{ poltronas.previous_page_number }}{% if busca %}&busca={{ busca }}{% endif %}">
+                        <i class="bi bi-chevron-left"></i>
+                    </a>
+                </li>
+            {% endif %}
+
+            {% for num in poltronas.paginator.page_range %}
+                {% if poltronas.number == num %}
+                    <li class="page-item active">
+                        <span class="page-link">{{ num }}</span>
+                    </li>
+                {% elif num > poltronas.number|add:'-3' and num < poltronas.number|add:'3' %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ num }}{% if busca %}&busca={{ busca }}{% endif %}">{{ num }}</a>
+                    </li>
+                {% endif %}
+            {% endfor %}
+
+            {% if poltronas.has_next %}
+                <li class="page-item">
+                    <a class="page-link" href="?page={{ poltronas.next_page_number }}{% if busca %}&busca={{ busca }}{% endif %}">
+                        <i class="bi bi-chevron-right"></i>
+                    </a>
+                </li>
+            {% endif %}
+        </ul>
+    </nav>
+    {% endif %}
+
+{% else %}
+    <div class="text-center py-5">
+        <i class="bi bi-chair-fill text-muted" style="font-size: 4rem;"></i>
+        <h3 class="text-muted mt-3">Nenhuma poltrona encontrada</h3>
+        {% if busca %}
+            <p class="text-muted">Não encontramos poltronas com o termo "{{ busca }}"</p>
+            <a href="{% url 'poltronas_lista' %}" class="btn btn-outline-secondary">
+                <i class="bi bi-arrow-left"></i> Ver todas as poltronas
+            </a>
+        {% else %}
+            <p class="text-muted">Começe cadastrando a primeira poltrona</p>
+            <a href="{% url 'poltrona_cadastro' %}" class="btn btn-primary">
+                <i class="bi bi-plus-circle"></i> Cadastrar Primeira Poltrona
+            </a>
+        {% endif %}
+    </div>
+{% endif %}
+
+{% endblock %}

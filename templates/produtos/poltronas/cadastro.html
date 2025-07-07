@@ -1,0 +1,29 @@
+{% extends 'produtos/includes/cadastro_base.html' %}
+
+{% block page_title %}Cadastrar Poltrona{% endblock %}
+
+{% block campos_especificos %}
+{% include 'produtos/includes/campos_poltrona.html' %}
+{% endblock %}
+
+{% block submit_text %}Cadastrar Poltrona{% endblock %}
+
+{% block extra_product_js %}
+<script>
+// Função específica para alternar campos de poltronas
+function toggleCamposEspecificos(tipoNome) {
+    const camposPoltrona = document.getElementById('campos-poltrona');
+    const dimensoesPoltrona = document.getElementById('dimensoes-poltrona');
+    
+    // Esconder campos específicos primeiro
+    if (camposPoltrona) camposPoltrona.style.display = 'none';
+    if (dimensoesPoltrona) dimensoesPoltrona.style.display = 'none';
+    
+    // Mostrar campos conforme o tipo
+    if (tipoNome === 'Poltronas') {
+        if (camposPoltrona) camposPoltrona.style.display = 'flex';
+        if (dimensoesPoltrona) dimensoesPoltrona.style.display = 'block';
+    }
+}
+</script>
+{% endblock %}

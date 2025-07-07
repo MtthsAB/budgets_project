@@ -1,0 +1,31 @@
+<!-- Campos Básicos de Produto -->
+<div class="row">
+    <div class="col-md-6">
+        <div class="form-floating mb-3">
+            <input type="text" class="form-control" id="ref_produto" name="ref_produto" 
+                   placeholder="Referência" required>
+            <label for="ref_produto">Referência do Produto *</label>
+        </div>
+    </div>
+    <div class="col-md-6">
+        <div class="form-floating mb-3">
+            <input type="text" class="form-control" id="nome_produto" name="nome_produto" 
+                   placeholder="Nome" required>
+            <label for="nome_produto">Nome do Produto *</label>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-6">
+        <div class="form-floating mb-3">
+            <select class="form-select" id="tipo_produto" name="tipo_produto" required onchange="toggleCamposPorTipo()">
+                <option value="">Selecione o tipo</option>
+                {% for tipo in tipos %}
+                    <option value="{{ tipo.id }}" data-nome="{{ tipo.nome }}">{{ tipo.nome }}</option>
+                {% endfor %}
+            </select>
+            <label for="tipo_produto">Tipo de Produto *</label>
+        </div>
+    </div>
+</div>

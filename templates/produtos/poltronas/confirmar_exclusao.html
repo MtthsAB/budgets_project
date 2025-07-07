@@ -1,0 +1,79 @@
+{% extends 'base.html' %}
+
+{% block title %}Excluir Poltrona - {{ poltrona.ref_poltrona }}{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header bg-danger text-white">
+                <h4 class="mb-0">
+                    <i class="bi bi-exclamation-triangle"></i> Confirmar Exclusão
+                </h4>
+            </div>
+            <div class="card-body">
+                <div class="text-center mb-4">
+                    {% if poltrona.imagem_principal %}
+                        <img src="{{ poltrona.imagem_principal.url }}" 
+                             class="img-fluid rounded" 
+                             style="max-height: 200px;" 
+                             alt="{{ poltrona.nome }}">
+                    {% else %}
+                        <div class="bg-light rounded d-flex align-items-center justify-content-center" style="height: 200px;">
+                            <i class="bi bi-chair-fill text-muted" style="font-size: 3rem;"></i>
+                        </div>
+                    {% endif %}
+                </div>
+                
+                <div class="alert alert-warning">
+                    <h5><i class="bi bi-exclamation-triangle"></i> Atenção!</h5>
+                    <p class="mb-0">Você está prestes a excluir a poltrona:</p>
+                </div>
+                
+                <div class="card bg-light">
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-sm-6">
+                                <strong>Referência:</strong><br>
+                                <span class="text-primary">{{ poltrona.ref_poltrona }}</span>
+                            </div>
+                            <div class="col-sm-6">
+                                <strong>Nome:</strong><br>
+                                {{ poltrona.nome }}
+                            </div>
+                        </div>
+                        <hr>
+                        <div class="row">
+                            <div class="col-sm-6">
+                                <strong>Dimensões:</strong><br>
+                                {{ poltrona.get_dimensoes_formatadas }}
+                            </div>
+                            <div class="col-sm-6">
+                                <strong>Preço:</strong><br>
+                                <span class="text-success">R$ {{ poltrona.preco|floatformat:2 }}</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="alert alert-danger mt-3">
+                    <strong><i class="bi bi-exclamation-triangle"></i> Esta ação não pode ser desfeita!</strong><br>
+                    Todos os dados desta poltrona serão permanentemente removidos do sistema.
+                </div>
+                
+                <form method="post" class="mt-4">
+                    {% csrf_token %}
+                    <div class="d-flex justify-content-between">
+                        <a href="{% url 'poltrona_detalhes' poltrona.id %}" class="btn btn-secondary">
+                            <i class="bi bi-arrow-left"></i> Cancelar
+                        </a>
+                        <button type="submit" class="btn btn-danger">
+                            <i class="bi bi-trash"></i> Sim, Excluir Poltrona
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,87 @@
+<!-- Campos específicos para Poltronas -->
+<div class="row" id="campos-poltrona" style="display: none;">
+    <div class="col-md-3">
+        <div class="form-check form-switch mb-3">
+            <input class="form-check-input" type="checkbox" id="ativo_poltrona" name="ativo_poltrona" checked>
+            <label class="form-check-label" for="ativo_poltrona">
+                Poltrona Ativa
+            </label>
+        </div>
+    </div>
+    <div class="col-md-9">
+        <p class="text-muted mb-3">
+            <i class="bi bi-info-circle"></i> 
+            Preencha as especificações técnicas da poltrona.
+        </p>
+    </div>
+</div>
+
+<!-- Dimensões da Poltrona -->
+<div id="dimensoes-poltrona" style="display: none;">
+    <div class="row">
+        <div class="col-md-4">
+            <div class="form-floating mb-3">
+                <input type="number" step="0.01" class="form-control" id="largura_poltrona" 
+                       name="largura_poltrona" placeholder="0.00" min="0.01">
+                <label for="largura_poltrona">Largura (cm) *</label>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="form-floating mb-3">
+                <input type="number" step="0.01" class="form-control" id="profundidade_poltrona" 
+                       name="profundidade_poltrona" placeholder="0.00" min="0.01">
+                <label for="profundidade_poltrona">Profundidade (cm) *</label>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="form-floating mb-3">
+                <input type="number" step="0.01" class="form-control" id="altura_poltrona" 
+                       name="altura_poltrona" placeholder="0.00" min="0.01">
+                <label for="altura_poltrona">Altura (cm) *</label>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Especificações Técnicas -->
+    <div class="row">
+        <div class="col-md-3">
+            <div class="form-floating mb-3">
+                <input type="number" step="0.01" class="form-control" id="tecido_metros_poltrona" 
+                       name="tecido_metros_poltrona" placeholder="0.00" min="0.01">
+                <label for="tecido_metros_poltrona">Tecido (m) *</label>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="form-floating mb-3">
+                <input type="number" step="0.001" class="form-control" id="volume_m3_poltrona" 
+                       name="volume_m3_poltrona" placeholder="0.000" min="0.001">
+                <label for="volume_m3_poltrona">Volume (m³) *</label>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="form-floating mb-3">
+                <input type="number" step="0.01" class="form-control" id="peso_kg_poltrona" 
+                       name="peso_kg_poltrona" placeholder="0.00" min="0.01">
+                <label for="peso_kg_poltrona">Peso (kg) *</label>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="form-floating mb-3">
+                <input type="number" step="0.01" class="form-control" id="preco_poltrona" 
+                       name="preco_poltrona" placeholder="0.00" min="0.01">
+                <label for="preco_poltrona">Preço (R$) *</label>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Descrição -->
+    <div class="row">
+        <div class="col-12">
+            <div class="form-floating mb-3">
+                <textarea class="form-control" id="descricao_poltrona" name="descricao_poltrona" 
+                         placeholder="Descrição da poltrona" style="height: 80px;"></textarea>
+                <label for="descricao_poltrona">Descrição (opcional)</label>
+            </div>
+        </div>
+    </div>
+</div>

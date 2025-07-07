@@ -52,6 +52,57 @@
     .badge.tipo-poltronas { background-color: #fd7e14 !important; }
     .badge.tipo-pufes { background-color: #dc3545 !important; }
     .badge.tipo-almofadas { background-color: #20c997 !important; }
+    
+    /* Estilos para botões de ordenação */
+    .sortable-header {
+        position: relative;
+        cursor: pointer;
+        user-select: none;
+        transition: background-color 0.2s ease;
+    }
+    
+    .sortable-header:hover {
+        background-color: rgba(0, 123, 255, 0.1);
+    }
+    
+    .sort-btn {
+        background: none;
+        border: none;
+        color: #6c757d;
+        font-size: 0.8rem;
+        margin-left: 0.25rem;
+        padding: 0.125rem 0.25rem;
+        border-radius: 0.25rem;
+        transition: all 0.2s ease;
+        opacity: 0.6;
+    }
+    
+    .sort-btn:hover {
+        color: #495057;
+        background-color: rgba(0, 123, 255, 0.1);
+        opacity: 1;
+    }
+    
+    .sort-btn.active {
+        color: #0d6efd;
+        opacity: 1;
+        font-weight: bold;
+    }
+    
+    .sort-btn.active.desc {
+        color: #dc3545;
+    }
+    
+    .header-content {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        width: 100%;
+    }
+    
+    .header-text {
+        flex: 1;
+    }
 </style>
 {% endblock %}
 
@@ -132,18 +183,102 @@
                 </h6>
             </div>
             <div class="card-body p-0">
-                {% if produtos or banquetas or cadeiras %}
+                {% if produtos or banquetas or cadeiras or poltronas or pufes or almofadas %}
                 <div class="table-responsive">
                     <table class="table table-hover mb-0">
                         <thead class="table-light">
                             <tr>
-                                <th width="120">Referência</th>
-                                <th>Nome</th>
-                                <th width="100">Tipo</th>
+                                <th width="120" class="sortable-header" data-field="referencia">
+                                    <div class="header-content">
+                                        <span class="header-text">Referência</span>
+                                        <button type="button" class="sort-btn {% if ordenacao.campo == 'referencia' %}active {% if ordenacao.direcao == 'desc' %}desc{% endif %}{% endif %}" 
+                                                onclick="sortTable('referencia')">
+                                            {% if ordenacao.campo == 'referencia' and ordenacao.direcao == 'desc' %}
+                                                ↓
+                                            {% elif ordenacao.campo == 'referencia' %}
+                                                ↑
+                                            {% else %}
+                                                ↕
+                                            {% endif %}
+                                        </button>
+                                    </div>
+                                </th>
+                                <th class="sortable-header" data-field="nome">
+                                    <div class="header-content">
+                                        <span class="header-text">Nome</span>
+                                        <button type="button" class="sort-btn {% if ordenacao.campo == 'nome' %}active {% if ordenacao.direcao == 'desc' %}desc{% endif %}{% endif %}" 
+                                                onclick="sortTable('nome')">
+                                            {% if ordenacao.campo == 'nome' and ordenacao.direcao == 'desc' %}
+                                                ↓
+                                            {% elif ordenacao.campo == 'nome' %}
+                                                ↑
+                                            {% else %}
+                                                ↕
+                                            {% endif %}
+                                        </button>
+                                    </div>
+                                </th>
+                                <th width="100" class="sortable-header" data-field="tipo">
+                                    <div class="header-content">
+                                        <span class="header-text">Tipo</span>
+                                        <button type="button" class="sort-btn {% if ordenacao.campo == 'tipo' %}active {% if ordenacao.direcao == 'desc' %}desc{% endif %}{% endif %}" 
+                                                onclick="sortTable('tipo')">
+                                            {% if ordenacao.campo == 'tipo' and ordenacao.direcao == 'desc' %}
+                                                ↓
+                                            {% elif ordenacao.campo == 'tipo' %}
+                                                ↑
+                                            {% else %}
+                                                ↕
+                                            {% endif %}
+                                        </button>
+                                    </div>
+                                </th>
                                 <th width="120">Módulos</th>
-                                <th width="80">Status</th>
-                                <th width="120">Criado em</th>
-                                <th width="120">Criado por</th>
+                                <th width="80" class="sortable-header" data-field="status">
+                                    <div class="header-content">
+                                        <span class="header-text">Status</span>
+                                        <button type="button" class="sort-btn {% if ordenacao.campo == 'status' %}active {% if ordenacao.direcao == 'desc' %}desc{% endif %}{% endif %}" 
+                                                onclick="sortTable('status')">
+                                            {% if ordenacao.campo == 'status' and ordenacao.direcao == 'desc' %}
+                                                ↓
+                                            {% elif ordenacao.campo == 'status' %}
+                                                ↑
+                                            {% else %}
+                                                ↕
+                                            {% endif %}
+                                        </button>
+                                    </div>
+                                </th>
+                                <th width="120" class="sortable-header" data-field="created_at">
+                                    <div class="header-content">
+                                        <span class="header-text">Criado em</span>
+                                        <button type="button" class="sort-btn {% if ordenacao.campo == 'created_at' %}active {% if ordenacao.direcao == 'desc' %}desc{% endif %}{% endif %}" 
+                                                onclick="sortTable('created_at')">
+                                            {% if ordenacao.campo == 'created_at' and ordenacao.direcao == 'desc' %}
+                                                ↓
+                                            {% elif ordenacao.campo == 'created_at' %}
+                                                ↑
+                                            {% else %}
+                                                ↕
+                                            {% endif %}
+                                        </button>
+                                    </div>
+                                </th>
+                                <th width="120" class="sortable-header" data-field="created_by">
+                                    <div class="header-content">
+                                        <span class="header-text">Criado por</span>
+                                        <button type="button" class="sort-btn {% if ordenacao.campo == 'created_by' %}active {% if ordenacao.direcao == 'desc' %}desc{% endif %}{% endif %}" 
+                                                onclick="sortTable('created_by')">
+                                            {% if ordenacao.campo == 'created_by' and ordenacao.direcao == 'desc' %}
+                                                ↓
+                                            {% elif ordenacao.campo == 'created_by' %}
+                                                ↑
+                                            {% else %}
+                                                ↕
+                                            {% endif %}
+                                        </button>
+                                    </div>
+                                </th>
                                 <th width="140">Ações</th>
                             </tr>
                         </thead>
@@ -199,14 +334,37 @@
                                 </td>
                                 <td>
                                     <div class="btn-group-actions">
-                                        <a href="{% url 'produto_detalhes' produto.id %}" 
-                                           class="btn btn-sm btn-outline-primary" title="Ver Detalhes">
-                                            <i class="bi bi-eye"></i>
-                                        </a>
-                                        <a href="{% url 'produto_editar' produto.id %}" 
-                                           class="btn btn-sm btn-outline-warning" title="Editar">
-                                            <i class="bi bi-pencil"></i>
-                                        </a>
+                                        {% with tipo_nome=produto.id_tipo_produto.nome|lower %}
+                                            {% if 'sofá' in tipo_nome or 'sofa' in tipo_nome %}
+                                                <a href="{% url 'sofa_detalhes' produto.id %}" 
+                                                   class="btn btn-sm btn-outline-primary" title="Ver Detalhes">
+                                                    <i class="bi bi-eye"></i>
+                                                </a>
+                                                <a href="{% url 'sofa_editar' produto.id %}" 
+                                                   class="btn btn-sm btn-outline-warning" title="Editar">
+                                                    <i class="bi bi-pencil"></i>
+                                                </a>
+                                            {% elif 'acessório' in tipo_nome or 'acessorio' in tipo_nome %}
+                                                <a href="{% url 'acessorio_detalhes' produto.id %}" 
+                                                   class="btn btn-sm btn-outline-primary" title="Ver Detalhes">
+                                                    <i class="bi bi-eye"></i>
+                                                </a>
+                                                <a href="{% url 'acessorio_editar' produto.id %}" 
+                                                   class="btn btn-sm btn-outline-warning" title="Editar">
+                                                    <i class="bi bi-pencil"></i>
+                                                </a>
+                                            {% else %}
+                                                <!-- Fallback para tipos não mapeados -->
+                                                <a href="{% url 'produto_detalhes' produto.id %}" 
+                                                   class="btn btn-sm btn-outline-primary" title="Ver Detalhes">
+                                                    <i class="bi bi-eye"></i>
+                                                </a>
+                                                <a href="{% url 'produto_editar' produto.id %}" 
+                                                   class="btn btn-sm btn-outline-warning" title="Editar">
+                                                    <i class="bi bi-pencil"></i>
+                                                </a>
+                                            {% endif %}
+                                        {% endwith %}
                                         <button type="button" class="btn btn-sm btn-outline-danger" 
                                                 title="Excluir" data-bs-toggle="modal" 
                                                 data-bs-target="#deleteModal{{ produto.id }}">
@@ -276,7 +434,7 @@
                                 </td>
                                 <td>
                                     <div class="btn-group-actions">
-                                        <a href="{% url 'produto_detalhes' banqueta.id %}" 
+                                        <a href="{% url 'banqueta_detalhes' banqueta.id %}" 
                                            class="btn btn-sm btn-outline-primary" title="Ver Detalhes">
                                             <i class="bi bi-eye"></i>
                                         </a>
@@ -394,13 +552,241 @@
                                 </td>
                             </tr>
                             {% endfor %}
+
+                            <!-- Seção para Poltronas -->
+                            {% for poltrona in poltronas %}
+                            <tr>
+                                <td>
+                                    <strong>{{ poltrona.ref_poltrona }}</strong>
+                                </td>
+                                <td>{{ poltrona.nome }}</td>
+                                <td>
+                                    <span class="badge tipo-poltronas">Poltronas</span>
+                                </td>
+                                <td>
+                                    <span class="text-muted">Sem módulos</span>
+                                </td>
+                                <td>
+                                    {% if poltrona.ativo %}
+                                        <span class="badge bg-success">Ativo</span>
+                                    {% else %}
+                                        <span class="badge bg-danger">Inativo</span>
+                                    {% endif %}
+                                </td>
+                                <td>{{ poltrona.created_at|date:"d/m/Y H:i" }}</td>
+                                <td>
+                                    {% if poltrona.created_by %}
+                                        <small class="text-muted small-user" title="{{ poltrona.created_by.email }}">
+                                            {{ poltrona.created_by.get_full_name|default:poltrona.created_by.email }}
+                                        </small>
+                                    {% else %}
+                                        <small class="text-muted">Sistema</small>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    <div class="btn-group-actions">
+                                        <a href="{% url 'poltrona_detalhes' poltrona.id %}" 
+                                           class="btn btn-sm btn-outline-primary" title="Ver Detalhes">
+                                            <i class="bi bi-eye"></i>
+                                        </a>
+                                        <a href="{% url 'poltrona_editar' poltrona.id %}" 
+                                           class="btn btn-sm btn-outline-warning" title="Editar">
+                                            <i class="bi bi-pencil"></i>
+                                        </a>
+                                        <button type="button" class="btn btn-sm btn-outline-danger" 
+                                                title="Excluir" data-bs-toggle="modal" 
+                                                data-bs-target="#deletePoltronaModal{{ poltrona.id }}">
+                                            <i class="bi bi-trash"></i>
+                                        </button>
+                                    </div>
+                                    
+                                    <!-- Modal de Confirmação de Exclusão para Poltrona -->
+                                    <div class="modal fade" id="deletePoltronaModal{{ poltrona.id }}" tabindex="-1">
+                                        <div class="modal-dialog">
+                                            <div class="modal-content">
+                                                <div class="modal-header">
+                                                    <h5 class="modal-title">Confirmar Exclusão</h5>
+                                                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                                                </div>
+                                                <div class="modal-body">
+                                                    <p>Tem certeza de que deseja excluir a poltrona <strong>{{ poltrona.nome }}</strong>?</p>
+                                                    <p class="text-warning">
+                                                        <i class="bi bi-exclamation-triangle"></i>
+                                                        Esta ação não pode ser desfeita.
+                                                    </p>
+                                                </div>
+                                                <div class="modal-footer">
+                                                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                                                    <form method="post" action="{% url 'poltrona_excluir' poltrona.id %}" style="display: inline;">
+                                                        {% csrf_token %}
+                                                        <button type="submit" class="btn btn-danger">Excluir</button>
+                                                    </form>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </td>
+                            </tr>
+                            {% endfor %}
+
+                            <!-- Seção para Pufes -->
+                            {% for pufe in pufes %}
+                            <tr>
+                                <td>
+                                    <strong>{{ pufe.ref_pufe }}</strong>
+                                </td>
+                                <td>{{ pufe.nome }}</td>
+                                <td>
+                                    <span class="badge tipo-pufes">Pufes</span>
+                                </td>
+                                <td>
+                                    <span class="text-muted">Sem módulos</span>
+                                </td>
+                                <td>
+                                    {% if pufe.ativo %}
+                                        <span class="badge bg-success">Ativo</span>
+                                    {% else %}
+                                        <span class="badge bg-danger">Inativo</span>
+                                    {% endif %}
+                                </td>
+                                <td>{{ pufe.created_at|date:"d/m/Y H:i" }}</td>
+                                <td>
+                                    {% if pufe.created_by %}
+                                        <small class="text-muted small-user" title="{{ pufe.created_by.email }}">
+                                            {{ pufe.created_by.get_full_name|default:pufe.created_by.email }}
+                                        </small>
+                                    {% else %}
+                                        <small class="text-muted">Sistema</small>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    <div class="btn-group-actions">
+                                        <a href="{% url 'pufe_detalhes' pufe.id %}" 
+                                           class="btn btn-sm btn-outline-primary" title="Ver Detalhes">
+                                            <i class="bi bi-eye"></i>
+                                        </a>
+                                        <a href="{% url 'pufe_editar' pufe.id %}" 
+                                           class="btn btn-sm btn-outline-warning" title="Editar">
+                                            <i class="bi bi-pencil"></i>
+                                        </a>
+                                        <button type="button" class="btn btn-sm btn-outline-danger" 
+                                                title="Excluir" data-bs-toggle="modal" 
+                                                data-bs-target="#deletePufeModal{{ pufe.id }}">
+                                            <i class="bi bi-trash"></i>
+                                        </button>
+                                    </div>
+                                    
+                                    <!-- Modal de Confirmação de Exclusão para Pufe -->
+                                    <div class="modal fade" id="deletePufeModal{{ pufe.id }}" tabindex="-1">
+                                        <div class="modal-dialog">
+                                            <div class="modal-content">
+                                                <div class="modal-header">
+                                                    <h5 class="modal-title">Confirmar Exclusão</h5>
+                                                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                                                </div>
+                                                <div class="modal-body">
+                                                    <p>Tem certeza de que deseja excluir o pufe <strong>{{ pufe.nome }}</strong>?</p>
+                                                    <p class="text-warning">
+                                                        <i class="bi bi-exclamation-triangle"></i>
+                                                        Esta ação não pode ser desfeita.
+                                                    </p>
+                                                </div>
+                                                <div class="modal-footer">
+                                                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                                                    <form method="post" action="{% url 'pufe_excluir' pufe.id %}" style="display: inline;">
+                                                        {% csrf_token %}
+                                                        <button type="submit" class="btn btn-danger">Excluir</button>
+                                                    </form>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </td>
+                            </tr>
+                            {% endfor %}
+
+                            <!-- Seção para Almofadas -->
+                            {% for almofada in almofadas %}
+                            <tr>
+                                <td>
+                                    <strong>{{ almofada.ref_almofada }}</strong>
+                                </td>
+                                <td>{{ almofada.nome }}</td>
+                                <td>
+                                    <span class="badge tipo-almofadas">Almofadas</span>
+                                </td>
+                                <td>
+                                    <span class="text-muted">Sem módulos</span>
+                                </td>
+                                <td>
+                                    {% if almofada.ativo %}
+                                        <span class="badge bg-success">Ativo</span>
+                                    {% else %}
+                                        <span class="badge bg-danger">Inativo</span>
+                                    {% endif %}
+                                </td>
+                                <td>{{ almofada.created_at|date:"d/m/Y H:i" }}</td>
+                                <td>
+                                    {% if almofada.created_by %}
+                                        <small class="text-muted small-user" title="{{ almofada.created_by.email }}">
+                                            {{ almofada.created_by.get_full_name|default:almofada.created_by.email }}
+                                        </small>
+                                    {% else %}
+                                        <small class="text-muted">Sistema</small>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    <div class="btn-group-actions">
+                                        <a href="{% url 'almofada_detalhes' almofada.id %}" 
+                                           class="btn btn-sm btn-outline-primary" title="Ver Detalhes">
+                                            <i class="bi bi-eye"></i>
+                                        </a>
+                                        <a href="{% url 'almofada_editar' almofada.id %}" 
+                                           class="btn btn-sm btn-outline-warning" title="Editar">
+                                            <i class="bi bi-pencil"></i>
+                                        </a>
+                                        <button type="button" class="btn btn-sm btn-outline-danger" 
+                                                title="Excluir" data-bs-toggle="modal" 
+                                                data-bs-target="#deleteAlmofadaModal{{ almofada.id }}">
+                                            <i class="bi bi-trash"></i>
+                                        </button>
+                                    </div>
+                                    
+                                    <!-- Modal de Confirmação de Exclusão para Almofada -->
+                                    <div class="modal fade" id="deleteAlmofadaModal{{ almofada.id }}" tabindex="-1">
+                                        <div class="modal-dialog">
+                                            <div class="modal-content">
+                                                <div class="modal-header">
+                                                    <h5 class="modal-title">Confirmar Exclusão</h5>
+                                                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                                                </div>
+                                                <div class="modal-body">
+                                                    <p>Tem certeza de que deseja excluir a almofada <strong>{{ almofada.nome }}</strong>?</p>
+                                                    <p class="text-warning">
+                                                        <i class="bi bi-exclamation-triangle"></i>
+                                                        Esta ação não pode ser desfeita.
+                                                    </p>
+                                                </div>
+                                                <div class="modal-footer">
+                                                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                                                    <form method="post" action="{% url 'almofada_excluir' almofada.id %}" style="display: inline;">
+                                                        {% csrf_token %}
+                                                        <button type="submit" class="btn btn-danger">Excluir</button>
+                                                    </form>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </td>
+                            </tr>
+                            {% endfor %}
                         </tbody>
                     </table>
                 </div>
                 {% else %}
                 <div class="text-center py-5">
                     <i class="bi bi-inbox fs-1 text-muted"></i>
-                    <h5 class="mt-3 text-muted">Nenhum produto, banqueta ou cadeira encontrada</h5>
+                    <h5 class="mt-3 text-muted">Nenhum produto encontrado</h5>
                     <p class="text-muted">Tente ajustar os filtros ou cadastre um novo produto.</p>
                     <a href="{% url 'produto_cadastro' %}" class="btn btn-primary me-2">
                         <i class="bi bi-plus-circle"></i> Cadastrar Produto
@@ -408,8 +794,17 @@
                     <a href="{% url 'banqueta_cadastro' %}" class="btn btn-warning me-2">
                         <i class="bi bi-plus-circle"></i> Cadastrar Banqueta
                     </a>
-                    <a href="{% url 'cadeira_cadastro' %}" class="btn btn-success">
+                    <a href="{% url 'cadeira_cadastro' %}" class="btn btn-success me-2">
                         <i class="bi bi-plus-circle"></i> Cadastrar Cadeira
+                    </a>
+                    <a href="{% url 'poltrona_cadastro' %}" class="btn btn-info me-2">
+                        <i class="bi bi-plus-circle"></i> Cadastrar Poltrona
+                    </a>
+                    <a href="{% url 'pufe_cadastro' %}" class="btn btn-secondary me-2">
+                        <i class="bi bi-plus-circle"></i> Cadastrar Pufe
+                    </a>
+                    <a href="{% url 'almofada_cadastro' %}" class="btn btn-dark">
+                        <i class="bi bi-plus-circle"></i> Cadastrar Almofada
                     </a>
                 </div>
                 {% endif %}
@@ -417,4 +812,57 @@
         </div>
     </div>
 </div>
+
+<script>
+function sortTable(campo) {
+    // Obter parâmetros atuais da URL
+    const urlParams = new URLSearchParams(window.location.search);
+    
+    // Verificar se é o mesmo campo e alternar direção
+    const campoAtual = urlParams.get('ordenar_por') || 'referencia';
+    const direcaoAtual = urlParams.get('direcao') || 'asc';
+    
+    let novaDirecao = 'asc';
+    if (campo === campoAtual && direcaoAtual === 'asc') {
+        novaDirecao = 'desc';
+    }
+    
+    // Definir novos parâmetros
+    urlParams.set('ordenar_por', campo);
+    urlParams.set('direcao', novaDirecao);
+    
+    // Redirecionar com novos parâmetros
+    window.location.search = urlParams.toString();
+}
+
+// Adicionar feedback visual durante carregamento
+document.addEventListener('DOMContentLoaded', function() {
+    const sortButtons = document.querySelectorAll('.sort-btn');
+    
+    sortButtons.forEach(button => {
+        button.addEventListener('click', function() {
+            // Adicionar indicador de carregamento
+            const originalContent = this.innerHTML;
+            this.innerHTML = '⟳';
+            this.style.animation = 'spin 1s linear infinite';
+            
+            // Remover animação após um tempo (caso algo dê errado)
+            setTimeout(() => {
+                this.innerHTML = originalContent;
+                this.style.animation = '';
+            }, 3000);
+        });
+    });
+});
+
+// Animação de rotação para indicador de carregamento
+const style = document.createElement('style');
+style.textContent = `
+    @keyframes spin {
+        from { transform: rotate(0deg); }
+        to { transform: rotate(360deg); }
+    }
+`;
+document.head.appendChild(style);
+</script>
 {% endblock %}

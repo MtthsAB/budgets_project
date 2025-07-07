@@ -1,0 +1,86 @@
+<!-- JavaScript Base para Cadastro de Produtos -->
+<script>
+// Função para preview de imagens (genérica)
+function previewImage(input, previewId) {
+    const preview = document.getElementById(previewId);
+    const img = document.getElementById('img_' + previewId);
+    
+    if (input.files && input.files[0]) {
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            img.src = e.target.result;
+            preview.style.display = 'block';
+        }
+        reader.readAsDataURL(input.files[0]);
+    }
+}
+
+// Função para remover imagem (genérica)
+function removeImage(previewId, inputId) {
+    const preview = document.getElementById(previewId);
+    const input = document.getElementById(inputId);
+    const img = document.getElementById('img_' + previewId);
+    
+    preview.style.display = 'none';
+    input.value = '';
+    img.src = '';
+    
+    // Se for segunda imagem, esconder área novamente
+    if (inputId === 'imagem_secundaria') {
+        document.getElementById('segunda_imagem_area').style.display = 'none';
+        document.getElementById('btn_adicionar_segunda_imagem').style.display = 'block';
+    }
+}
+
+// Função para mostrar segunda imagem (genérica)
+function mostrarSegundaImagem() {
+    document.getElementById('segunda_imagem_area').style.display = 'block';
+    document.getElementById('btn_adicionar_segunda_imagem').style.display = 'none';
+}
+
+// Função básica para alternar campos por tipo (será estendida por cada produto)
+function toggleCamposPorTipo() {
+    const tipoSelect = document.getElementById('tipo_produto');
+    const selectedOption = tipoSelect.options[tipoSelect.selectedIndex];
+    const tipoNome = selectedOption.getAttribute('data-nome');
+    
+    // Elementos básicos
+    const secaoImagens = document.getElementById('secao-imagens');
+    
+    // Esconder seção de imagens primeiro
+    if (secaoImagens) secaoImagens.style.display = 'none';
+    
+    if (!tipoNome) return;
+    
+    // Mostrar seção de imagens para todos os tipos
+    if (secaoImagens) secaoImagens.style.display = 'block';
+    
+    // Chamar função específica do produto se existir
+    if (typeof toggleCamposEspecificos === 'function') {
+        toggleCamposEspecificos(tipoNome);
+    }
+}
+
+// Validação básica do formulário
+document.getElementById('produtoForm').addEventListener('submit', function(e) {
+    const refProduto = document.getElementById('ref_produto').value;
+    const nomeProduto = document.getElementById('nome_produto').value;
+    const tipoProduto = document.getElementById('tipo_produto').value;
+    
+    if (!refProduto || !nomeProduto || !tipoProduto) {
+        e.preventDefault();
+        alert('Por favor, preencha todos os campos obrigatórios.');
+        return false;
+    }
+    
+    // Chamar validação específica do produto se existir
+    if (typeof validacaoEspecifica === 'function') {
+        return validacaoEspecifica(e);
+    }
+});
+
+// Inicializar estado dos campos ao carregar a página
+document.addEventListener('DOMContentLoaded', function() {
+    toggleCamposPorTipo(); // Garantir que os campos estejam ocultos inicialmente
+});
+</script>

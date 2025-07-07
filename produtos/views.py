@@ -3,7 +3,9 @@ from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from django.views.decorators.csrf import csrf_protect
 from django.db import transaction
+from django.db import models
 from django.http import JsonResponse, Http404
+from django.core.paginator import Paginator
 from rest_framework import viewsets, status
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated
@@ -13,9 +15,9 @@ from sistema_produtos.mixins import track_user_changes
 from .models import (
     Item, TipoItem, Linha, Modulo, Acessorio, 
     TamanhosModulos, TamanhosModulosDetalhado, FaixaTecido, PrecosBase,
-    Banqueta, Cadeira
+    Banqueta, Cadeira, Poltrona, Pufe, Almofada
 )
-from .forms import AcessorioForm, BanquetaForm, CadeiraForm
+from .forms import AcessorioForm, BanquetaForm, CadeiraForm, PoltronaForm, PufeForm, AlmofadaForm
 
 logger = logging.getLogger(__name__)
 
@@ -32,41 +34,76 @@ def home_view(request):
 
 @login_required
 def produtos_list_view(request):
-    """View para listagem de produtos unificada (inclui banquetas e cadeiras)"""
+    """View para listagem de produtos unificada (inclui todos os tipos)"""
     # Buscar produtos da tabela Item
     produtos = Item.objects.select_related('id_tipo_produto').prefetch_related('modulos').all()
     
-    # Buscar banquetas da tabela Banqueta
+    # Buscar produtos das tabelas específicas
     banquetas = Banqueta.objects.filter(ativo=True).all()
-    
-    # Buscar cadeiras da tabela Cadeira
     cadeiras = Cadeira.objects.filter(ativo=True).all()
+    poltronas = Poltrona.objects.filter(ativo=True).all()
+    pufes = Pufe.objects.filter(ativo=True).all()
+    almofadas = Almofada.objects.filter(ativo=True).all()
     
     # Filtros
     tipo_filtro = request.GET.get('tipo')
     ativo_filtro = request.GET.get('ativo')
     busca = request.GET.get('busca')
     
+    # Parâmetros de ordenação
+    ordenar_por = request.GET.get('ordenar_por', 'referencia')  # campo padrão
+    direcao = request.GET.get('direcao', 'asc')  # asc ou desc
+    
     if tipo_filtro:
         # Filtrar produtos por tipo
         produtos = produtos.filter(id_tipo_produto__id=tipo_filtro)
         
-        # Se o filtro for por "Banquetas" (id=4), mostrar apenas banquetas
-        if tipo_filtro == '4':
-            produtos = Item.objects.none()  # Não mostrar produtos da tabela Item
-            cadeiras = Cadeira.objects.none()  # Não mostrar cadeiras
-        # Se o filtro for por "Cadeiras" (id=3), mostrar apenas cadeiras
-        elif tipo_filtro == '3':
-            produtos = Item.objects.none()  # Não mostrar produtos da tabela Item
-            banquetas = Banqueta.objects.none()  # Não mostrar banquetas
+        # Se o filtro for por tipo específico, mostrar apenas esse tipo
+        if tipo_filtro == '4':  # Banquetas
+            produtos = Item.objects.none()
+            cadeiras = Cadeira.objects.none()
+            poltronas = Poltrona.objects.none()
+            pufes = Pufe.objects.none()
+            almofadas = Almofada.objects.none()
+        elif tipo_filtro == '3':  # Cadeiras
+            produtos = Item.objects.none()
+            banquetas = Banqueta.objects.none()
+            poltronas = Poltrona.objects.none()
+            pufes = Pufe.objects.none()
+            almofadas = Almofada.objects.none()
+        elif tipo_filtro == '5':  # Poltronas (assumindo ID 5)
+            produtos = Item.objects.none()
+            banquetas = Banqueta.objects.none()
+            cadeiras = Cadeira.objects.none()
+            pufes = Pufe.objects.none()
+            almofadas = Almofada.objects.none()
+        elif tipo_filtro == '6':  # Pufes (assumindo ID 6)
+            produtos = Item.objects.none()
+            banquetas = Banqueta.objects.none()
+            cadeiras = Cadeira.objects.none()
+            poltronas = Poltrona.objects.none()
+            almofadas = Almofada.objects.none()
+        elif tipo_filtro == '7':  # Almofadas (assumindo ID 7)
+            produtos = Item.objects.none()
+            banquetas = Banqueta.objects.none()
+            cadeiras = Cadeira.objects.none()
+            poltronas = Poltrona.objects.none()
+            pufes = Pufe.objects.none()
         else:
-            banquetas = Banqueta.objects.none()  # Não mostrar banquetas se filtro não for banquetas
-            cadeiras = Cadeira.objects.none()  # Não mostrar cadeiras se filtro não for cadeiras
+            # Para outros tipos, não mostrar produtos das tabelas específicas
+            banquetas = Banqueta.objects.none()
+            cadeiras = Cadeira.objects.none()
+            poltronas = Poltrona.objects.none()
+            pufes = Pufe.objects.none()
+            almofadas = Almofada.objects.none()
     
     if ativo_filtro:
         produtos = produtos.filter(ativo=ativo_filtro == 'true')
         banquetas = banquetas.filter(ativo=ativo_filtro == 'true')
         cadeiras = cadeiras.filter(ativo=ativo_filtro == 'true')
+        poltronas = poltronas.filter(ativo=ativo_filtro == 'true')
+        pufes = pufes.filter(ativo=ativo_filtro == 'true')
+        almofadas = almofadas.filter(ativo=ativo_filtro == 'true')
     
     if busca:
         produtos = produtos.filter(
@@ -84,17 +121,116 @@ def produtos_list_view(request):
         ) | cadeiras.filter(
             ref_cadeira__icontains=busca
         )
+        poltronas = poltronas.filter(
+            nome__icontains=busca
+        ) | poltronas.filter(
+            ref_poltrona__icontains=busca
+        )
+        pufes = pufes.filter(
+            nome__icontains=busca
+        ) | pufes.filter(
+            ref_pufe__icontains=busca
+        )
+        almofadas = almofadas.filter(
+            nome__icontains=busca
+        ) | almofadas.filter(
+            ref_almofada__icontains=busca
+        )
+    
+    # Aplicar ordenação
+    # Mapeamento de campos para ordenação
+    campos_ordenacao = {
+        'referencia': {
+            'Item': 'ref_produto',
+            'Banqueta': 'ref_banqueta', 
+            'Cadeira': 'ref_cadeira',
+            'Poltrona': 'ref_poltrona',
+            'Pufe': 'ref_pufe',
+            'Almofada': 'ref_almofada'
+        },
+        'nome': {
+            'Item': 'nome_produto',
+            'Banqueta': 'nome',
+            'Cadeira': 'nome', 
+            'Poltrona': 'nome',
+            'Pufe': 'nome',
+            'Almofada': 'nome'
+        },
+        'tipo': {
+            'Item': 'id_tipo_produto__nome',
+            'Banqueta': 'created_at',  # Banquetas sempre terão tipo fixo
+            'Cadeira': 'created_at',   # Cadeiras sempre terão tipo fixo
+            'Poltrona': 'created_at',  # Poltronas sempre terão tipo fixo
+            'Pufe': 'created_at',      # Pufes sempre terão tipo fixo
+            'Almofada': 'created_at'   # Almofadas sempre terão tipo fixo
+        },
+        'status': {
+            'Item': 'ativo',
+            'Banqueta': 'ativo',
+            'Cadeira': 'ativo',
+            'Poltrona': 'ativo', 
+            'Pufe': 'ativo',
+            'Almofada': 'ativo'
+        },
+        'created_at': {
+            'Item': 'created_at',
+            'Banqueta': 'created_at',
+            'Cadeira': 'created_at',
+            'Poltrona': 'created_at',
+            'Pufe': 'created_at', 
+            'Almofada': 'created_at'
+        },
+        'created_by': {
+            'Item': 'created_by__email',
+            'Banqueta': 'created_by__email',
+            'Cadeira': 'created_by__email',
+            'Poltrona': 'created_by__email',
+            'Pufe': 'created_by__email',
+            'Almofada': 'created_by__email'
+        }
+    }
+    
+    if ordenar_por in campos_ordenacao:
+        # Aplicar ordenação para cada tipo de produto
+        campo_item = campos_ordenacao[ordenar_por]['Item']
+        campo_banqueta = campos_ordenacao[ordenar_por]['Banqueta']
+        campo_cadeira = campos_ordenacao[ordenar_por]['Cadeira']
+        campo_poltrona = campos_ordenacao[ordenar_por]['Poltrona']
+        campo_pufe = campos_ordenacao[ordenar_por]['Pufe']
+        campo_almofada = campos_ordenacao[ordenar_por]['Almofada']
+        
+        if direcao == 'desc':
+            campo_item = '-' + campo_item
+            campo_banqueta = '-' + campo_banqueta
+            campo_cadeira = '-' + campo_cadeira
+            campo_poltrona = '-' + campo_poltrona
+            campo_pufe = '-' + campo_pufe
+            campo_almofada = '-' + campo_almofada
+        
+        produtos = produtos.order_by(campo_item)
+        banquetas = banquetas.order_by(campo_banqueta)
+        cadeiras = cadeiras.order_by(campo_cadeira)
+        poltronas = poltronas.order_by(campo_poltrona)
+        pufes = pufes.order_by(campo_pufe)
+        almofadas = almofadas.order_by(campo_almofada)
     
     context = {
         'produtos': produtos,
         'banquetas': banquetas,
         'cadeiras': cadeiras,
-        'total_itens': produtos.count() + banquetas.count() + cadeiras.count(),
+        'poltronas': poltronas,
+        'pufes': pufes,
+        'almofadas': almofadas,
+        'total_itens': produtos.count() + banquetas.count() + cadeiras.count() + poltronas.count() + pufes.count() + almofadas.count(),
         'tipos': TipoItem.objects.all(),
         'filtros': {
             'tipo': tipo_filtro,
             'ativo': ativo_filtro,
             'busca': busca,
+        },
+        'ordenacao': {
+            'campo': ordenar_por,
+            'direcao': direcao,
         }
     }
     return render(request, 'produtos/lista.html', context)
@@ -125,6 +261,10 @@ def produto_cadastro_view(request):
                 tipo_produto = get_object_or_404(TipoItem, id=tipo_produto_id)
                 eh_acessorio = tipo_produto.nome.lower() == 'acessórios'
                 eh_banqueta = tipo_produto.nome.lower() == 'banquetas'
+                eh_cadeira = tipo_produto.nome.lower() == 'cadeiras'
+                eh_poltrona = tipo_produto.nome.lower() == 'poltronas'
+                eh_pufe = tipo_produto.nome.lower() == 'pufes'
+                eh_almofada = tipo_produto.nome.lower() == 'almofadas'
                 
                 if eh_banqueta:
                     # Processar como banqueta usando o modelo específico
@@ -165,6 +305,164 @@ def produto_cadastro_view(request):
                     
                     messages.success(request, f'Banqueta "{banqueta.ref_banqueta} - {banqueta.nome}" cadastrada com sucesso!')
                     return redirect('banquetas_lista')
+                    
+                elif eh_cadeira:
+                    # Processar como cadeira usando o modelo específico
+                    largura = request.POST.get('largura_cadeira')
+                    profundidade = request.POST.get('profundidade_cadeira')
+                    altura = request.POST.get('altura_cadeira')
+                    tecido_metros = request.POST.get('tecido_metros_cadeira')
+                    volume_m3 = request.POST.get('volume_m3_cadeira')
+                    peso_kg = request.POST.get('peso_kg_cadeira')
+                    preco = request.POST.get('preco_cadeira')
+                    ativo = request.POST.get('ativo_cadeira') == 'on'
+                    descricao = request.POST.get('descricao_cadeira')
+                    
+                    # Validar campos obrigatórios para cadeiras
+                    if not all([largura, profundidade, altura, tecido_metros, volume_m3, peso_kg, preco]):
+                        messages.error(request, 'Por favor, preencha todos os campos obrigatórios para cadeiras.')
+                        raise ValueError('Campos obrigatórios da cadeira não preenchidos')
+                    
+                    # Criar cadeira
+                    cadeira = Cadeira(
+                        ref_cadeira=ref_produto,
+                        nome=nome_produto,
+                        largura=float(largura),
+                        profundidade=float(profundidade),
+                        altura=float(altura),
+                        tecido_metros=float(tecido_metros),
+                        volume_m3=float(volume_m3),
+                        peso_kg=float(peso_kg),
+                        preco=float(preco),
+                        ativo=ativo,
+                        imagem_principal=request.FILES.get('imagem_principal'),
+                        imagem_secundaria=request.FILES.get('imagem_secundaria'),
+                        descricao=descricao if descricao else None
+                    )
+                    # Rastrear usuário
+                    track_user_changes(cadeira, request.user)
+                    cadeira.save()
+                    
+                    messages.success(request, f'Cadeira "{cadeira.ref_cadeira} - {cadeira.nome}" cadastrada com sucesso!')
+                    return redirect('cadeiras_lista')
+                
+                elif eh_poltrona:
+                    # Processar como poltrona usando o modelo específico
+                    largura = request.POST.get('largura_poltrona')
+                    profundidade = request.POST.get('profundidade_poltrona')
+                    altura = request.POST.get('altura_poltrona')
+                    tecido_metros = request.POST.get('tecido_metros_poltrona')
+                    volume_m3 = request.POST.get('volume_m3_poltrona')
+                    peso_kg = request.POST.get('peso_kg_poltrona')
+                    preco = request.POST.get('preco_poltrona')
+                    ativo = request.POST.get('ativo_poltrona') == 'on'
+                    descricao = request.POST.get('descricao_poltrona')
+                    
+                    # Validar campos obrigatórios para poltronas
+                    if not all([largura, profundidade, altura, tecido_metros, volume_m3, peso_kg, preco]):
+                        messages.error(request, 'Por favor, preencha todos os campos obrigatórios para poltronas.')
+                        raise ValueError('Campos obrigatórios da poltrona não preenchidos')
+                    
+                    # Criar poltrona
+                    poltrona = Poltrona(
+                        ref_poltrona=ref_produto,
+                        nome=nome_produto,
+                        largura=float(largura),
+                        profundidade=float(profundidade),
+                        altura=float(altura),
+                        tecido_metros=float(tecido_metros),
+                        volume_m3=float(volume_m3),
+                        peso_kg=float(peso_kg),
+                        preco=float(preco),
+                        ativo=ativo,
+                        imagem_principal=request.FILES.get('imagem_principal'),
+                        imagem_secundaria=request.FILES.get('imagem_secundaria'),
+                        descricao=descricao if descricao else None
+                    )
+                    # Rastrear usuário
+                    track_user_changes(poltrona, request.user)
+                    poltrona.save()
+                    
+                    messages.success(request, f'Poltrona "{poltrona.ref_poltrona} - {poltrona.nome}" cadastrada com sucesso!')
+                    return redirect('produtos_lista')
+                    
+                elif eh_pufe:
+                    # Processar como pufe usando o modelo específico
+                    largura = request.POST.get('largura_pufe')
+                    profundidade = request.POST.get('profundidade_pufe')
+                    altura = request.POST.get('altura_pufe')
+                    tecido_metros = request.POST.get('tecido_metros_pufe')
+                    volume_m3 = request.POST.get('volume_m3_pufe')
+                    peso_kg = request.POST.get('peso_kg_pufe')
+                    preco = request.POST.get('preco_pufe')
+                    ativo = request.POST.get('ativo_pufe') == 'on'
+                    descricao = request.POST.get('descricao_pufe')
+                    
+                    # Validar campos obrigatórios para pufes
+                    if not all([largura, profundidade, altura, tecido_metros, volume_m3, peso_kg, preco]):
+                        messages.error(request, 'Por favor, preencha todos os campos obrigatórios para pufes.')
+                        raise ValueError('Campos obrigatórios do pufe não preenchidos')
+                    
+                    # Criar pufe
+                    pufe = Pufe(
+                        ref_pufe=ref_produto,
+                        nome=nome_produto,
+                        largura=float(largura),
+                        profundidade=float(profundidade),
+                        altura=float(altura),
+                        tecido_metros=float(tecido_metros),
+                        volume_m3=float(volume_m3),
+                        peso_kg=float(peso_kg),
+                        preco=float(preco),
+                        ativo=ativo,
+                        imagem_principal=request.FILES.get('imagem_principal'),
+                        imagem_secundaria=request.FILES.get('imagem_secundaria'),
+                        descricao=descricao if descricao else None
+                    )
+                    # Rastrear usuário
+                    track_user_changes(pufe, request.user)
+                    pufe.save()
+                    
+                    messages.success(request, f'Pufe "{pufe.ref_pufe} - {pufe.nome}" cadastrado com sucesso!')
+                    return redirect('produtos_lista')
+                    
+                elif eh_almofada:
+                    # Processar como almofada usando o modelo específico (sem profundidade)
+                    largura = request.POST.get('largura_almofada')
+                    altura = request.POST.get('altura_almofada')
+                    tecido_metros = request.POST.get('tecido_metros_almofada')
+                    volume_m3 = request.POST.get('volume_m3_almofada')
+                    peso_kg = request.POST.get('peso_kg_almofada')
+                    preco = request.POST.get('preco_almofada')
+                    ativo = request.POST.get('ativo_almofada') == 'on'
+                    descricao = request.POST.get('descricao_almofada')
+                    
+                    # Validar campos obrigatórios para almofadas (sem profundidade)
+                    if not all([largura, altura, tecido_metros, volume_m3, peso_kg, preco]):
+                        messages.error(request, 'Por favor, preencha todos os campos obrigatórios para almofadas.')
+                        raise ValueError('Campos obrigatórios da almofada não preenchidos')
+                    
+                    # Criar almofada
+                    almofada = Almofada(
+                        ref_almofada=ref_produto,
+                        nome=nome_produto,
+                        largura=float(largura),
+                        altura=float(altura),
+                        tecido_metros=float(tecido_metros),
+                        volume_m3=float(volume_m3),
+                        peso_kg=float(peso_kg),
+                        preco=float(preco),
+                        ativo=ativo,
+                        imagem_principal=request.FILES.get('imagem_principal'),
+                        imagem_secundaria=request.FILES.get('imagem_secundaria'),
+                        descricao=descricao if descricao else None
+                    )
+                    # Rastrear usuário
+                    track_user_changes(almofada, request.user)
+                    almofada.save()
+                    
+                    messages.success(request, f'Almofada "{almofada.ref_almofada} - {almofada.nome}" cadastrada com sucesso!')
+                    return redirect('produtos_lista')
                     
                 elif eh_acessorio:
                     # Processar como acessório usando o modelo Item unificado
@@ -314,7 +612,7 @@ def produto_cadastro_view(request):
         'tipos': TipoItem.objects.all(),
         'produtos_disponiveis': Item.objects.filter(ativo=True).order_by('ref_produto'),
     }
-    return render(request, 'produtos/sofas/cadastro.html', context)
+    return render(request, 'produtos/cadastro_unificado.html', context)
 
 @login_required
 def produto_editar_view(request, produto_id):
@@ -1097,3 +1395,392 @@ def cadeira_excluir_view(request, cadeira_id):
         'cadeira': cadeira,
     }
     return render(request, 'produtos/cadeiras/confirmar_exclusao.html', context)
+
+
+# ================================
+# VIEWS PARA POLTRONAS 
+# ================================
+
+def poltronas_list_view(request):
+    """View para listar poltronas"""
+    poltronas = Poltrona.objects.filter(ativo=True).order_by('ref_poltrona')
+    
+    # Busca
+    busca = request.GET.get('busca', '').strip()
+    if busca:
+        poltronas = poltronas.filter(
+            models.Q(nome__icontains=busca) |
+            models.Q(ref_poltrona__icontains=busca)
+        )
+    
+    # Paginação
+    paginator = Paginator(poltronas, 12)  # 12 poltronas por página
+    page_number = request.GET.get('page')
+    page_obj = paginator.get_page(page_number)
+    
+    context = {
+        'poltronas': page_obj,
+        'busca': busca,
+        'total_poltronas': poltronas.count(),
+    }
+    return render(request, 'produtos/poltronas/lista.html', context)
+
+
+def poltrona_cadastro_view(request):
+    """View para cadastrar nova poltrona"""
+    if request.method == 'POST':
+        form = PoltronaForm(request.POST, request.FILES)
+        if form.is_valid():
+            try:
+                poltrona = form.save()
+                messages.success(request, f'Poltrona "{poltrona.ref_poltrona} - {poltrona.nome}" cadastrada com sucesso!')
+                return redirect('poltrona_detalhes', poltrona_id=poltrona.id)
+            except Exception as e:
+                logger.error(f"Erro ao cadastrar poltrona: {str(e)}")
+                messages.error(request, f'Erro ao cadastrar poltrona: {str(e)}')
+        else:
+            logger.warning(f"Formulário de poltrona inválido: {form.errors}")
+    else:
+        form = PoltronaForm()
+    
+    context = {
+        'form': form,
+    }
+    return render(request, 'produtos/poltronas/cadastro.html', context)
+
+
+def poltrona_detalhes_view(request, poltrona_id):
+    """View para visualizar detalhes da poltrona"""
+    poltrona = get_object_or_404(Poltrona, id=poltrona_id)
+    
+    context = {
+        'poltrona': poltrona,
+    }
+    return render(request, 'produtos/poltronas/detalhes.html', context)
+
+
+def poltrona_teste_imagem_view(request, poltrona_id):
+    """View para testar imagem da poltrona"""
+    poltrona = get_object_or_404(Poltrona, id=poltrona_id)
+    return JsonResponse({
+        'imagem_url': poltrona.imagem_principal.url if poltrona.imagem_principal else None
+    })
+
+
+def poltrona_editar_view(request, poltrona_id):
+    """View para editar poltrona"""
+    poltrona = get_object_or_404(Poltrona, id=poltrona_id)
+    
+    if request.method == 'POST':
+        form = PoltronaForm(request.POST, request.FILES, instance=poltrona)
+        if form.is_valid():
+            try:
+                poltrona = form.save()
+                messages.success(request, f'Poltrona "{poltrona.ref_poltrona} - {poltrona.nome}" atualizado com sucesso!')
+                return redirect('poltrona_detalhes', poltrona_id=poltrona.id)
+            except Exception as e:
+                logger.error(f"Erro ao editar poltrona: {str(e)}")
+                messages.error(request, f'Erro ao editar poltrona: {str(e)}')
+        else:
+            logger.warning(f"Formulário de edição de poltrona inválido: {form.errors}")
+    else:
+        form = PoltronaForm(instance=poltrona)
+    
+    context = {
+        'form': form,
+        'poltrona': poltrona,
+    }
+    return render(request, 'produtos/poltronas/editar.html', context)
+
+
+def poltrona_excluir_view(request, poltrona_id):
+    """View para excluir poltronas"""
+    poltrona = get_object_or_404(Poltrona, id=poltrona_id)
+    
+    if request.method == 'POST':
+        try:
+            nome_poltrona = f"{poltrona.ref_poltrona} - {poltrona.nome}"
+            poltrona.delete()
+            messages.success(request, f'Poltrona "{nome_poltrona}" excluída com sucesso!')
+            return redirect('poltronas_lista')
+        except Exception as e:
+            logger.error(f"Erro ao excluir poltrona: {str(e)}")
+            messages.error(request, f'Erro ao excluir poltrona: {str(e)}')
+            return redirect('poltrona_detalhes', poltrona_id=poltrona.id)
+    
+    context = {
+        'poltrona': poltrona,
+    }
+    return render(request, 'produtos/poltronas/confirmar_exclusao.html', context)
+
+# =============================================================================
+# VIEWS PARA PUFES
+# =============================================================================
+
+@login_required
+def pufes_list_view(request):
+    """View para listagem de pufes"""
+    pufes = Pufe.objects.all().order_by('ref_pufe')
+    
+    context = {
+        'pufes': pufes,
+        'total_pufes': pufes.count(),
+    }
+    return render(request, 'produtos/pufes/lista.html', context)
+
+@login_required
+def pufe_cadastro_view(request):
+    """View para cadastro de pufes"""
+    if request.method == 'POST':
+        form = PufeForm(request.POST, request.FILES)
+        if form.is_valid():
+            try:
+                pufe = form.save()
+                track_user_changes(pufe, request.user)
+                messages.success(request, f'Pufe "{pufe.ref_pufe} - {pufe.nome}" cadastrado com sucesso!')
+                return redirect('pufe_detalhes', pufe_id=pufe.id)
+            except Exception as e:
+                logger.error(f"Erro ao cadastrar pufe: {str(e)}")
+                messages.error(request, f'Erro ao cadastrar pufe: {str(e)}')
+        else:
+            logger.warning(f"Formulário de cadastro de pufe inválido: {form.errors}")
+    else:
+        form = PufeForm()
+    
+    context = {
+        'form': form,
+    }
+    return render(request, 'produtos/pufes/cadastro.html', context)
+
+@login_required
+def pufe_detalhes_view(request, pufe_id):
+    """View para detalhes de pufe"""
+    pufe = get_object_or_404(Pufe, id=pufe_id)
+    
+    context = {
+        'pufe': pufe,
+    }
+    return render(request, 'produtos/pufes/detalhes.html', context)
+
+@login_required
+def pufe_editar_view(request, pufe_id):
+    """View para editar pufe"""
+    pufe = get_object_or_404(Pufe, id=pufe_id)
+    
+    if request.method == 'POST':
+        form = PufeForm(request.POST, request.FILES, instance=pufe)
+        if form.is_valid():
+            try:
+                pufe = form.save()
+                messages.success(request, f'Pufe "{pufe.ref_pufe} - {pufe.nome}" atualizado com sucesso!')
+                return redirect('pufe_detalhes', pufe_id=pufe.id)
+            except Exception as e:
+                logger.error(f"Erro ao editar pufe: {str(e)}")
+                messages.error(request, f'Erro ao editar pufe: {str(e)}')
+        else:
+            logger.warning(f"Formulário de edição de pufe inválido: {form.errors}")
+    else:
+        form = PufeForm(instance=pufe)
+    
+    context = {
+        'form': form,
+        'pufe': pufe,
+    }
+    return render(request, 'produtos/pufes/editar.html', context)
+
+@login_required
+def pufe_excluir_view(request, pufe_id):
+    """View para excluir pufes"""
+    pufe = get_object_or_404(Pufe, id=pufe_id)
+    
+    if request.method == 'POST':
+        try:
+            nome_pufe = f"{pufe.ref_pufe} - {pufe.nome}"
+            pufe.delete()
+            messages.success(request, f'Pufe "{nome_pufe}" excluído com sucesso!')
+            return redirect('pufes_lista')
+        except Exception as e:
+            logger.error(f"Erro ao excluir pufe: {str(e)}")
+            messages.error(request, f'Erro ao excluir pufe: {str(e)}')
+            return redirect('pufe_detalhes', pufe_id=pufe.id)
+    
+    context = {
+        'pufe': pufe,
+    }
+    return render(request, 'produtos/pufes/confirmar_exclusao.html', context)
+
+@login_required
+def pufe_teste_imagem_view(request, pufe_id):
+    """View de teste para imagens de pufes"""
+    pufe = get_object_or_404(Pufe, id=pufe_id)
+    return render(request, 'produtos/pufes/teste_imagem.html', {'pufe': pufe})
+
+# =====================================================================
+# VIEWS PARA ALMOFADAS
+# =====================================================================
+
+@login_required
+def almofadas_list_view(request):
+    """View para listagem de almofadas"""
+    almofadas = Almofada.objects.all().order_by('ref_almofada')
+    
+    context = {
+        'almofadas': almofadas,
+        'total_almofadas': almofadas.count(),
+    }
+    return render(request, 'produtos/almofadas/lista.html', context)
+
+@login_required
+def almofada_cadastro_view(request):
+    """View para cadastro de almofadas"""
+    if request.method == 'POST':
+        form = AlmofadaForm(request.POST, request.FILES)
+        if form.is_valid():
+            try:
+                almofada = form.save()
+                track_user_changes(almofada, request.user)
+                messages.success(request, f'Almofada "{almofada.ref_almofada} - {almofada.nome}" cadastrada com sucesso!')
+                return redirect('almofada_detalhes', almofada_id=almofada.id)
+            except Exception as e:
+                logger.error(f"Erro ao cadastrar almofada: {str(e)}")
+                messages.error(request, f'Erro ao cadastrar almofada: {str(e)}')
+        else:
+            logger.warning(f"Formulário de cadastro de almofada inválido: {form.errors}")
+    else:
+        form = AlmofadaForm()
+    
+    context = {
+        'form': form,
+    }
+    return render(request, 'produtos/almofadas/cadastro.html', context)
+
+@login_required
+def almofada_detalhes_view(request, almofada_id):
+    """View para detalhes de almofada"""
+    almofada = get_object_or_404(Almofada, id=almofada_id)
+    
+    context = {
+        'almofada': almofada,
+    }
+    return render(request, 'produtos/almofadas/detalhes.html', context)
+
+@login_required
+def almofada_editar_view(request, almofada_id):
+    """View para editar almofada"""
+    almofada = get_object_or_404(Almofada, id=almofada_id)
+    
+    if request.method == 'POST':
+        form = AlmofadaForm(request.POST, request.FILES, instance=almofada)
+        if form.is_valid():
+            try:
+                almofada = form.save()
+                messages.success(request, f'Almofada "{almofada.ref_almofada} - {almofada.nome}" atualizada com sucesso!')
+                return redirect('almofada_detalhes', almofada_id=almofada.id)
+            except Exception as e:
+                logger.error(f"Erro ao editar almofada: {str(e)}")
+                messages.error(request, f'Erro ao editar almofada: {str(e)}')
+        else:
+            logger.warning(f"Formulário de edição de almofada inválido: {form.errors}")
+    else:
+        form = AlmofadaForm(instance=almofada)
+    
+    context = {
+        'form': form,
+        'almofada': almofada,
+    }
+    return render(request, 'produtos/almofadas/editar.html', context)
+
+@login_required
+def almofada_excluir_view(request, almofada_id):
+    """View para excluir almofadas"""
+    almofada = get_object_or_404(Almofada, id=almofada_id)
+    
+    if request.method == 'POST':
+        try:
+            nome_almofada = f"{almofada.ref_almofada} - {almofada.nome}"
+            almofada.delete()
+            messages.success(request, f'Almofada "{nome_almofada}" excluída com sucesso!')
+            return redirect('almofadas_lista')
+        except Exception as e:
+            logger.error(f"Erro ao excluir almofada: {str(e)}")
+            messages.error(request, f'Erro ao excluir almofada: {str(e)}')
+            return redirect('almofada_detalhes', almofada_id=almofada.id)
+    
+    context = {
+        'almofada': almofada,
+    }
+    return render(request, 'produtos/almofadas/confirmar_exclusao.html', context)
+
+@login_required
+def almofada_teste_imagem_view(request, almofada_id):
+    """View de teste para imagens de almofadas"""
+    almofada = get_object_or_404(Almofada, id=almofada_id)
+    return render(request, 'produtos/almofadas/teste_imagem.html', {'almofada': almofada})
+
+# =====================================================================
+# VIEWS PARA SOFÁS (ADEQUAÇÃO AO NOVO PADRÃO)
+# =====================================================================
+
+@login_required
+def sofas_list_view(request):
+    """View para listagem específica de sofás"""
+    sofas = Item.objects.filter(id_tipo_produto__nome__icontains='sofá').order_by('ref_produto')
+    
+    context = {
+        'sofas': sofas,
+        'total_sofas': sofas.count(),
+    }
+    return render(request, 'produtos/sofas/lista.html', context)
+
+@login_required
+def sofa_cadastro_view(request):
+    """View para cadastro específico de sofás"""
+    return redirect('produto_cadastro')  # Redireciona para o cadastro unificado por enquanto
+
+@login_required
+def sofa_detalhes_view(request, sofa_id):
+    """View para detalhes específicos de sofás"""
+    sofa = get_object_or_404(Item, id=sofa_id, id_tipo_produto__nome__icontains='sofá')
+    modulos = sofa.modulos.prefetch_related('tamanhos_detalhados').all()
+    
+    # Buscar acessórios vinculados a este sofá
+    acessorios_vinculados = Acessorio.objects.filter(produtos_vinculados=sofa).order_by('ref_acessorio')
+    
+    context = {
+        'sofa': sofa,
+        'produto': sofa,  # Para compatibilidade com templates existentes
+        'modulos': modulos,
+        'acessorios_vinculados': acessorios_vinculados,
+        'eh_sofa': True,
+    }
+    return render(request, 'produtos/sofas/detalhes.html', context)
+
+@login_required
+def sofa_editar_view(request, sofa_id):
+    """View para edição específica de sofás"""
+    sofa = get_object_or_404(Item, id=sofa_id, id_tipo_produto__nome__icontains='sofá')
+    
+    # Por enquanto, redireciona para a view genérica de edição
+    # TODO: Implementar view específica de edição de sofás
+    return redirect('produto_editar', produto_id=sofa_id)
+
+@login_required
+def sofa_excluir_view(request, sofa_id):
+    """View para exclusão específica de sofás"""
+    sofa = get_object_or_404(Item, id=sofa_id, id_tipo_produto__nome__icontains='sofá')
+    
+    if request.method == 'POST':
+        try:
+            nome_sofa = f"{sofa.ref_produto} - {sofa.nome_produto}"
+            sofa.delete()
+            messages.success(request, f'Sofá "{nome_sofa}" excluído com sucesso!')
+            return redirect('sofas_lista')
+        except Exception as e:
+            logger.error(f"Erro ao excluir sofá: {str(e)}")
+            messages.error(request, f'Erro ao excluir sofá: {str(e)}')
+            return redirect('sofa_detalhes', sofa_id=sofa.id)
+    
+    context = {
+        'sofa': sofa,
+    }
+    return render(request, 'produtos/sofas/confirmar_exclusao.html', context)

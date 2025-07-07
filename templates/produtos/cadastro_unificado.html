@@ -1,0 +1,22 @@
+{% extends 'produtos/includes/cadastro_base.html' %}
+
+{% block campos_especificos %}
+<!-- Incluir campos específicos para cada tipo -->
+{% include 'produtos/includes/campos_sofa.html' %}
+{% include 'produtos/includes/campos_acessorio.html' %}
+{% include 'produtos/includes/campos_outros.html' %}
+{% include 'produtos/includes/campos_banqueta.html' %}
+{% include 'produtos/includes/campos_cadeira.html' %}
+{% include 'produtos/includes/campos_poltrona.html' %}
+{% include 'produtos/includes/campos_pufe.html' %}
+{% include 'produtos/includes/campos_almofada.html' %}
+{% endblock %}
+
+{% block secoes_especificas %}
+{% include 'produtos/includes/secao_modulos_sofa.html' %}
+{% include 'produtos/includes/secao_vinculacao_acessorio.html' %}
+{% endblock %}
+
+{% block extra_product_js %}
+{% include 'produtos/includes/cadastro_unificado_js.html' %}
+{% endblock %}

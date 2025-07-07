@@ -1,0 +1,81 @@
+<!-- Campos específicos para Almofadas -->
+<div class="row" id="campos-almofada" style="display: none;">
+    <div class="col-md-3">
+        <div class="form-check form-switch mb-3">
+            <input class="form-check-input" type="checkbox" id="ativo_almofada" name="ativo_almofada" checked>
+            <label class="form-check-label" for="ativo_almofada">
+                Almofada Ativa
+            </label>
+        </div>
+    </div>
+    <div class="col-md-9">
+        <p class="text-muted mb-3">
+            <i class="bi bi-info-circle"></i> 
+            Preencha as especificações técnicas da almofada.
+        </p>
+    </div>
+</div>
+
+<!-- Dimensões da Almofada -->
+<div id="dimensoes-almofada" style="display: none;">
+    <div class="row">
+        <div class="col-md-6">
+            <div class="form-floating mb-3">
+                <input type="number" step="0.01" class="form-control" id="largura_almofada" 
+                       name="largura_almofada" placeholder="0.00" min="0.01">
+                <label for="largura_almofada">Largura (cm) *</label>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="form-floating mb-3">
+                <input type="number" step="0.01" class="form-control" id="altura_almofada" 
+                       name="altura_almofada" placeholder="0.00" min="0.01">
+                <label for="altura_almofada">Altura (cm) *</label>
+            </div>
+        </div>
+        <!-- Nota: Almofadas não têm profundidade -->
+    </div>
+    
+    <!-- Especificações Técnicas -->
+    <div class="row">
+        <div class="col-md-3">
+            <div class="form-floating mb-3">
+                <input type="number" step="0.01" class="form-control" id="tecido_metros_almofada" 
+                       name="tecido_metros_almofada" placeholder="0.00" min="0.01">
+                <label for="tecido_metros_almofada">Tecido (m) *</label>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="form-floating mb-3">
+                <input type="number" step="0.001" class="form-control" id="volume_m3_almofada" 
+                       name="volume_m3_almofada" placeholder="0.000" min="0.001">
+                <label for="volume_m3_almofada">Volume (m³) *</label>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="form-floating mb-3">
+                <input type="number" step="0.01" class="form-control" id="peso_kg_almofada" 
+                       name="peso_kg_almofada" placeholder="0.00" min="0.01">
+                <label for="peso_kg_almofada">Peso (kg) *</label>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="form-floating mb-3">
+                <input type="number" step="0.01" class="form-control" id="preco_almofada" 
+                       name="preco_almofada" placeholder="0.00" min="0.01">
+                <label for="preco_almofada">Preço (R$) *</label>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Descrição -->
+    <div class="row">
+        <div class="col-12">
+            <div class="form-floating mb-3">
+                <textarea class="form-control" id="descricao_almofada" name="descricao_almofada" 
+                         placeholder="Descrição da almofada" style="height: 80px;"></textarea>
+                <label for="descricao_almofada">Descrição (opcional)</label>
+            </div>
+        </div>
+    </div>
+</div>

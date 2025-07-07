@@ -1,6 +1,6 @@
 from django.contrib import admin
 from .models import (
-    TipoItem, Item, Acessorio, Banqueta, Cadeira,
+    TipoItem, Item, Acessorio, Banqueta, Cadeira, Poltrona, Pufe, Almofada,
     Modulo, TamanhosModulos, TamanhosModulosDetalhado, FaixaTecido, PrecosBase
 )
 from .forms import TamanhosModulosDetalhadoForm, ModuloForm, ItemForm
@@ -154,6 +154,85 @@ class CadeiraAdmin(admin.ModelAdmin):
         }),
         ('Dimensões', {
             'fields': ('largura', 'profundidade', 'altura')
+        }),
+        ('Especificações Técnicas', {
+            'fields': ('tecido_metros', 'volume_m3', 'peso_kg', 'preco')
+        }),
+        ('Imagens', {
+            'fields': ('imagem_principal', 'imagem_secundaria')
+        }),
+        ('Auditoria', {
+            'fields': ('created_at', 'updated_at', 'created_by', 'updated_by'),
+            'classes': ('collapse',)
+        }),
+    )
+
+@admin.register(Poltrona)
+class PoltronaAdmin(admin.ModelAdmin):
+    list_display = ('ref_poltrona', 'nome', 'ativo', 'preco', 'created_at', 'created_by')
+    list_filter = ('ativo', 'created_by', 'created_at')
+    search_fields = ('ref_poltrona', 'nome')
+    readonly_fields = ('created_at', 'updated_at', 'created_by', 'updated_by')
+    
+    fieldsets = (
+        ('Informações Básicas', {
+            'fields': ('ref_poltrona', 'nome', 'ativo', 'descricao')
+        }),
+        ('Dimensões', {
+            'fields': ('largura', 'profundidade', 'altura')
+        }),
+        ('Especificações Técnicas', {
+            'fields': ('tecido_metros', 'volume_m3', 'peso_kg', 'preco')
+        }),
+        ('Imagens', {
+            'fields': ('imagem_principal', 'imagem_secundaria')
+        }),
+        ('Auditoria', {
+            'fields': ('created_at', 'updated_at', 'created_by', 'updated_by'),
+            'classes': ('collapse',)
+        }),
+    )
+
+@admin.register(Pufe)
+class PufeAdmin(admin.ModelAdmin):
+    list_display = ('ref_pufe', 'nome', 'ativo', 'largura', 'profundidade', 'altura', 'preco', 'created_at', 'created_by')
+    list_filter = ('ativo', 'created_by', 'created_at')
+    search_fields = ('ref_pufe', 'nome')
+    readonly_fields = ('created_at', 'updated_at', 'created_by', 'updated_by')
+    
+    fieldsets = (
+        ('Informações Básicas', {
+            'fields': ('ref_pufe', 'nome', 'ativo', 'descricao')
+        }),
+        ('Dimensões', {
+            'fields': ('largura', 'profundidade', 'altura')
+        }),
+        ('Especificações Técnicas', {
+            'fields': ('tecido_metros', 'volume_m3', 'peso_kg', 'preco')
+        }),
+        ('Imagens', {
+            'fields': ('imagem_principal', 'imagem_secundaria')
+        }),
+        ('Auditoria', {
+            'fields': ('created_at', 'updated_at', 'created_by', 'updated_by'),
+            'classes': ('collapse',)
+        }),
+    )
+
+
+@admin.register(Almofada)
+class AlmofadaAdmin(admin.ModelAdmin):
+    list_display = ('ref_almofada', 'nome', 'ativo', 'largura', 'altura', 'preco', 'created_at', 'created_by')
+    list_filter = ('ativo', 'created_by', 'created_at')
+    search_fields = ('ref_almofada', 'nome')
+    readonly_fields = ('created_at', 'updated_at', 'created_by', 'updated_by')
+    
+    fieldsets = (
+        ('Informações Básicas', {
+            'fields': ('ref_almofada', 'nome', 'ativo', 'descricao')
+        }),
+        ('Dimensões', {
+            'fields': ('largura', 'altura')  # Almofadas não têm profundidade
         }),
         ('Especificações Técnicas', {
             'fields': ('tecido_metros', 'volume_m3', 'peso_kg', 'preco')

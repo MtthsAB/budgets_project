@@ -1,0 +1,87 @@
+<!-- JavaScript específico para Acessórios -->
+<script>
+// Produtos disponíveis para vinculação
+let produtosDisponiveis = [];
+
+// Carregar produtos para vinculação
+document.addEventListener('DOMContentLoaded', function() {
+    carregarProdutosDisponiveis();
+});
+
+// Função específica para alternar campos de acessórios
+function toggleCamposEspecificos(tipoNome) {
+    const camposAcessorio = document.getElementById('campos-acessorio');
+    const vinculacaoProdutos = document.getElementById('vinculacao-produtos');
+    
+    // Esconder campos específicos primeiro
+    if (camposAcessorio) camposAcessorio.style.display = 'none';
+    if (vinculacaoProdutos) vinculacaoProdutos.style.display = 'none';
+    
+    // Mostrar campos conforme o tipo
+    if (tipoNome === 'Acessórios') {
+        if (camposAcessorio) camposAcessorio.style.display = 'flex';
+        if (vinculacaoProdutos) vinculacaoProdutos.style.display = 'block';
+    }
+}
+
+// Função para carregar produtos disponíveis para vinculação
+function carregarProdutosDisponiveis() {
+    fetch('/api/produtos/')
+        .then(response => response.json())
+        .then(data => {
+            produtosDisponiveis = data;
+            renderizarProdutosDisponiveis();
+        })
+        .catch(error => {
+            console.log('Erro ao carregar produtos:', error);
+            produtosDisponiveis = [];
+            renderizarProdutosDisponiveis();
+        });
+}
+
+// Função para renderizar checkboxes de produtos
+function renderizarProdutosDisponiveis() {
+    const container = document.getElementById('produtos-disponiveis');
+    if (!container) return;
+    
+    container.innerHTML = '';
+    
+    if (produtosDisponiveis.length === 0) {
+        container.innerHTML = '<div class="col-12"><p class="text-muted">Nenhum produto disponível para vinculação.</p></div>';
+        return;
+    }
+    
+    produtosDisponiveis.forEach(produto => {
+        const html = `
+            <div class="col-md-4 col-lg-3 mb-2">
+                <div class="form-check">
+                    <input class="form-check-input" type="checkbox" value="${produto.id}" 
+                           id="produto_${produto.id}" name="produtos_vinculados">
+                    <label class="form-check-label" for="produto_${produto.id}">
+                        ${produto.ref_produto} - ${produto.nome_produto}
+                    </label>
+                </div>
+            </div>
+        `;
+        container.insertAdjacentHTML('beforeend', html);
+    });
+}
+
+// Validação específica para acessórios
+function validacaoEspecifica(e) {
+    const tipoSelect = document.getElementById('tipo_produto');
+    const selectedOption = tipoSelect.options[tipoSelect.selectedIndex];
+    const tipoNome = selectedOption.getAttribute('data-nome');
+    
+    if (tipoNome && tipoNome.toLowerCase() === 'acessórios') {
+        const precoAcessorio = document.getElementById('preco_acessorio').value;
+        if (!precoAcessorio || parseFloat(precoAcessorio) < 0) {
+            e.preventDefault();
+            alert('Por favor, informe um preço válido para o acessório.');
+            return false;
+        }
+    }
+    
+    return true;
+}
+</script>
