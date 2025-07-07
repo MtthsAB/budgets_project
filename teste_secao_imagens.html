@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Teste - Seção de Imagens</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.7.2/font/bootstrap-icons.css" rel="stylesheet">
+</head>
+<body>
+    <div class="container mt-4">
+        <h1>Teste da Seção de Imagens</h1>
+        
+        <!-- Simulação do select de tipo de produto -->
+        <div class="row mb-4">
+            <div class="col-md-6">
+                <div class="form-floating mb-3">
+                    <select class="form-select" id="tipo_produto" name="tipo_produto" required onchange="toggleCamposPorTipo()">
+                        <option value="">Selecione o tipo</option>
+                        <option value="1" data-nome="Sofás">Sofás</option>
+                        <option value="2" data-nome="Cadeiras">Cadeiras</option>
+                        <option value="3" data-nome="Banquetas">Banquetas</option>
+                        <option value="4" data-nome="Acessórios">Acessórios</option>
+                        <option value="5" data-nome="Poltronas">Poltronas</option>
+                    </select>
+                    <label for="tipo_produto">Tipo de Produto *</label>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Seção de Imagens -->
+        <div id="secao-imagens" style="display: none;">
+            <div class="row mb-4">
+                <div class="col-12">
+                    <div class="card border-primary">
+                        <div class="card-header bg-primary text-white">
+                            <h6 class="mb-0">
+                                <i class="bi bi-images"></i> Imagens do Produto
+                            </h6>
+                        </div>
+                        <div class="card-body">
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <label for="imagem_principal" class="form-label fw-bold">
+                                        <i class="bi bi-image"></i> Imagem Principal
+                                    </label>
+                                    <input type="file" class="form-control form-control-lg" 
+                                           id="imagem_principal" 
+                                           name="imagem_principal" 
+                                           accept="image/*" 
+                                           onchange="previewImage(this, 'preview_principal')">
+                                    <div class="form-text">JPG, PNG, GIF (máx. 5MB)</div>
+                                    
+                                    <!-- Preview da Imagem Principal -->
+                                    <div id="preview_principal" style="display: none;" class="mt-2">
+                                        <img id="img_preview_principal" src="" alt="Preview" 
+                                             class="img-thumbnail border border-primary" style="max-width: 200px; max-height: 200px;">
+                                        <div class="mt-1">
+                                            <button type="button" class="btn btn-sm btn-outline-danger" 
+                                                    onclick="removeImage('preview_principal', 'imagem_principal')">
+                                                <i class="bi bi-trash"></i> Remover
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div id="segunda_imagem_area" style="display: none;">
+                                        <label for="imagem_secundaria" class="form-label fw-bold">
+                                            <i class="bi bi-image"></i> Segunda Imagem
+                                        </label>
+                                        <input type="file" class="form-control" 
+                                               id="imagem_secundaria" 
+                                               name="imagem_secundaria" 
+                                               accept="image/*"
+                                               onchange="previewImage(this, 'preview_secundaria')">
+                                        <div class="form-text">Formatos aceitos: JPG, PNG, GIF (máx. 5MB)</div>
+                                        
+                                        <!-- Preview da Segunda Imagem -->
+                                        <div id="preview_secundaria" style="display: none;" class="mt-2">
+                                            <img id="img_preview_secundaria" src="" alt="Preview Segunda Imagem" 
+                                                 class="img-thumbnail border border-primary" style="max-width: 150px; max-height: 150px;">
+                                            <div class="mt-1">
+                                                <button type="button" class="btn btn-sm btn-outline-danger" 
+                                                        onclick="removeImage('preview_secundaria', 'imagem_secundaria')">
+                                                    <i class="bi bi-trash"></i> Remover
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="text-end mt-3">
+                                        <button type="button" class="btn btn-outline-primary btn-sm btn-add-image" 
+                                                id="btn_adicionar_segunda_imagem" 
+                                                onclick="mostrarSegundaImagem()" 
+                                                title="Adicionar outra imagem">
+                                            <i class="bi bi-camera-fill"></i><i class="bi bi-plus-circle-fill" style="font-size: 0.7em; margin-left: -3px;"></i>
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Status da seção -->
+        <div id="status" class="alert alert-info">
+            <strong>Status:</strong> Selecione um tipo de produto para ver a seção de imagens aparecer.
+        </div>
+    </div>
+
+    <style>
+        .btn-add-image {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: 2px solid #0d6efd;
+            background: #fff;
+            color: #0d6efd;
+            transition: all 0.3s ease;
+            position: relative;
+        }
+        .btn-add-image:hover {
+            background: #0d6efd;
+            color: #fff;
+            transform: scale(1.1);
+        }
+        .btn-add-image .bi-camera-fill {
+            font-size: 14px;
+        }
+        .btn-add-image .bi-plus-circle-fill {
+            position: absolute;
+            top: -2px;
+            right: -2px;
+            background: #fff;
+            border-radius: 50%;
+            color: #28a745;
+        }
+    </style>
+
+    <script>
+        function toggleCamposPorTipo() {
+            const tipoSelect = document.getElementById('tipo_produto');
+            const selectedOption = tipoSelect.options[tipoSelect.selectedIndex];
+            const tipoNome = selectedOption.getAttribute('data-nome');
+            const secaoImagens = document.getElementById('secao-imagens');
+            const status = document.getElementById('status');
+            
+            // Esconder a seção primeiro
+            secaoImagens.style.display = 'none';
+            
+            if (!tipoNome) {
+                status.innerHTML = '<strong>Status:</strong> Selecione um tipo de produto para ver a seção de imagens aparecer.';
+                status.className = 'alert alert-info';
+                return;
+            }
+            
+            // Mostrar seção de imagens para todos os tipos
+            secaoImagens.style.display = 'block';
+            status.innerHTML = `<strong>Status:</strong> ✅ Seção de imagens APARECEU para o tipo "${tipoNome}"!`;
+            status.className = 'alert alert-success';
+        }
+
+        function mostrarSegundaImagem() {
+            document.getElementById('segunda_imagem_area').style.display = 'block';
+            document.getElementById('btn_adicionar_segunda_imagem').style.display = 'none';
+        }
+
+        function previewImage(input, previewId) {
+            if (input.files && input.files[0]) {
+                var reader = new FileReader();
+                reader.onload = function(e) {
+                    document.getElementById('img_' + previewId).src = e.target.result;
+                    document.getElementById(previewId).style.display = 'block';
+                }
+                reader.readAsDataURL(input.files[0]);
+            }
+        }
+
+        function removeImage(previewId, inputId) {
+            document.getElementById(previewId).style.display = 'none';
+            document.getElementById('img_' + previewId).src = '';
+            document.getElementById(inputId).value = '';
+            
+            if (inputId === 'imagem_secundaria') {
+                document.getElementById('segunda_imagem_area').style.display = 'none';
+                document.getElementById('btn_adicionar_segunda_imagem').style.display = 'block';
+            }
+        }
+    </script>
+</body>
+</html>

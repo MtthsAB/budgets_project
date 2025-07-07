@@ -1,0 +1,352 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login - Sistema de Produtos</title>
+    
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.7.2/font/bootstrap-icons.css" rel="stylesheet">
+    
+    
+    
+    <style>
+        .sidebar {
+            background-color: #f8f9fa;
+            min-height: calc(100vh - 56px);
+            border-right: 1px solid #dee2e6;
+        }
+        .main-content {
+            min-height: calc(100vh - 56px);
+        }
+        
+        /* Estilos para o menu expansível */
+        .menu-section {
+            margin-bottom: 0.25rem;
+        }
+        
+        .menu-toggle {
+            background: none;
+            border: none;
+            width: 100%;
+            text-align: left;
+            padding: 0.75rem 1rem;
+            color: #495057;
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            border-radius: 0.375rem;
+            font-weight: 500;
+        }
+        
+        .menu-toggle:hover {
+            background-color: #e9ecef;
+            color: #0d6efd;
+        }
+        
+        .menu-toggle.active {
+            background-color: #0d6efd;
+            color: white;
+        }
+        
+        .menu-toggle .menu-icon {
+            margin-right: 0.75rem;
+            font-size: 1.1rem;
+        }
+        
+        .menu-toggle .arrow-icon {
+            margin-left: auto;
+            transition: transform 0.3s ease;
+            font-size: 0.9rem;
+        }
+        
+        .menu-toggle.collapsed .arrow-icon {
+            transform: rotate(-90deg);
+        }
+        
+        .menu-submenu {
+            background-color: #ffffff;
+            border-radius: 0.375rem;
+            margin: 0.25rem 0 0.5rem 1rem;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        
+        .menu-submenu .list-group-item {
+            border: none;
+            padding: 0.625rem 1rem 0.625rem 2.5rem;
+            font-size: 0.9rem;
+            color: #6c757d;
+            transition: all 0.2s ease;
+            border-radius: 0.25rem;
+            margin: 0.125rem;
+        }
+        
+        .menu-submenu .list-group-item:hover {
+            background-color: #f8f9fa;
+            color: #0d6efd;
+            transform: translateX(2px);
+        }
+        
+        .menu-submenu .list-group-item.active {
+            background-color: #e3f2fd;
+            color: #0d6efd;
+            border-left: 3px solid #0d6efd;
+            font-weight: 500;
+        }
+        
+        .menu-submenu .list-group-item i {
+            margin-right: 0.5rem;
+            width: 1rem;
+        }
+        
+        /* Responsividade para telas menores */
+        @media (max-width: 768px) {
+            .sidebar {
+                min-height: auto;
+            }
+            
+            .menu-toggle {
+                padding: 0.625rem 0.75rem;
+            }
+            
+            .menu-submenu {
+                margin-left: 0.5rem;
+            }
+            
+            .menu-submenu .list-group-item {
+                padding-left: 2rem;
+                font-size: 0.85rem;
+            }
+        }
+        
+        /* Estilos para dropdown do navbar superior */
+        .navbar-nav .dropdown-menu {
+            border-radius: 0.5rem;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            border: none;
+            margin-top: 0.25rem;
+        }
+        
+        .navbar-nav .dropdown-item {
+            padding: 0.625rem 1rem;
+            transition: all 0.2s ease;
+            color: #495057;
+        }
+        
+        .navbar-nav .dropdown-item:hover {
+            background-color: #f8f9fa;
+            color: #0d6efd;
+            transform: translateX(2px);
+        }
+        
+        .navbar-nav .dropdown-item i {
+            margin-right: 0.5rem;
+            width: 1rem;
+        }
+        
+        .navbar-nav .dropdown-toggle::after {
+            margin-left: 0.5rem;
+            transition: transform 0.3s ease;
+        }
+        
+        .navbar-nav .dropdown.show .dropdown-toggle::after {
+            transform: rotate(180deg);
+        }
+        
+        /* Estilos para o logo */
+        .navbar-brand {
+            display: flex;
+            align-items: center;
+        }
+        
+        .navbar-brand img {
+            height: 38px;
+            width: auto;
+            transition: all 0.3s ease;
+            margin-right: 0.5rem;
+        }
+        
+        .navbar-brand:hover img {
+            transform: scale(1.05);
+        }
+    </style>
+</head>
+<body>
+    <!-- Navbar -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
+        <div class="container-fluid">
+            <a class="navbar-brand" href="/">
+                
+                <img src="/static/images/essere-logo.svg" alt="Essere" />
+            </a>
+            
+            
+        </div>
+    </nav>
+
+    <!-- Messages -->
+    
+
+    <!-- Main Content Area -->
+    <div class="container">
+        <div class="row">
+            
+            <!-- Full width content for non-authenticated users -->
+            <div class="col-12 d-flex justify-content-center align-items-center" style="min-height: calc(100vh - 56px);">
+                <div class="w-100" style="max-width: 500px;">
+            
+                    
+<div class="card shadow">
+    <div class="card-header bg-primary text-white text-center">
+        <h4 class="mb-0">
+            <i class="bi bi-box-arrow-in-right"></i> Login
+        </h4>
+    </div>
+    <div class="card-body">
+        <form method="post">
+            <input type="hidden" name="csrfmiddlewaretoken" value="9NHZp0tXYyx7XiHFIANgv37YtjyGABNloPVuzj1od5VVtLcU6IPOnP2kC3v9wtP0">
+            
+            <div class="form-floating mb-3">
+                <input type="email" class="form-control" id="email" name="email" placeholder="email@exemplo.com" required>
+                <label for="email"><i class="bi bi-envelope"></i> Email</label>
+            </div>
+            
+            <div class="form-floating mb-3">
+                <input type="password" class="form-control" id="password" name="password" placeholder="Senha" required>
+                <label for="password"><i class="bi bi-lock"></i> Senha</label>
+            </div>
+            
+            <div class="d-grid gap-2">
+                <button type="submit" class="btn btn-primary">
+                    <i class="bi bi-box-arrow-in-right"></i> Entrar
+                </button>
+            </div>
+        </form>
+        
+        <hr>
+        
+        <div class="text-center">
+            <p class="mb-0">Não tem conta?</p>
+            <a href="/auth/register/" class="btn btn-outline-primary">
+                <i class="bi bi-person-plus"></i> Criar Conta
+            </a>
+        </div>
+    </div>
+</div>
+
+            
+                </div>
+            </div>
+            
+        </div>
+    </div>
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Função para gerenciar o estado dos menus expansíveis na sidebar
+            function initExpandableMenus() {
+                // Encontrar menu ativo baseado na página atual
+                const activeMenuItems = document.querySelectorAll('.menu-submenu .list-group-item.active');
+                
+                // Expandir o menu que contém o item ativo
+                activeMenuItems.forEach(function(activeItem) {
+                    const menuSection = activeItem.closest('.menu-section');
+                    if (menuSection) {
+                        const toggleButton = menuSection.querySelector('.menu-toggle');
+                        const collapseTarget = menuSection.querySelector('.collapse');
+                        
+                        if (toggleButton && collapseTarget) {
+                            // Remover classe collapsed e adicionar classe active ao botão
+                            toggleButton.classList.remove('collapsed');
+                            toggleButton.classList.add('active');
+                            toggleButton.setAttribute('aria-expanded', 'true');
+                            
+                            // Mostrar o menu
+                            collapseTarget.classList.add('show');
+                        }
+                    }
+                });
+                
+                // Adicionar listeners para os botões de toggle
+                const toggleButtons = document.querySelectorAll('.menu-toggle');
+                toggleButtons.forEach(function(button) {
+                    // Listener para o evento de collapse do Bootstrap
+                    const target = button.getAttribute('data-bs-target');
+                    const collapseElement = document.querySelector(target);
+                    
+                    if (collapseElement) {
+                        collapseElement.addEventListener('show.bs.collapse', function() {
+                            button.classList.add('active');
+                            button.classList.remove('collapsed');
+                        });
+                        
+                        collapseElement.addEventListener('hide.bs.collapse', function() {
+                            button.classList.remove('active');
+                            button.classList.add('collapsed');
+                        });
+                    }
+                });
+                
+                // Adicionar efeito de hover suave
+                const menuItems = document.querySelectorAll('.menu-submenu .list-group-item');
+                menuItems.forEach(function(item) {
+                    item.addEventListener('mouseenter', function() {
+                        if (!this.classList.contains('active')) {
+                            this.style.transform = 'translateX(4px)';
+                        }
+                    });
+                    
+                    item.addEventListener('mouseleave', function() {
+                        if (!this.classList.contains('active')) {
+                            this.style.transform = 'translateX(0)';
+                        }
+                    });
+                });
+            }
+            
+            // Função para gerenciar dropdowns do navbar superior
+            function initNavbarDropdowns() {
+                // Adicionar efeito de rotação para as setas dos dropdowns
+                const dropdownToggles = document.querySelectorAll('.navbar-nav .dropdown-toggle');
+                dropdownToggles.forEach(function(toggle) {
+                    const dropdown = toggle.closest('.dropdown');
+                    
+                    // Listener para quando o dropdown abre
+                    dropdown.addEventListener('show.bs.dropdown', function() {
+                        toggle.classList.add('show');
+                    });
+                    
+                    // Listener para quando o dropdown fecha
+                    dropdown.addEventListener('hide.bs.dropdown', function() {
+                        toggle.classList.remove('show');
+                    });
+                });
+                
+                // Adicionar efeito de hover suave aos itens do dropdown
+                const dropdownItems = document.querySelectorAll('.navbar-nav .dropdown-item');
+                dropdownItems.forEach(function(item) {
+                    item.addEventListener('mouseenter', function() {
+                        this.style.transform = 'translateX(4px)';
+                    });
+                    
+                    item.addEventListener('mouseleave', function() {
+                        this.style.transform = 'translateX(0)';
+                    });
+                });
+            }
+            
+            // Inicializar os menus
+            initExpandableMenus();
+            initNavbarDropdowns();
+        });
+    </script>
+    
+    
+</body>
+</html>

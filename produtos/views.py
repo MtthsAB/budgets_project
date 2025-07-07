@@ -13,9 +13,9 @@ from sistema_produtos.mixins import track_user_changes
 from .models import (
     Item, TipoItem, Linha, Modulo, Acessorio, 
     TamanhosModulos, TamanhosModulosDetalhado, FaixaTecido, PrecosBase,
-    Banqueta
+    Banqueta, Cadeira
 )
-from .forms import AcessorioForm, BanquetaForm
+from .forms import AcessorioForm, BanquetaForm, CadeiraForm
 
 logger = logging.getLogger(__name__)
 
@@ -32,12 +32,15 @@ def home_view(request):
 
 @login_required
 def produtos_list_view(request):
-    """View para listagem de produtos unificada (inclui banquetas)"""
+    """View para listagem de produtos unificada (inclui banquetas e cadeiras)"""
     # Buscar produtos da tabela Item
     produtos = Item.objects.select_related('id_tipo_produto').prefetch_related('modulos').all()
     
     # Buscar banquetas da tabela Banqueta
     banquetas = Banqueta.objects.filter(ativo=True).all()
+    
+    # Buscar cadeiras da tabela Cadeira
+    cadeiras = Cadeira.objects.filter(ativo=True).all()
     
     # Filtros
     tipo_filtro = request.GET.get('tipo')
@@ -51,12 +54,19 @@ def produtos_list_view(request):
         # Se o filtro for por "Banquetas" (id=4), mostrar apenas banquetas
         if tipo_filtro == '4':
             produtos = Item.objects.none()  # Não mostrar produtos da tabela Item
+            cadeiras = Cadeira.objects.none()  # Não mostrar cadeiras
+        # Se o filtro for por "Cadeiras" (id=3), mostrar apenas cadeiras
+        elif tipo_filtro == '3':
+            produtos = Item.objects.none()  # Não mostrar produtos da tabela Item
+            banquetas = Banqueta.objects.none()  # Não mostrar banquetas
         else:
             banquetas = Banqueta.objects.none()  # Não mostrar banquetas se filtro não for banquetas
+            cadeiras = Cadeira.objects.none()  # Não mostrar cadeiras se filtro não for cadeiras
     
     if ativo_filtro:
         produtos = produtos.filter(ativo=ativo_filtro == 'true')
         banquetas = banquetas.filter(ativo=ativo_filtro == 'true')
+        cadeiras = cadeiras.filter(ativo=ativo_filtro == 'true')
     
     if busca:
         produtos = produtos.filter(
@@ -69,11 +79,17 @@ def produtos_list_view(request):
         ) | banquetas.filter(
             ref_banqueta__icontains=busca
         )
+        cadeiras = cadeiras.filter(
+            nome__icontains=busca
+        ) | cadeiras.filter(
+            ref_cadeira__icontains=busca
+        )
     
     context = {
         'produtos': produtos,
         'banquetas': banquetas,
-        'total_itens': produtos.count() + banquetas.count(),
+        'cadeiras': cadeiras,
+        'total_itens': produtos.count() + banquetas.count() + cadeiras.count(),
         'tipos': TipoItem.objects.all(),
         'filtros': {
             'tipo': tipo_filtro,
@@ -950,3 +966,134 @@ def banqueta_excluir_view(request, banqueta_id):
         'banqueta': banqueta,
     }
     return render(request, 'produtos/banquetas/confirmar_exclusao.html', context)
+
+# ============================================================================
+# VIEWS PARA CADEIRAS
+# ============================================================================
+
+@login_required
+def cadeiras_list_view(request):
+    """View para listagem de cadeiras"""
+    # Buscar cadeiras da tabela Cadeira
+    cadeiras = Cadeira.objects.filter(ativo=True).all()
+    
+    # Filtros
+    busca = request.GET.get('busca')
+    
+    if busca:
+        cadeiras = cadeiras.filter(
+            nome__icontains=busca
+        ) | cadeiras.filter(
+            ref_cadeira__icontains=busca
+        )
+    
+    # Paginação
+    from django.core.paginator import Paginator
+    paginator = Paginator(cadeiras, 12)  # 12 cadeiras por página
+    page_number = request.GET.get('page')
+    page_obj = paginator.get_page(page_number)
+    
+    context = {
+        'cadeiras': page_obj,
+        'busca': busca,
+        'total_cadeiras': cadeiras.count(),
+        'page_obj': page_obj,
+    }
+    return render(request, 'produtos/cadeiras/lista.html', context)
+
+@login_required
+@csrf_protect
+def cadeira_cadastro_view(request):
+    """View para cadastro de cadeiras"""
+    if request.method == 'POST':
+        form = CadeiraForm(request.POST, request.FILES)
+        if form.is_valid():
+            try:
+                with transaction.atomic():
+                    cadeira = form.save(commit=False)
+                    # Rastrear usuário
+                    track_user_changes(cadeira, request.user)
+                    cadeira.save()
+                    
+                    messages.success(request, f'Cadeira "{cadeira.ref_cadeira} - {cadeira.nome}" cadastrada com sucesso!')
+                    return redirect('cadeira_detalhes', cadeira_id=cadeira.id)
+            except Exception as e:
+                logger.error(f"Erro ao cadastrar cadeira: {str(e)}")
+                messages.error(request, f'Erro ao cadastrar cadeira: {str(e)}')
+    else:
+        form = CadeiraForm()
+    
+    context = {
+        'form': form,
+        'title': 'Cadastrar Nova Cadeira'
+    }
+    return render(request, 'produtos/cadeiras/cadastro.html', context)
+
+@login_required
+def cadeira_detalhes_view(request, cadeira_id):
+    """View para exibir detalhes de uma cadeira"""
+    cadeira = get_object_or_404(Cadeira, id=cadeira_id)
+    
+    context = {
+        'cadeira': cadeira,
+    }
+    return render(request, 'produtos/cadeiras/detalhes.html', context)
+
+@login_required
+def cadeira_teste_imagem_view(request, cadeira_id):
+    """View para testar exibição de imagem de cadeira"""
+    cadeira = get_object_or_404(Cadeira, id=cadeira_id)
+    return render(request, 'produtos/cadeiras/teste_imagem.html', {'cadeira': cadeira})
+
+@login_required
+@csrf_protect
+def cadeira_editar_view(request, cadeira_id):
+    """View para editar cadeiras"""
+    cadeira = get_object_or_404(Cadeira, id=cadeira_id)
+    
+    if request.method == 'POST':
+        form = CadeiraForm(request.POST, request.FILES, instance=cadeira)
+        if form.is_valid():
+            try:
+                with transaction.atomic():
+                    cadeira = form.save(commit=False)
+                    # Rastrear usuário
+                    track_user_changes(cadeira, request.user)
+                    cadeira.save()
+                    
+                    messages.success(request, f'Cadeira "{cadeira.ref_cadeira} - {cadeira.nome}" atualizada com sucesso!')
+                    return redirect('cadeira_detalhes', cadeira_id=cadeira.id)
+            except Exception as e:
+                logger.error(f"Erro ao editar cadeira: {str(e)}")
+                messages.error(request, f'Erro ao editar cadeira: {str(e)}')
+    else:
+        form = CadeiraForm(instance=cadeira)
+    
+    context = {
+        'form': form,
+        'cadeira': cadeira,
+        'title': f'Editar Cadeira {cadeira.ref_cadeira}'
+    }
+    return render(request, 'produtos/cadeiras/editar.html', context)
+
+@login_required
+@csrf_protect
+def cadeira_excluir_view(request, cadeira_id):
+    """View para excluir cadeiras"""
+    cadeira = get_object_or_404(Cadeira, id=cadeira_id)
+    
+    if request.method == 'POST':
+        try:
+            nome_cadeira = f"{cadeira.ref_cadeira} - {cadeira.nome}"
+            cadeira.delete()
+            messages.success(request, f'Cadeira "{nome_cadeira}" excluída com sucesso!')
+            return redirect('cadeiras_lista')
+        except Exception as e:
+            logger.error(f"Erro ao excluir cadeira: {str(e)}")
+            messages.error(request, f'Erro ao excluir cadeira: {str(e)}')
+            return redirect('cadeira_detalhes', cadeira_id=cadeira.id)
+    
+    context = {
+        'cadeira': cadeira,
+    }
+    return render(request, 'produtos/cadeiras/confirmar_exclusao.html', context)

@@ -1,6 +1,6 @@
 from django.contrib import admin
 from .models import (
-    TipoItem, Item, Acessorio, Banqueta,
+    TipoItem, Item, Acessorio, Banqueta, Cadeira,
     Modulo, TamanhosModulos, TamanhosModulosDetalhado, FaixaTecido, PrecosBase
 )
 from .forms import TamanhosModulosDetalhadoForm, ModuloForm, ItemForm
@@ -125,6 +125,32 @@ class BanquetaAdmin(admin.ModelAdmin):
     fieldsets = (
         ('Informações Básicas', {
             'fields': ('ref_banqueta', 'nome', 'ativo', 'descricao')
+        }),
+        ('Dimensões', {
+            'fields': ('largura', 'profundidade', 'altura')
+        }),
+        ('Especificações Técnicas', {
+            'fields': ('tecido_metros', 'volume_m3', 'peso_kg', 'preco')
+        }),
+        ('Imagens', {
+            'fields': ('imagem_principal', 'imagem_secundaria')
+        }),
+        ('Auditoria', {
+            'fields': ('created_at', 'updated_at', 'created_by', 'updated_by'),
+            'classes': ('collapse',)
+        }),
+    )
+
+@admin.register(Cadeira)
+class CadeiraAdmin(admin.ModelAdmin):
+    list_display = ('ref_cadeira', 'nome', 'ativo', 'preco', 'created_at', 'created_by')
+    list_filter = ('ativo', 'created_by', 'created_at')
+    search_fields = ('ref_cadeira', 'nome')
+    readonly_fields = ('created_at', 'updated_at', 'created_by', 'updated_by')
+    
+    fieldsets = (
+        ('Informações Básicas', {
+            'fields': ('ref_cadeira', 'nome', 'ativo', 'descricao')
         }),
         ('Dimensões', {
             'fields': ('largura', 'profundidade', 'altura')

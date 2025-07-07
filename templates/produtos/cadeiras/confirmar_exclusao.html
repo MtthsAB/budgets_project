@@ -1,0 +1,81 @@
+{% extends 'base.html' %}
+
+{% block title %}Excluir Cadeira - Sistema de Produtos{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="d-flex justify-content-between align-items-center">
+            <h1 class="h2 mb-0">
+                <i class="bi bi-exclamation-triangle text-danger"></i> Excluir Cadeira
+            </h1>
+            <a href="{% url 'cadeira_detalhes' cadeira.id %}" class="btn btn-outline-secondary">
+                <i class="bi bi-arrow-left"></i> Voltar
+            </a>
+        </div>
+    </div>
+</div>
+
+<div class="row justify-content-center">
+    <div class="col-md-8">
+        <div class="card border-danger">
+            <div class="card-header bg-danger text-white">
+                <h5 class="mb-0">
+                    <i class="bi bi-exclamation-triangle"></i> Confirmar Exclusão
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="alert alert-warning" role="alert">
+                    <i class="bi bi-exclamation-triangle"></i>
+                    <strong>Atenção!</strong> Esta ação não pode ser desfeita.
+                </div>
+                
+                <p class="mb-4">Tem certeza que deseja excluir a cadeira abaixo?</p>
+                
+                <!-- Dados da Cadeira -->
+                <div class="border rounded p-3 mb-4 bg-light">
+                    <div class="row">
+                        {% if cadeira.imagem_principal %}
+                        <div class="col-md-3">
+                            <img src="{{ cadeira.imagem_principal.url }}" 
+                                 alt="{{ cadeira.nome }}" 
+                                 class="img-fluid rounded">
+                        </div>
+                        <div class="col-md-9">
+                        {% else %}
+                        <div class="col-12">
+                        {% endif %}
+                            <h6><strong>{{ cadeira.ref_cadeira }} - {{ cadeira.nome }}</strong></h6>
+                            <div class="row">
+                                <div class="col-sm-6">
+                                    <p class="mb-1"><strong>Largura:</strong> {{ cadeira.largura }} cm</p>
+                                    <p class="mb-1"><strong>Profundidade:</strong> {{ cadeira.profundidade }} cm</p>
+                                    <p class="mb-1"><strong>Altura:</strong> {{ cadeira.altura }} cm</p>
+                                </div>
+                                <div class="col-sm-6">
+                                    <p class="mb-1"><strong>Tecido:</strong> {{ cadeira.tecido_metros|floatformat:2 }} m</p>
+                                    <p class="mb-1"><strong>Volume:</strong> {{ cadeira.volume_m3|floatformat:3 }} m³</p>
+                                    <p class="mb-1"><strong>Peso:</strong> {{ cadeira.peso_kg|floatformat:1 }} kg</p>
+                                </div>
+                            </div>
+                            <p class="mb-0"><strong>Preço:</strong> R$ {{ cadeira.preco|floatformat:2 }}</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <form method="post">
+                    {% csrf_token %}
+                    <div class="d-flex justify-content-end gap-2">
+                        <a href="{% url 'cadeira_detalhes' cadeira.id %}" class="btn btn-outline-secondary">
+                            <i class="bi bi-x-circle"></i> Cancelar
+                        </a>
+                        <button type="submit" class="btn btn-danger">
+                            <i class="bi bi-trash"></i> Sim, excluir cadeira
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

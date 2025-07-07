@@ -33,4 +33,12 @@ urlpatterns = [
     path('banquetas/<int:banqueta_id>/', views.banqueta_detalhes_view, name='banqueta_detalhes'),
     path('banquetas/<int:banqueta_id>/editar/', views.banqueta_editar_view, name='banqueta_editar'),
     path('banquetas/<int:banqueta_id>/excluir/', views.banqueta_excluir_view, name='banqueta_excluir'),
+    
+    # URLs para cadeiras
+    path('cadeiras/', views.cadeiras_list_view, name='cadeiras_lista'),
+    path('cadeiras/cadastro/', views.cadeira_cadastro_view, name='cadeira_cadastro'),
+    path('cadeiras/<int:cadeira_id>/', views.cadeira_detalhes_view, name='cadeira_detalhes'),
+    path('cadeiras/<int:cadeira_id>/editar/', views.cadeira_editar_view, name='cadeira_editar'),
+    path('cadeiras/<int:cadeira_id>/excluir/', views.cadeira_excluir_view, name='cadeira_excluir'),
+    path('cadeiras/<int:cadeira_id>/teste-imagem/', views.cadeira_teste_imagem_view, name='cadeira_teste_imagem'),
 ]

@@ -1,7 +1,7 @@
 from django import forms
 from .models import (
     Item, TipoItem, Modulo, TamanhosModulosDetalhado, 
-    Acessorio, FaixaTecido, PrecosBase, Banqueta
+    Acessorio, FaixaTecido, PrecosBase, Banqueta, Cadeira
 )
 
 class TamanhosModulosDetalhadoForm(forms.ModelForm):
@@ -296,6 +296,99 @@ class BanquetaForm(forms.ModelForm):
                 raise forms.ValidationError("Já existe uma banqueta com esta referência.")
         
         return ref_banqueta
+    
+    def clean(self):
+        cleaned_data = super().clean()
+        
+        # Validações específicas para campos numéricos
+        campos_numericos = ['largura', 'profundidade', 'altura', 'tecido_metros', 'volume_m3', 'peso_kg', 'preco']
+        
+        for campo in campos_numericos:
+            valor = cleaned_data.get(campo)
+            if valor is not None and valor <= 0:
+                self.add_error(campo, f"O valor deve ser maior que zero.")
+        
+        return cleaned_data
+
+class CadeiraForm(forms.ModelForm):
+    """
+    Formulário específico para Cadeiras.
+    """
+    
+    class Meta:
+        model = Cadeira
+        fields = [
+            'ref_cadeira',
+            'nome',
+            'largura',
+            'profundidade', 
+            'altura',
+            'tecido_metros',
+            'volume_m3',
+            'peso_kg',
+            'preco',
+            'ativo',
+            'imagem_principal',
+            'imagem_secundaria',
+            'descricao'
+        ]
+        widgets = {
+            'descricao': forms.Textarea(attrs={'rows': 3}),
+            'largura': forms.NumberInput(attrs={'step': '0.01', 'min': '0.01'}),
+            'profundidade': forms.NumberInput(attrs={'step': '0.01', 'min': '0.01'}),
+            'altura': forms.NumberInput(attrs={'step': '0.01', 'min': '0.01'}),
+            'tecido_metros': forms.NumberInput(attrs={'step': '0.01', 'min': '0.01'}),
+            'volume_m3': forms.NumberInput(attrs={'step': '0.001', 'min': '0.001'}),
+            'peso_kg': forms.NumberInput(attrs={'step': '0.01', 'min': '0.01'}),
+            'preco': forms.NumberInput(attrs={'step': '0.01', 'min': '0.01'}),
+        }
+        
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        
+        # Adicionar classes CSS
+        for field_name, field in self.fields.items():
+            if isinstance(field.widget, forms.CheckboxInput):
+                field.widget.attrs.update({'class': 'form-check-input'})
+            elif field_name not in ['imagem_principal', 'imagem_secundaria']:
+                field.widget.attrs.update({'class': 'form-control'})
+        
+        # Adicionar help_text e placeholder
+        self.fields['ref_cadeira'].help_text = "Código único da cadeira (ex: CD001, CD24, CD267)"
+        self.fields['nome'].help_text = "Nome da cadeira (ex: EVA, FIT, KIA)"
+        self.fields['largura'].help_text = "Largura em centímetros"
+        self.fields['profundidade'].help_text = "Profundidade em centímetros"
+        self.fields['altura'].help_text = "Altura em centímetros"
+        self.fields['tecido_metros'].help_text = "Quantidade de tecido em metros"
+        self.fields['volume_m3'].help_text = "Volume em metros cúbicos (m³)"
+        self.fields['peso_kg'].help_text = "Peso em quilogramas (kg)"
+        self.fields['preco'].help_text = "Preço em reais (R$)"
+        
+        # Adicionar placeholders
+        self.fields['ref_cadeira'].widget.attrs['placeholder'] = 'Ex: CD001'
+        self.fields['nome'].widget.attrs['placeholder'] = 'Ex: EVA'
+        self.fields['largura'].widget.attrs['placeholder'] = '48,00'
+        self.fields['profundidade'].widget.attrs['placeholder'] = '65,00'
+        self.fields['altura'].widget.attrs['placeholder'] = '97,00'
+        self.fields['tecido_metros'].widget.attrs['placeholder'] = '1,30'
+        self.fields['volume_m3'].widget.attrs['placeholder'] = '0,40'
+        self.fields['peso_kg'].widget.attrs['placeholder'] = '8'
+        self.fields['preco'].widget.attrs['placeholder'] = '857,00'
+    
+    def clean_ref_cadeira(self):
+        ref_cadeira = self.cleaned_data.get('ref_cadeira')
+        if ref_cadeira:
+            ref_cadeira = ref_cadeira.strip().upper()
+            
+            # Verificar se já existe (exceto para o próprio objeto na edição)
+            qs = Cadeira.objects.filter(ref_cadeira=ref_cadeira)
+            if self.instance.pk:
+                qs = qs.exclude(pk=self.instance.pk)
+            
+            if qs.exists():
+                raise forms.ValidationError("Já existe uma cadeira com esta referência.")
+        
+        return ref_cadeira
     
     def clean(self):
         cleaned_data = super().clean()

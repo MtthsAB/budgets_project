@@ -1,0 +1,156 @@
+<!-- Seção de Imagens Reutilizável -->
+<div class="row mb-3">
+    <div class="col-12">
+        <hr class="my-4">
+        <h6 class="text-primary mb-3">
+            <i class="bi bi-images"></i> Imagens do Produto
+        </h6>
+    </div>
+</div>
+<div class="row">
+    <!-- Imagem Principal -->
+    <div class="col-md-8">
+        <div class="mb-3">
+            <label for="imagem_principal" class="form-label fw-bold">
+                <i class="bi bi-image"></i> Imagem Principal
+            </label>
+            {% if objeto and objeto.imagem_principal %}
+                <div class="mb-2">
+                    <img src="{{ objeto.imagem_principal.url }}" alt="Imagem Atual" 
+                         class="img-thumbnail border border-info" style="max-width: 200px; max-height: 200px;">
+                    <div class="form-text text-info">Imagem atual</div>
+                </div>
+            {% endif %}
+            <input type="file" class="form-control form-control-lg" 
+                   id="imagem_principal" 
+                   name="imagem_principal" 
+                   accept="image/*" 
+                   onchange="previewImage(this, 'preview_principal')">
+            <div class="form-text">JPG, PNG, GIF (máx. 5MB)</div>
+                            
+                            <!-- Preview da Imagem Principal -->
+                            <div id="preview_principal" style="display: none;" class="mt-2">
+                                <img id="img_preview_principal" src="" alt="Preview" 
+                                     class="img-thumbnail border border-primary" style="max-width: 200px; max-height: 200px;">
+                                <div class="mt-1">
+                                    <button type="button" class="btn btn-sm btn-outline-danger" 
+                                            onclick="removeImage('preview_principal', 'imagem_principal')">
+                                        <i class="bi bi-trash"></i> Remover
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Segunda Imagem - Botão Compacto -->
+                    <div class="col-md-4">
+                        <div class="mb-3">
+                            {% if objeto and objeto.imagem_secundaria %}
+                                <div class="mb-2">
+                                    <label class="form-label fw-bold">
+                                        <i class="bi bi-image"></i> Segunda Imagem Atual
+                                    </label>
+                                    <div>
+                                        <img src="{{ objeto.imagem_secundaria.url }}" alt="Segunda Imagem Atual" 
+                                             class="img-thumbnail border border-info" style="max-width: 150px; max-height: 150px;">
+                                        <div class="form-text text-info">Segunda imagem atual</div>
+                                    </div>
+                                </div>
+                            {% endif %}
+                            <div id="segunda_imagem_area" style="display: none;">
+                                <label for="imagem_secundaria" class="form-label fw-bold">
+                                    <i class="bi bi-image"></i> Segunda Imagem
+                                </label>
+                                <input type="file" class="form-control" 
+                                       id="imagem_secundaria" 
+                                       name="imagem_secundaria" 
+                                       accept="image/*"
+                                       onchange="previewImage(this, 'preview_secundaria')">
+                                <div class="form-text">Formatos aceitos: JPG, PNG, GIF (máx. 5MB)</div>
+                                
+                                <!-- Preview da Segunda Imagem -->
+                                <div id="preview_secundaria" style="display: none;" class="mt-2">
+                                    <img id="img_preview_secundaria" src="" alt="Preview Segunda Imagem" 
+                                         class="img-thumbnail border border-primary" style="max-width: 150px; max-height: 150px;">
+                                    <div class="mt-1">
+                                        <button type="button" class="btn btn-sm btn-outline-danger" 
+                                                onclick="removeImage('preview_secundaria', 'imagem_secundaria')">
+                                            <i class="bi bi-trash"></i> Remover
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="text-end mt-3">
+                                <button type="button" class="btn btn-outline-primary btn-sm btn-add-image" 
+                                        id="btn_adicionar_segunda_imagem" 
+                                        onclick="mostrarSegundaImagem()" 
+                                        title="Adicionar outra imagem">
+                                    <i class="bi bi-camera-fill"></i><i class="bi bi-plus-circle-fill" style="font-size: 0.7em; margin-left: -3px;"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+<!-- CSS específico para seção de imagens -->
+<style>
+    .btn-add-image {
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border: 2px solid #0d6efd;
+        background: #fff;
+        color: #0d6efd;
+        transition: all 0.3s ease;
+        position: relative;
+    }
+    .btn-add-image:hover {
+        background: #0d6efd;
+        color: #fff;
+        transform: scale(1.1);
+    }
+    .btn-add-image .bi-camera-fill {
+        font-size: 14px;
+    }
+    .btn-add-image .bi-plus-circle-fill {
+        position: absolute;
+        top: -2px;
+        right: -2px;
+        background: #fff;
+        border-radius: 50%;
+        color: #28a745;
+    }
+</style>
+
+<!-- JavaScript específico para seção de imagens -->
+<script>
+function mostrarSegundaImagem() {
+    document.getElementById('segunda_imagem_area').style.display = 'block';
+    document.getElementById('btn_adicionar_segunda_imagem').style.display = 'none';
+}
+
+function previewImage(input, previewId) {
+    if (input.files && input.files[0]) {
+        var reader = new FileReader();
+        reader.onload = function(e) {
+            document.getElementById('img_' + previewId).src = e.target.result;
+            document.getElementById(previewId).style.display = 'block';
+        }
+        reader.readAsDataURL(input.files[0]);
+    }
+}
+
+function removeImage(previewId, inputId) {
+    document.getElementById(previewId).style.display = 'none';
+    document.getElementById('img_' + previewId).src = '';
+    document.getElementById(inputId).value = '';
+    
+    if (inputId === 'imagem_secundaria') {
+        document.getElementById('segunda_imagem_area').style.display = 'none';
+        document.getElementById('btn_adicionar_segunda_imagem').style.display = 'block';
+    }
+}
+</script>
