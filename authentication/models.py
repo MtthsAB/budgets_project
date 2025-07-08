@@ -2,6 +2,13 @@ from django.contrib.auth.models import AbstractBaseUser, BaseUserManager, Permis
 from django.db import models
 from sistema_produtos.base_models import BaseModel
 
+class TipoPermissao(models.TextChoices):
+    """Tipos de permissão do sistema"""
+    MASTER = 'master', 'Master'
+    ADMIN = 'admin', 'Admin'
+    VENDEDOR = 'vendedor', 'Vendedor'
+    OPERADOR_PRODUTOS = 'operador_produtos', 'Operador de Produtos'
+
 class CustomUserManager(BaseUserManager):
     """Manager personalizado para o modelo de usuário"""
     
@@ -34,6 +41,12 @@ class CustomUser(AbstractBaseUser, PermissionsMixin, BaseModel):
     last_name = models.CharField(max_length=30, verbose_name="Sobrenome")
     is_active = models.BooleanField(default=True, verbose_name="Ativo")
     is_staff = models.BooleanField(default=False, verbose_name="Staff")
+    tipo_permissao = models.CharField(
+        max_length=20,
+        choices=TipoPermissao.choices,
+        default=TipoPermissao.OPERADOR_PRODUTOS,
+        verbose_name="Tipo de Permissão"
+    )
     
     objects = CustomUserManager()
     
@@ -52,3 +65,35 @@ class CustomUser(AbstractBaseUser, PermissionsMixin, BaseModel):
     
     def get_short_name(self):
         return self.first_name
+    
+    def has_permission(self, permission):
+        """Verifica se o usuário tem uma permissão específica"""
+        if self.tipo_permissao == TipoPermissao.MASTER:
+            return True
+        elif self.tipo_permissao == TipoPermissao.ADMIN:
+            return permission in ['produtos', 'clientes', 'home']
+        elif self.tipo_permissao == TipoPermissao.VENDEDOR:
+            return permission in ['orcamentos']
+        elif self.tipo_permissao == TipoPermissao.OPERADOR_PRODUTOS:
+            return permission in ['produtos']
+        return False
+    
+    def can_access_home(self):
+        """Verifica se pode acessar a página inicial"""
+        return self.tipo_permissao in [TipoPermissao.MASTER, TipoPermissao.ADMIN]
+    
+    def can_access_produtos(self):
+        """Verifica se pode acessar produtos"""
+        return self.tipo_permissao in [TipoPermissao.MASTER, TipoPermissao.ADMIN, TipoPermissao.OPERADOR_PRODUTOS]
+    
+    def can_access_clientes(self):
+        """Verifica se pode acessar clientes"""
+        return self.tipo_permissao in [TipoPermissao.MASTER, TipoPermissao.ADMIN]
+    
+    def can_access_orcamentos(self):
+        """Verifica se pode acessar orçamentos"""
+        return self.tipo_permissao in [TipoPermissao.MASTER, TipoPermissao.ADMIN, TipoPermissao.VENDEDOR]
+    
+    def can_manage_users(self):
+        """Verifica se pode gerenciar usuários"""
+        return self.tipo_permissao == TipoPermissao.MASTER

@@ -307,11 +307,16 @@
                 <div class="card-header">
                     <div class="d-flex justify-content-between align-items-center">
                         <h6 class="mb-0">
-                            <i class="bi bi-grid-3x3"></i> Módulos
+                            <i class="bi bi-grid-3x3 text-primary"></i> Módulos (Opcional)
                         </h6>
-                        <button type="button" class="btn btn-sm btn-success" onclick="adicionarModulo()">
-                            <i class="bi bi-plus"></i> Adicionar Módulo
-                        </button>
+                        <div class="btn-group" role="group">
+                            <button type="button" class="btn btn-sm btn-primary" onclick="toggleTodosModulos()" id="toggleModulosBtn" style="font-weight: 500;">
+                                <i class="bi bi-arrows-expand"></i> <span id="toggleModulosText">Expandir Todos</span>
+                            </button>
+                            <button type="button" class="btn btn-sm btn-success" onclick="adicionarModulo()">
+                                <i class="bi bi-plus"></i> Adicionar Módulo
+                            </button>
+                        </div>
                     </div>
                 </div>
                 <div class="card-body">
@@ -583,6 +588,7 @@
 let moduloCount = {{ modulos|length }};
 let produtosDisponiveis = [];
 let produtosVinculadosIds = {{ produtos_vinculados_ids|default:"[]"|safe }};
+let modulosColapsados = true;
 
 // Carregar produtos para vinculação
 document.addEventListener('DOMContentLoaded', function() {
@@ -1223,6 +1229,78 @@ function removeModuloSegundaImagem(moduloId) {
     btn.style.display = 'block';
     input.value = '';
 }
+
+// Função para expandir/recolher todos os módulos
+function toggleTodosModulos() {
+    const btn = document.getElementById('toggleModulosBtn');
+    const btnText = document.getElementById('toggleModulosText');
+    const btnIcon = btn.querySelector('i');
+    
+    modulosColapsados = !modulosColapsados;
+    
+    // Buscar todos os módulos (existentes e novos)
+    const modulosExistentes = document.querySelectorAll('[id^="modulo_existing_"]');
+    const modulosNovos = document.querySelectorAll('.card.mb-3:not([id*="existing"])');
+    
+    // Processar módulos existentes
+    modulosExistentes.forEach(modulo => {
+        const moduloBody = modulo.querySelector('.card-body[id^="moduloBody_existing_"]');
+        const toggleBtn = modulo.querySelector('[id^="toggleBtn_existing_"]');
+        const icon = toggleBtn ? toggleBtn.querySelector('i') : null;
+        
+        if (moduloBody && toggleBtn && icon) {
+            if (modulosColapsados) {
+                // Recolher módulo
+                moduloBody.style.display = 'none';
+                modulo.classList.add('modulo-recolhido');
+                modulo.classList.remove('modulo-expandido');
+                icon.className = 'bi bi-plus-lg';
+                toggleBtn.title = 'Expandir módulo';
+            } else {
+                // Expandir módulo
+                moduloBody.style.display = 'block';
+                modulo.classList.add('modulo-expandido');
+                modulo.classList.remove('modulo-recolhido');
+                icon.className = 'bi bi-dash-lg';
+                toggleBtn.title = 'Recolher módulo';
+            }
+        }
+    });
+    
+    // Processar módulos novos
+    modulosNovos.forEach(modulo => {
+        const moduloBody = modulo.querySelector('.card-body[id^="moduloBody_"]');
+        const toggleBtn = modulo.querySelector('[id^="toggleBtn_"]:not([id*="existing"])');
+        const icon = toggleBtn ? toggleBtn.querySelector('i') : null;
+        
+        if (moduloBody && toggleBtn && icon) {
+            if (modulosColapsados) {
+                // Recolher módulo
+                moduloBody.style.display = 'none';
+                modulo.classList.add('modulo-recolhido');
+                modulo.classList.remove('modulo-expandido');
+                icon.className = 'bi bi-plus-lg';
+                toggleBtn.title = 'Expandir módulo';
+            } else {
+                // Expandir módulo
+                moduloBody.style.display = 'block';
+                modulo.classList.add('modulo-expandido');
+                modulo.classList.remove('modulo-recolhido');
+                icon.className = 'bi bi-dash-lg';
+                toggleBtn.title = 'Recolher módulo';
+            }
+        }
+    });
+    
+    // Atualizar botão principal
+    if (modulosColapsados) {
+        btnText.textContent = 'Expandir Todos';
+        btnIcon.className = 'bi bi-arrows-expand';
+    } else {
+        btnText.textContent = 'Recolher Todos';
+        btnIcon.className = 'bi bi-arrows-collapse';
+    }
+}
 </script>
 
 <style>
@@ -1337,6 +1415,50 @@ function removeModuloSegundaImagem(moduloId) {
 
 .card:hover {
     transform: translateY(-1px);
+}
+
+/* Estilos para os botões de expandir/recolher todos os módulos */
+#toggleModulosBtn {
+    min-width: 140px;
+    border-radius: 4px;
+    font-size: 0.875rem;
+    position: relative;
+    overflow: hidden;
+}
+
+#toggleModulosBtn:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+#toggleModulosBtn .bi {
+    transition: all 0.2s ease-in-out;
+}
+
+/* Agrupamento dos botões na seção de módulos */
+.btn-group .btn {
+    border-radius: 4px;
+    margin-right: 0;
+}
+
+.btn-group .btn:first-child {
+    border-top-right-radius: 0;
+    border-bottom-right-radius: 0;
+}
+
+.btn-group .btn:last-child {
+    border-top-left-radius: 0;
+    border-bottom-left-radius: 0;
+}
+
+/* Estados visuais dos módulos */
+.modulo-recolhido {
+    opacity: 0.85;
+}
+
+.modulo-expandido {
+    opacity: 1;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 </style>
 {% endblock %}

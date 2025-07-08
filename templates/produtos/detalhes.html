@@ -45,6 +45,53 @@
         color: #495057;
         font-weight: 600;
     }
+    
+    /* Melhorias para módulos */
+    .modulo-card {
+        border: 1px solid #e0e0e0;
+        border-radius: 12px;
+        transition: all 0.3s ease;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    }
+    .modulo-card:hover {
+        box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+        transform: translateY(-2px);
+    }
+    .modulo-header {
+        background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+        border-bottom: 2px solid #007bff;
+        border-radius: 12px 12px 0 0;
+    }
+    .modulo-image {
+        border-radius: 8px;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        transition: all 0.3s ease;
+    }
+    .modulo-image:hover {
+        box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+        transform: scale(1.05);
+    }
+    .modulo-info {
+        padding: 1rem;
+    }
+    .modulo-nome {
+        color: #2c3e50;
+        font-weight: 600;
+        margin-bottom: 0.5rem;
+    }
+    .modulo-dimensoes {
+        color: #6c757d;
+        font-size: 0.9rem;
+        margin-bottom: 0.5rem;
+    }
+    .modulo-descricao {
+        color: #495057;
+        font-size: 0.9rem;
+        background: #f8f9fa;
+        padding: 0.5rem;
+        border-radius: 6px;
+        border-left: 3px solid #007bff;
+    }
 </style>
 {% endblock %}
 
@@ -226,38 +273,60 @@
             <div class="card-body">
                 {% if modulos %}
                 {% for modulo in modulos %}
-                <div class="card mb-4">
-                    <div class="card-header bg-light">
+                <div class="card mb-4 modulo-card">
+                    <div class="card-header modulo-header">
                         <div class="row align-items-center">
                             <div class="col-auto">
                                 {% if modulo.imagem_principal %}
                                     <img src="{{ modulo.imagem_principal.url }}" 
                                          alt="Imagem - {{ modulo.nome }}" 
-                                         class="img-thumbnail"
-                                         style="width: 80px; height: 80px; object-fit: cover;">
+                                         class="img-thumbnail modulo-image"
+                                         style="width: 100px; height: 100px; object-fit: cover; border-radius: 8px;">
                                 {% else %}
-                                    <div class="bg-secondary rounded d-flex align-items-center justify-content-center" 
-                                         style="width: 80px; height: 80px;">
-                                        <i class="bi bi-image text-white"></i>
+                                    <div class="bg-secondary rounded d-flex align-items-center justify-content-center modulo-image" 
+                                         style="width: 100px; height: 100px; border-radius: 8px;">
+                                        <i class="bi bi-image text-white fs-3"></i>
                                     </div>
                                 {% endif %}
                             </div>
-                            <div class="col">
-                                <h5 class="mb-1">
+                            <div class="col modulo-info">
+                                <h5 class="modulo-nome">
                                     <i class="bi bi-puzzle"></i> {{ modulo.nome }}
                                 </h5>
-                                <div class="text-muted">
+                                <div class="modulo-dimensoes">
                                     {% if modulo.profundidade %}
-                                        <small><i class="bi bi-arrows-vertical"></i> <strong>Prof:</strong> {{ modulo.profundidade }}cm</small>
+                                        <span class="badge bg-info me-2">
+                                            <i class="bi bi-arrows-vertical"></i> Prof: {{ modulo.profundidade }}cm
+                                        </span>
                                     {% endif %}
                                     {% if modulo.altura %}
-                                        <small class="ms-3"><i class="bi bi-arrows-vertical"></i> <strong>Alt:</strong> {{ modulo.altura }}cm</small>
+                                        <span class="badge bg-info me-2">
+                                            <i class="bi bi-arrows-vertical"></i> Alt: {{ modulo.altura }}cm
+                                        </span>
                                     {% endif %}
                                     {% if modulo.braco %}
-                                        <small class="ms-3"><i class="bi bi-arrows-horizontal"></i> <strong>Braço:</strong> {{ modulo.braco }}cm</small>
+                                        <span class="badge bg-info me-2">
+                                            <i class="bi bi-arrows-horizontal"></i> Braço: {{ modulo.braco }}cm
+                                        </span>
                                     {% endif %}
                                 </div>
+                                {% if modulo.descricao %}
+                                    <div class="modulo-descricao mt-2">
+                                        <small><i class="bi bi-info-circle"></i> {{ modulo.descricao }}</small>
+                                    </div>
+                                {% endif %}
                             </div>
+                            {% if modulo.imagem_secundaria %}
+                            <div class="col-auto">
+                                <img src="{{ modulo.imagem_secundaria.url }}" 
+                                     alt="Imagem Secundária - {{ modulo.nome }}" 
+                                     class="img-thumbnail modulo-image"
+                                     style="width: 80px; height: 80px; object-fit: cover; border-radius: 8px;">
+                                <div class="text-center mt-1">
+                                    <small class="text-muted">Imagem Secundária</small>
+                                </div>
+                            </div>
+                            {% endif %}
                         </div>
                     </div>
                     <div class="card-body">

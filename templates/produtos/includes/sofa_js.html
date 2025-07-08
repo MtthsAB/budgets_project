@@ -37,7 +37,7 @@ function adicionarModulo() {
                 <h6 class="mb-0 d-flex align-items-center">
                     <i class="bi bi-cube text-primary me-2"></i> 
                     <span class="fw-semibold">Módulo ${moduloCount}</span>
-                    <i class="bi bi-chevron-down ms-2 toggle-icon text-primary" id="toggle-novo-${moduloCount}" 
+                    <i class="bi bi-chevron-right ms-2 toggle-icon text-primary" id="toggle-novo-${moduloCount}" 
                        style="transition: transform 0.2s;"></i>
                 </h6>
                 <button type="button" class="btn btn-sm btn-outline-danger" 
@@ -47,7 +47,7 @@ function adicionarModulo() {
                 </button>
             </div>
             
-            <div class="modulo-content p-3" id="content-novo-${moduloCount}">
+            <div class="modulo-content p-3" id="content-novo-${moduloCount}" style="display: none;">
                 <div class="row">
                     <div class="col-md-6">
                         <div class="form-floating mb-3">
@@ -101,9 +101,14 @@ function adicionarModulo() {
                         <h6 class="mb-0">
                             <i class="bi bi-rulers text-success"></i> Tamanhos (Opcional)
                         </h6>
-                        <button type="button" class="btn btn-sm btn-outline-success" onclick="adicionarTamanho(${moduloCount})">
-                            <i class="bi bi-plus"></i> Adicionar Tamanho
-                        </button>
+                        <div class="btn-group" role="group">
+                            <button type="button" class="btn btn-sm btn-outline-secondary" onclick="toggleTodosTamanhos(${moduloCount})" id="toggleTamanhosBtn_${moduloCount}">
+                                <i class="bi bi-arrows-expand"></i> <span id="toggleTamanhosText_${moduloCount}">Expandir Todos</span>
+                            </button>
+                            <button type="button" class="btn btn-sm btn-outline-success" onclick="adicionarTamanho(${moduloCount})">
+                                <i class="bi bi-plus"></i> Adicionar Tamanho
+                            </button>
+                        </div>
                     </div>
                     <div id="tamanhosContainer_${moduloCount}">
                         <!-- Tamanhos serão adicionados aqui -->
@@ -171,6 +176,11 @@ function toggleTodosModulos() {
     const btnText = document.getElementById('toggleModulosText');
     const btnIcon = btn.querySelector('i');
     
+    if (!btn || !btnText || !btnIcon) {
+        console.error('Elementos do botão não encontrados');
+        return;
+    }
+    
     modulosColapsados = !modulosColapsados;
     
     // Buscar todos os módulos (existentes e novos)
@@ -225,7 +235,12 @@ function toggleTamanho(moduloId, tamanhoId, tipo) {
 function toggleTodosTamanhos(moduloId) {
     const btn = document.getElementById(`toggleTamanhosBtn_${moduloId}`);
     const btnText = document.getElementById(`toggleTamanhosText_${moduloId}`);
-    const btnIcon = btn.querySelector('i');
+    const btnIcon = btn ? btn.querySelector('i') : null;
+    
+    if (!btn || !btnText || !btnIcon) {
+        console.error('Elementos do botão de tamanhos não encontrados para módulo:', moduloId);
+        return;
+    }
     
     // Determinar estado atual baseado no texto do botão
     const isCollapsed = btnText.textContent.includes('Expandir');
@@ -239,10 +254,12 @@ function toggleTodosTamanhos(moduloId) {
         
         if (content && icon) {
             if (isCollapsed) {
+                // Expandir
                 content.style.display = 'block';
                 icon.style.transform = 'rotate(90deg)';
                 icon.className = 'bi bi-chevron-down ms-2 toggle-icon text-success';
             } else {
+                // Recolher
                 content.style.display = 'none';
                 icon.style.transform = 'rotate(0deg)';
                 icon.className = 'bi bi-chevron-right ms-2 toggle-icon text-success';
@@ -286,8 +303,6 @@ function adicionarTamanho(moduloId) {
                 </button>
             </div>
             <div class="card-body tamanho-content" id="content-tamanho-novo-${moduloId}_${tamanhoCount}" style="display: none;">
-                    </button>
-                </div>
                 <div class="row">
                     <div class="col-md-3">
                         <div class="form-floating mb-2">
@@ -356,6 +371,18 @@ function removerTamanho(tamanhoId) {
 
 // Inicializar interface de módulos ao carregar a página
 document.addEventListener('DOMContentLoaded', function() {
+    // Para páginas de edição, garantir que os campos estejam visíveis
+    const tipoSelect = document.getElementById('tipo_produto');
+    if (tipoSelect) {
+        const selectedOption = tipoSelect.options[tipoSelect.selectedIndex];
+        if (selectedOption) {
+            const tipoNome = selectedOption.getAttribute('data-nome');
+            if (tipoNome) {
+                toggleCamposEspecificos(tipoNome);
+            }
+        }
+    }
+    
     // Inicializar estado dos módulos existentes como recolhidos
     const modulosExistentes = document.querySelectorAll('.modulo-item');
     modulosExistentes.forEach(modulo => {

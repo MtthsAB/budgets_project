@@ -23,7 +23,7 @@ class TamanhosModulosDetalhadoForm(forms.ModelForm):
             'descricao'
         ]
         widgets = {
-            'descricao': forms.Textarea(attrs={'rows': 3}),
+            'descricao': forms.Textarea(attrs={'rows': 3, 'class': 'form-control auto-resize-textarea', 'style': 'height: 80px;'}),
             'largura_total': forms.NumberInput(attrs={'step': '0.01'}),
             'largura_assento': forms.NumberInput(attrs={'step': '0.01'}),
             'tecido_metros': forms.NumberInput(attrs={'step': '0.01'}),
@@ -64,7 +64,7 @@ class ModuloForm(forms.ModelForm):
             'imagem_principal'
         ]
         widgets = {
-            'descricao': forms.Textarea(attrs={'rows': 3}),
+            'descricao': forms.Textarea(attrs={'rows': 3, 'class': 'form-control auto-resize-textarea', 'style': 'height: 80px;'}),
             'profundidade': forms.NumberInput(attrs={'step': '0.01'}),
             'altura': forms.NumberInput(attrs={'step': '0.01'}),
             'braco': forms.NumberInput(attrs={'step': '0.01'}),
@@ -171,7 +171,7 @@ class AcessorioForm(forms.ModelForm):
             'descricao'
         ]
         widgets = {
-            'descricao': forms.Textarea(attrs={'rows': 3}),
+            'descricao': forms.Textarea(attrs={'rows': 3, 'class': 'form-control auto-resize-textarea', 'style': 'height: 80px;'}),
             'preco': forms.NumberInput(attrs={'step': '0.01'}),
             'produtos_vinculados': forms.CheckboxSelectMultiple(),
         }
@@ -257,7 +257,7 @@ class BanquetaForm(forms.ModelForm):
             'descricao'
         ]
         widgets = {
-            'descricao': forms.Textarea(attrs={'rows': 3}),
+            'descricao': forms.Textarea(attrs={'rows': 3, 'class': 'form-control auto-resize-textarea', 'style': 'height: 80px;'}),
             'largura': forms.NumberInput(attrs={'step': '0.01', 'min': '0.01'}),
             'profundidade': forms.NumberInput(attrs={'step': '0.01', 'min': '0.01'}),
             'altura': forms.NumberInput(attrs={'step': '0.01', 'min': '0.01'}),
@@ -351,7 +351,7 @@ class CadeiraForm(forms.ModelForm):
             'descricao'
         ]
         widgets = {
-            'descricao': forms.Textarea(attrs={'rows': 3}),
+            'descricao': forms.Textarea(attrs={'rows': 3, 'class': 'form-control auto-resize-textarea', 'style': 'height: 80px;'}),
             'largura': forms.NumberInput(attrs={'step': '0.01', 'min': '0.01'}),
             'profundidade': forms.NumberInput(attrs={'step': '0.01', 'min': '0.01'}),
             'altura': forms.NumberInput(attrs={'step': '0.01', 'min': '0.01'}),
@@ -446,7 +446,7 @@ class PoltronaForm(forms.ModelForm):
             'descricao'
         ]
         widgets = {
-            'descricao': forms.Textarea(attrs={'rows': 3}),
+            'descricao': forms.Textarea(attrs={'rows': 3, 'class': 'form-control auto-resize-textarea', 'style': 'height: 80px;'}),
             'largura': forms.NumberInput(attrs={'step': '0.01', 'min': '0.01'}),
             'profundidade': forms.NumberInput(attrs={'step': '0.01', 'min': '0.01'}),
             'altura': forms.NumberInput(attrs={'step': '0.01', 'min': '0.01'}),
@@ -540,7 +540,7 @@ class PufeForm(forms.ModelForm):
             'descricao'
         ]
         widgets = {
-            'descricao': forms.Textarea(attrs={'rows': 3}),
+            'descricao': forms.Textarea(attrs={'rows': 3, 'class': 'form-control auto-resize-textarea', 'style': 'height: 80px;'}),
             'largura': forms.NumberInput(attrs={'step': '0.01', 'min': '0.01'}),
             'profundidade': forms.NumberInput(attrs={'step': '0.01', 'min': '0.01'}),
             'altura': forms.NumberInput(attrs={'step': '0.01', 'min': '0.01'}),
@@ -633,7 +633,7 @@ class AlmofadaForm(forms.ModelForm):
             'descricao'
         ]
         widgets = {
-            'descricao': forms.Textarea(attrs={'rows': 3}),
+            'descricao': forms.Textarea(attrs={'rows': 3, 'class': 'form-control auto-resize-textarea', 'style': 'height: 80px;'}),
             'largura': forms.NumberInput(attrs={'step': '0.01', 'min': '0.01'}),
             'altura': forms.NumberInput(attrs={'step': '0.01', 'min': '0.01'}),
             'tecido_metros': forms.NumberInput(attrs={'step': '0.01', 'min': '0.01'}),

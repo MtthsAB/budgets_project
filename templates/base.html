@@ -21,6 +21,20 @@
             min-height: calc(100vh - 56px);
         }
         
+        /* Estilos para campos de descrição auto-ajustáveis */
+        .auto-resize-textarea {
+            min-height: 80px; /* Altura mínima mantida */
+            resize: none;
+            overflow-y: hidden;
+            transition: height 0.3s ease;
+        }
+        
+        .auto-resize-textarea:focus {
+            outline: none;
+            border-color: #86b7fe;
+            box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25);
+        }
+        
         /* Estilos para o menu expansível */
         .menu-section {
             margin-bottom: 0.25rem;
@@ -197,6 +211,7 @@
                     </li>
                     
                     <!-- Dropdown Produtos -->
+                    {% if user.can_access_produtos %}
                     <li class="nav-item dropdown">
                         <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
                             <i class="bi bi-box-seam"></i> Produtos
@@ -214,8 +229,10 @@
                             </li>
                         </ul>
                     </li>
+                    {% endif %}
                     
                     <!-- Dropdown Clientes -->
+                    {% if user.can_access_clientes %}
                     <li class="nav-item dropdown">
                         <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
                             <i class="bi bi-people"></i> Clientes
@@ -233,6 +250,49 @@
                             </li>
                         </ul>
                     </li>
+                    {% endif %}
+                    
+                    <!-- Dropdown Orçamentos -->
+                    {% if user.can_access_orcamentos %}
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                            <i class="bi bi-receipt"></i> Orçamentos
+                        </a>
+                        <ul class="dropdown-menu">
+                            <li>
+                                <a class="dropdown-item" href="{% url 'orcamentos_em_desenvolvimento' %}">
+                                    <i class="bi bi-receipt"></i> Listar Orçamentos
+                                </a>
+                            </li>
+                            <li>
+                                <a class="dropdown-item" href="{% url 'orcamentos_em_desenvolvimento' %}">
+                                    <i class="bi bi-plus-circle"></i> Novo Orçamento
+                                </a>
+                            </li>
+                        </ul>
+                    </li>
+                    {% endif %}
+                    
+                    <!-- Dropdown Usuários -->
+                    {% if user.can_manage_users %}
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                            <i class="bi bi-person-gear"></i> Usuários
+                        </a>
+                        <ul class="dropdown-menu">
+                            <li>
+                                <a class="dropdown-item" href="{% url 'usuarios_lista' %}">
+                                    <i class="bi bi-people"></i> Gestão de Usuários
+                                </a>
+                            </li>
+                            <li>
+                                <a class="dropdown-item" href="{% url 'usuario_novo' %}">
+                                    <i class="bi bi-person-plus"></i> Novo Usuário
+                                </a>
+                            </li>
+                        </ul>
+                    </li>
+                    {% endif %}
                 </ul>
                 
                 <ul class="navbar-nav">
@@ -272,11 +332,14 @@
             <div class="col-md-2 col-lg-2 sidebar p-3">
                 <div class="list-group list-group-flush">
                     <!-- Dashboard -->
+                    {% if user.can_access_home %}
                     <a href="{% url 'home' %}" class="list-group-item list-group-item-action {% if request.resolver_match.url_name == 'home' %}active{% endif %}">
                         <i class="bi bi-house"></i> Dashboard
                     </a>
+                    {% endif %}
                     
                     <!-- Menu Produtos -->
+                    {% if user.can_access_produtos %}
                     <div class="menu-section">
                         <button class="menu-toggle collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#produtosMenu" aria-expanded="false" aria-controls="produtosMenu">
                             <i class="bi bi-box-seam menu-icon"></i>
@@ -294,8 +357,10 @@
                             </div>
                         </div>
                     </div>
+                    {% endif %}
                     
                     <!-- Menu Clientes -->
+                    {% if user.can_access_clientes %}
                     <div class="menu-section">
                         <button class="menu-toggle collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#clientesMenu" aria-expanded="false" aria-controls="clientesMenu">
                             <i class="bi bi-people menu-icon"></i>
@@ -313,6 +378,49 @@
                             </div>
                         </div>
                     </div>
+                    {% endif %}
+                    
+                    <!-- Menu Orçamentos -->
+                    {% if user.can_access_orcamentos %}
+                    <div class="menu-section">
+                        <button class="menu-toggle collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#orcamentosMenu" aria-expanded="false" aria-controls="orcamentosMenu">
+                            <i class="bi bi-receipt menu-icon"></i>
+                            <span>Orçamentos</span>
+                            <i class="bi bi-chevron-down arrow-icon"></i>
+                        </button>
+                        <div class="collapse" id="orcamentosMenu">
+                            <div class="menu-submenu">
+                                <a href="{% url 'orcamentos_em_desenvolvimento' %}" class="list-group-item list-group-item-action">
+                                    <i class="bi bi-receipt"></i> Listar Orçamentos
+                                </a>
+                                <a href="{% url 'orcamentos_em_desenvolvimento' %}" class="list-group-item list-group-item-action">
+                                    <i class="bi bi-plus-circle"></i> Novo Orçamento
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                    {% endif %}
+                    
+                    <!-- Menu Usuários -->
+                    {% if user.can_manage_users %}
+                    <div class="menu-section">
+                        <button class="menu-toggle collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#usuariosMenu" aria-expanded="false" aria-controls="usuariosMenu">
+                            <i class="bi bi-person-gear menu-icon"></i>
+                            <span>Usuários</span>
+                            <i class="bi bi-chevron-down arrow-icon"></i>
+                        </button>
+                        <div class="collapse" id="usuariosMenu">
+                            <div class="menu-submenu">
+                                <a href="{% url 'usuarios_lista' %}" class="list-group-item list-group-item-action {% if request.resolver_match.url_name == 'usuarios_lista' %}active{% endif %}">
+                                    <i class="bi bi-people"></i> Gestão de Usuários
+                                </a>
+                                <a href="{% url 'usuario_novo' %}" class="list-group-item list-group-item-action {% if request.resolver_match.url_name == 'usuario_novo' %}active{% endif %}">
+                                    <i class="bi bi-person-plus"></i> Novo Usuário
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                    {% endif %}
                 </div>
             </div>
             <!-- Content area for authenticated users -->
@@ -432,6 +540,80 @@
             // Inicializar os menus
             initExpandableMenus();
             initNavbarDropdowns();
+            
+            // Função para auto-ajustar altura dos textareas de descrição
+            function autoResizeTextarea(textarea) {
+                textarea.style.height = 'auto';
+                textarea.style.height = Math.max(textarea.scrollHeight, 80) + 'px';
+            }
+            
+            // Inicializar auto-resize para todos os textareas com classe auto-resize-textarea
+            function initAutoResizeTextareas() {
+                const textareas = document.querySelectorAll('.auto-resize-textarea');
+                
+                textareas.forEach(function(textarea) {
+                    // Ajustar altura inicial
+                    autoResizeTextarea(textarea);
+                    
+                    // Adicionar event listeners
+                    textarea.addEventListener('input', function() {
+                        autoResizeTextarea(this);
+                    });
+                    
+                    textarea.addEventListener('paste', function() {
+                        // Pequeno delay para permitir que o conteúdo seja colado
+                        setTimeout(() => {
+                            autoResizeTextarea(this);
+                        }, 10);
+                    });
+                    
+                    // Ajustar altura quando o conteúdo é carregado (para edição)
+                    textarea.addEventListener('focus', function() {
+                        autoResizeTextarea(this);
+                    });
+                });
+            }
+            
+            // Inicializar auto-resize textareas
+            initAutoResizeTextareas();
+            
+            // Observar mudanças no DOM para aplicar auto-resize em novos elementos
+            const observer = new MutationObserver(function(mutations) {
+                mutations.forEach(function(mutation) {
+                    if (mutation.type === 'childList') {
+                        mutation.addedNodes.forEach(function(node) {
+                            if (node.nodeType === 1) { // Element node
+                                const newTextareas = node.querySelectorAll('.auto-resize-textarea');
+                                if (newTextareas.length > 0) {
+                                    newTextareas.forEach(function(textarea) {
+                                        autoResizeTextarea(textarea);
+                                        
+                                        textarea.addEventListener('input', function() {
+                                            autoResizeTextarea(this);
+                                        });
+                                        
+                                        textarea.addEventListener('paste', function() {
+                                            setTimeout(() => {
+                                                autoResizeTextarea(this);
+                                            }, 10);
+                                        });
+                                        
+                                        textarea.addEventListener('focus', function() {
+                                            autoResizeTextarea(this);
+                                        });
+                                    });
+                                }
+                            }
+                        });
+                    }
+                });
+            });
+            
+            // Observar mudanças no documento
+            observer.observe(document.body, {
+                childList: true,
+                subtree: true
+            });
         });
     </script>
     

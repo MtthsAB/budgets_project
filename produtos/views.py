@@ -12,6 +12,7 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 import logging
 from sistema_produtos.mixins import track_user_changes
+from authentication.decorators import admin_or_master_required, produtos_access_required
 from .models import (
     Produto, TipoItem, Linha, Modulo, Acessorio, 
     TamanhosModulos, TamanhosModulosDetalhado, FaixaTecido, PrecosBase,
@@ -24,6 +25,17 @@ logger = logging.getLogger(__name__)
 @login_required
 def home_view(request):
     """View da página inicial do sistema"""
+    # Verificar se o usuário tem permissão para acessar o home
+    if not request.user.can_access_home():
+        # Redirecionar baseado no tipo de permissão
+        if request.user.tipo_permissao == 'vendedor':
+            return redirect('orcamentos_em_desenvolvimento')
+        elif request.user.tipo_permissao == 'operador_produtos':
+            return redirect('produtos_lista')
+        else:
+            # Fallback para produtos se não conseguir determinar
+            return redirect('produtos_lista')
+    
     context = {
         'total_produtos': Produto.objects.count(),
         'total_tipos': TipoItem.objects.count(),
@@ -32,7 +44,7 @@ def home_view(request):
     }
     return render(request, 'produtos/home.html', context)
 
-@login_required
+@produtos_access_required
 def produtos_list_view(request):
     """View para listagem de produtos unificada (inclui todos os tipos)"""
     # Buscar produtos da nova tabela Produto (apenas dados básicos)
@@ -235,7 +247,7 @@ def produtos_list_view(request):
     }
     return render(request, 'produtos/lista.html', context)
 
-@login_required
+@produtos_access_required
 @csrf_protect
 def produto_cadastro_view(request):
     """View para cadastro de novos produtos (incluindo acessórios)"""
@@ -611,7 +623,7 @@ def produto_cadastro_view(request):
     }
     return render(request, 'produtos/cadastro_unificado.html', context)
 
-@login_required
+@produtos_access_required
 def produto_editar_view(request, produto_id):
     """View para edição de produtos (incluindo acessórios)"""
     produto = get_object_or_404(Produto, id=produto_id)
@@ -893,7 +905,7 @@ def produto_editar_view(request, produto_id):
     }
     return render(request, 'produtos/sofas/editar_unificado.html', context)
 
-@login_required
+@produtos_access_required
 def produto_excluir_view(request, produto_id):
     """View para exclusão de produtos"""
     produto = get_object_or_404(Produto, id=produto_id)
@@ -908,7 +920,7 @@ def produto_excluir_view(request, produto_id):
     
     return redirect('produtos_lista')
 
-@login_required
+@produtos_access_required
 def produto_detalhes_view(request, produto_id):
     """View para visualização detalhada de um produto (inclui banquetas)"""
     # Primeiro, tentar buscar na tabela Produto
@@ -960,7 +972,7 @@ def teste_imagem_view(request):
     
     return render(request, 'produtos/teste_imagem.html')
 
-@login_required
+@produtos_access_required
 @csrf_protect
 def debug_cadastro_view(request):
     """View de debug para verificar dados POST"""
@@ -978,7 +990,7 @@ def debug_cadastro_view(request):
         'tipos': TipoItem.objects.all()
     })
 
-@login_required
+@produtos_access_required
 def teste_cadastro_view(request):
     """View de teste para cadastro simples"""
     context = {
@@ -986,12 +998,12 @@ def teste_cadastro_view(request):
     }
     return render(request, 'produtos/teste_cadastro.html', context)
 
-@login_required
+@produtos_access_required
 def teste_tamanhos_edicao_view(request):
     """View de teste para verificar funcionalidade de tamanhos na edição"""
     return render(request, 'produtos/teste_tamanhos_edicao.html')
 
-@login_required
+@produtos_access_required
 def api_produtos_disponiveis(request):
     """API para carregar produtos disponíveis para vinculação"""
     produtos = Produto.objects.filter(ativo=True).exclude(
@@ -1000,7 +1012,7 @@ def api_produtos_disponiveis(request):
     
     return JsonResponse(list(produtos), safe=False)
 
-@login_required
+@produtos_access_required
 def acessorios_list_view(request):
     """View para listagem de acessórios"""
     acessorios = Acessorio.objects.prefetch_related('produtos_vinculados').all()
@@ -1026,7 +1038,7 @@ def acessorios_list_view(request):
     }
     return render(request, 'produtos/acessorios/lista.html', context)
 
-@login_required
+@produtos_access_required
 @csrf_protect
 def acessorio_cadastro_view(request):
     """View para cadastro de acessórios"""
@@ -1060,7 +1072,7 @@ def acessorio_cadastro_view(request):
     }
     return render(request, 'produtos/acessorios/formulario.html', context)
 
-@login_required
+@produtos_access_required
 def acessorio_detalhes_view(request, acessorio_id):
     """View para visualizar detalhes de um acessório"""
     acessorio = get_object_or_404(Acessorio, id=acessorio_id)
@@ -1072,7 +1084,7 @@ def acessorio_detalhes_view(request, acessorio_id):
     }
     return render(request, 'produtos/acessorios/detalhes.html', context)
 
-@login_required
+@produtos_access_required
 @csrf_protect
 def acessorio_editar_view(request, acessorio_id):
     """View para editar um acessório - busca por ID do Produto"""
@@ -1125,7 +1137,7 @@ def acessorio_editar_view(request, acessorio_id):
     }
     return render(request, 'produtos/acessorios/editar.html', context)
 
-@login_required
+@produtos_access_required
 @csrf_protect
 def acessorio_excluir_view(request, acessorio_id):
     """View para excluir um acessório"""
@@ -1149,7 +1161,7 @@ def acessorio_excluir_view(request, acessorio_id):
 
 # ===== VIEWS PARA BANQUETAS =====
 
-@login_required
+@produtos_access_required
 def banquetas_list_view(request):
     """View para listagem de banquetas"""
     banquetas = Banqueta.objects.all()
@@ -1177,7 +1189,7 @@ def banquetas_list_view(request):
     }
     return render(request, 'produtos/banquetas/lista.html', context)
 
-@login_required
+@produtos_access_required
 @csrf_protect
 def banqueta_cadastro_view(request):
     """View para cadastro de banquetas"""
@@ -1205,7 +1217,7 @@ def banqueta_cadastro_view(request):
     }
     return render(request, 'produtos/banquetas/cadastro.html', context)
 
-@login_required
+@produtos_access_required
 def banqueta_detalhes_view(request, banqueta_id):
     """View para exibir detalhes de uma banqueta"""
     banqueta = get_object_or_404(Banqueta, id=banqueta_id)
@@ -1224,7 +1236,7 @@ def banqueta_teste_imagem_view(request, banqueta_id):
     }
     return render(request, 'produtos/banquetas/teste_imagem.html', context)
 
-@login_required
+@produtos_access_required
 @csrf_protect
 def banqueta_editar_view(request, banqueta_id):
     """View para editar banquetas"""
@@ -1255,7 +1267,7 @@ def banqueta_editar_view(request, banqueta_id):
     }
     return render(request, 'produtos/banquetas/editar.html', context)
 
-@login_required
+@produtos_access_required
 @csrf_protect
 def banqueta_excluir_view(request, banqueta_id):
     """View para excluir banquetas"""
@@ -1281,7 +1293,7 @@ def banqueta_excluir_view(request, banqueta_id):
 # VIEWS PARA CADEIRAS
 # ============================================================================
 
-@login_required
+@produtos_access_required
 def cadeiras_list_view(request):
     """View para listagem de cadeiras"""
     # Buscar cadeiras da tabela Cadeira
@@ -1311,7 +1323,7 @@ def cadeiras_list_view(request):
     }
     return render(request, 'produtos/cadeiras/lista.html', context)
 
-@login_required
+@produtos_access_required
 @csrf_protect
 def cadeira_cadastro_view(request):
     """View para cadastro de cadeiras"""
@@ -1339,7 +1351,7 @@ def cadeira_cadastro_view(request):
     }
     return render(request, 'produtos/cadeiras/cadastro.html', context)
 
-@login_required
+@produtos_access_required
 def cadeira_detalhes_view(request, cadeira_id):
     """View para exibir detalhes de uma cadeira"""
     cadeira = get_object_or_404(Cadeira, id=cadeira_id)
@@ -1349,13 +1361,13 @@ def cadeira_detalhes_view(request, cadeira_id):
     }
     return render(request, 'produtos/cadeiras/detalhes.html', context)
 
-@login_required
+@produtos_access_required
 def cadeira_teste_imagem_view(request, cadeira_id):
     """View para testar exibição de imagem de cadeira"""
     cadeira = get_object_or_404(Cadeira, id=cadeira_id)
     return render(request, 'produtos/cadeiras/teste_imagem.html', {'cadeira': cadeira})
 
-@login_required
+@produtos_access_required
 @csrf_protect
 def cadeira_editar_view(request, cadeira_id):
     """View para editar cadeiras"""
@@ -1386,7 +1398,7 @@ def cadeira_editar_view(request, cadeira_id):
     }
     return render(request, 'produtos/cadeiras/editar.html', context)
 
-@login_required
+@produtos_access_required
 @csrf_protect
 def cadeira_excluir_view(request, cadeira_id):
     """View para excluir cadeiras"""
@@ -1529,7 +1541,7 @@ def poltrona_excluir_view(request, poltrona_id):
 # VIEWS PARA PUFES
 # =============================================================================
 
-@login_required
+@produtos_access_required
 def pufes_list_view(request):
     """View para listagem de pufes"""
     pufes = Pufe.objects.all().order_by('ref_pufe')
@@ -1540,7 +1552,7 @@ def pufes_list_view(request):
     }
     return render(request, 'produtos/pufes/lista.html', context)
 
-@login_required
+@produtos_access_required
 def pufe_cadastro_view(request):
     """View para cadastro de pufes"""
     if request.method == 'POST':
@@ -1564,7 +1576,7 @@ def pufe_cadastro_view(request):
     }
     return render(request, 'produtos/pufes/cadastro.html', context)
 
-@login_required
+@produtos_access_required
 def pufe_detalhes_view(request, pufe_id):
     """View para detalhes de pufe"""
     pufe = get_object_or_404(Pufe, id=pufe_id)
@@ -1574,7 +1586,7 @@ def pufe_detalhes_view(request, pufe_id):
     }
     return render(request, 'produtos/pufes/detalhes.html', context)
 
-@login_required
+@produtos_access_required
 def pufe_editar_view(request, pufe_id):
     """View para editar pufe"""
     pufe = get_object_or_404(Pufe, id=pufe_id)
@@ -1600,7 +1612,7 @@ def pufe_editar_view(request, pufe_id):
     }
     return render(request, 'produtos/pufes/editar.html', context)
 
-@login_required
+@produtos_access_required
 def pufe_excluir_view(request, pufe_id):
     """View para excluir pufes"""
     pufe = get_object_or_404(Pufe, id=pufe_id)
@@ -1621,7 +1633,7 @@ def pufe_excluir_view(request, pufe_id):
     }
     return render(request, 'produtos/pufes/confirmar_exclusao.html', context)
 
-@login_required
+@produtos_access_required
 def pufe_teste_imagem_view(request, pufe_id):
     """View de teste para imagens de pufes"""
     pufe = get_object_or_404(Pufe, id=pufe_id)
@@ -1631,7 +1643,7 @@ def pufe_teste_imagem_view(request, pufe_id):
 # VIEWS PARA ALMOFADAS
 # =====================================================================
 
-@login_required
+@produtos_access_required
 def almofadas_list_view(request):
     """View para listagem de almofadas"""
     almofadas = Almofada.objects.all().order_by('ref_almofada')
@@ -1642,7 +1654,7 @@ def almofadas_list_view(request):
     }
     return render(request, 'produtos/almofadas/lista.html', context)
 
-@login_required
+@produtos_access_required
 def almofada_cadastro_view(request):
     """View para cadastro de almofadas"""
     if request.method == 'POST':
@@ -1666,7 +1678,7 @@ def almofada_cadastro_view(request):
     }
     return render(request, 'produtos/almofadas/cadastro.html', context)
 
-@login_required
+@produtos_access_required
 def almofada_detalhes_view(request, almofada_id):
     """View para detalhes de almofada"""
     almofada = get_object_or_404(Almofada, id=almofada_id)
@@ -1676,7 +1688,7 @@ def almofada_detalhes_view(request, almofada_id):
     }
     return render(request, 'produtos/almofadas/detalhes.html', context)
 
-@login_required
+@produtos_access_required
 def almofada_editar_view(request, almofada_id):
     """View para editar almofada"""
     almofada = get_object_or_404(Almofada, id=almofada_id)
@@ -1702,7 +1714,7 @@ def almofada_editar_view(request, almofada_id):
     }
     return render(request, 'produtos/almofadas/editar.html', context)
 
-@login_required
+@produtos_access_required
 def almofada_excluir_view(request, almofada_id):
     """View para excluir almofadas"""
     almofada = get_object_or_404(Almofada, id=almofada_id)
@@ -1723,7 +1735,7 @@ def almofada_excluir_view(request, almofada_id):
     }
     return render(request, 'produtos/almofadas/confirmar_exclusao.html', context)
 
-@login_required
+@produtos_access_required
 def almofada_teste_imagem_view(request, almofada_id):
     """View de teste para imagens de almofadas"""
     almofada = get_object_or_404(Almofada, id=almofada_id)
@@ -1733,7 +1745,7 @@ def almofada_teste_imagem_view(request, almofada_id):
 # VIEWS PARA SOFÁS (ADEQUAÇÃO AO NOVO PADRÃO)
 # =====================================================================
 
-@login_required
+@produtos_access_required
 def sofas_list_view(request):
     """View para listagem específica de sofás"""
     sofas = Produto.objects.filter(id_tipo_produto__nome__icontains='sofá').order_by('ref_produto')
@@ -1744,12 +1756,12 @@ def sofas_list_view(request):
     }
     return render(request, 'produtos/sofas/lista.html', context)
 
-@login_required
+@produtos_access_required
 def sofa_cadastro_view(request):
     """View para cadastro específico de sofás"""
     return redirect('produto_cadastro')  # Redireciona para o cadastro unificado por enquanto
 
-@login_required
+@produtos_access_required
 def sofa_detalhes_view(request, sofa_id):
     """View para detalhes específicos de sofás"""
     sofa = get_object_or_404(Produto, id=sofa_id, id_tipo_produto__nome__icontains='sofá')
@@ -1767,7 +1779,7 @@ def sofa_detalhes_view(request, sofa_id):
     }
     return render(request, 'produtos/sofas/detalhes.html', context)
 
-@login_required
+@produtos_access_required
 def sofa_editar_view(request, sofa_id):
     """View para edição específica de sofás"""
     sofa = get_object_or_404(Produto, id=sofa_id, id_tipo_produto__nome__icontains='sofá')
@@ -1844,7 +1856,7 @@ def sofa_editar_view(request, sofa_id):
     }
     return render(request, 'produtos/sofas/editar.html', context)
 
-@login_required
+@produtos_access_required
 def sofa_excluir_view(request, sofa_id):
     """View para exclusão específica de sofás"""
     sofa = get_object_or_404(Produto, id=sofa_id, id_tipo_produto__nome__icontains='sofá')

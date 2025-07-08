@@ -1,0 +1,168 @@
+{% extends 'base.html' %}
+
+{% block title %}Detalhes do Usuário - Sistema de Produtos{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h2><i class="bi bi-person-badge"></i> Detalhes do Usuário</h2>
+                <div>
+                    <a href="{% url 'usuario_editar' usuario.pk %}" class="btn btn-warning">
+                        <i class="bi bi-pencil"></i> Editar
+                    </a>
+                    <a href="{% url 'usuarios_lista' %}" class="btn btn-secondary">
+                        <i class="bi bi-arrow-left"></i> Voltar
+                    </a>
+                </div>
+            </div>
+
+            <div class="row">
+                <div class="col-md-8">
+                    <div class="card">
+                        <div class="card-header">
+                            <h5><i class="bi bi-person-lines-fill"></i> Informações Pessoais</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label class="form-label text-muted">Nome Completo</label>
+                                        <p class="h6">{{ usuario.get_full_name }}</p>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label class="form-label text-muted">Email</label>
+                                        <p class="h6">{{ usuario.email }}</p>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label class="form-label text-muted">Tipo de Permissão</label>
+                                        <p>
+                                            {% if usuario.tipo_permissao == 'master' %}
+                                                <span class="badge bg-danger fs-6">{{ tipo_permissao_display }}</span>
+                                            {% elif usuario.tipo_permissao == 'admin' %}
+                                                <span class="badge bg-warning fs-6">{{ tipo_permissao_display }}</span>
+                                            {% elif usuario.tipo_permissao == 'vendedor' %}
+                                                <span class="badge bg-info fs-6">{{ tipo_permissao_display }}</span>
+                                            {% else %}
+                                                <span class="badge bg-secondary fs-6">{{ tipo_permissao_display }}</span>
+                                            {% endif %}
+                                        </p>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label class="form-label text-muted">Status</label>
+                                        <p>
+                                            {% if usuario.is_active %}
+                                                <span class="badge bg-success fs-6">Ativo</span>
+                                            {% else %}
+                                                <span class="badge bg-secondary fs-6">Inativo</span>
+                                            {% endif %}
+                                        </p>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label class="form-label text-muted">Criado em</label>
+                                        <p class="h6">{{ usuario.created_at|date:"d/m/Y H:i" }}</p>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label class="form-label text-muted">Última atualização</label>
+                                        <p class="h6">{{ usuario.updated_at|date:"d/m/Y H:i" }}</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-md-4">
+                    <div class="card">
+                        <div class="card-header">
+                            <h5><i class="bi bi-shield-check"></i> Permissões</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="mb-3">
+                                <label class="form-label text-muted">Acesso a:</label>
+                                <ul class="list-group list-group-flush">
+                                    {% if usuario.can_access_home %}
+                                        <li class="list-group-item d-flex justify-content-between align-items-center">
+                                            <span><i class="bi bi-house text-success"></i> Página Inicial</span>
+                                            <span class="badge bg-success">Permitido</span>
+                                        </li>
+                                    {% endif %}
+                                    
+                                    {% if usuario.can_access_produtos %}
+                                        <li class="list-group-item d-flex justify-content-between align-items-center">
+                                            <span><i class="bi bi-box-seam text-success"></i> Produtos</span>
+                                            <span class="badge bg-success">Permitido</span>
+                                        </li>
+                                    {% endif %}
+                                    
+                                    {% if usuario.can_access_clientes %}
+                                        <li class="list-group-item d-flex justify-content-between align-items-center">
+                                            <span><i class="bi bi-people text-success"></i> Clientes</span>
+                                            <span class="badge bg-success">Permitido</span>
+                                        </li>
+                                    {% endif %}
+                                    
+                                    {% if usuario.can_access_orcamentos %}
+                                        <li class="list-group-item d-flex justify-content-between align-items-center">
+                                            <span><i class="bi bi-receipt text-success"></i> Orçamentos</span>
+                                            <span class="badge bg-success">Permitido</span>
+                                        </li>
+                                    {% endif %}
+                                    
+                                    {% if usuario.can_manage_users %}
+                                        <li class="list-group-item d-flex justify-content-between align-items-center">
+                                            <span><i class="bi bi-person-gear text-success"></i> Gestão de Usuários</span>
+                                            <span class="badge bg-success">Permitido</span>
+                                        </li>
+                                    {% endif %}
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="card mt-3">
+                        <div class="card-header">
+                            <h5><i class="bi bi-gear"></i> Ações</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="d-grid gap-2">
+                                <a href="{% url 'usuario_editar' usuario.pk %}" class="btn btn-warning">
+                                    <i class="bi bi-pencil"></i> Editar Usuário
+                                </a>
+                                <a href="{% url 'usuario_alterar_senha' usuario.pk %}" class="btn btn-info">
+                                    <i class="bi bi-key"></i> Alterar Senha
+                                </a>
+                                {% if usuario != user %}
+                                    <a href="{% url 'usuario_toggle_ativo' usuario.pk %}" 
+                                       class="btn btn-{% if usuario.is_active %}danger{% else %}success{% endif %}"
+                                       onclick="return confirm('Tem certeza que deseja {% if usuario.is_active %}desativar{% else %}ativar{% endif %} este usuário?')">
+                                        <i class="bi bi-{% if usuario.is_active %}x-circle{% else %}check-circle{% endif %}"></i>
+                                        {% if usuario.is_active %}Desativar{% else %}Ativar{% endif %}
+                                    </a>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

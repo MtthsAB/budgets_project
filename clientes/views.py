@@ -4,11 +4,12 @@ from django.contrib import messages
 from django.core.paginator import Paginator
 from django.db.models import Q
 from sistema_produtos.mixins import track_user_changes
+from authentication.decorators import clientes_access_required
 from .models import Cliente
 from .forms import ClienteForm
 
 
-@login_required
+@clientes_access_required
 def cliente_lista(request):
     """Lista todos os clientes com busca e paginação"""
     search_query = request.GET.get('search', '')
@@ -35,7 +36,7 @@ def cliente_lista(request):
     return render(request, 'clientes/lista.html', context)
 
 
-@login_required
+@clientes_access_required
 def cliente_cadastro(request):
     """Cadastra um novo cliente"""
     if request.method == 'POST':
@@ -57,7 +58,7 @@ def cliente_cadastro(request):
     return render(request, 'clientes/cadastro.html', context)
 
 
-@login_required
+@clientes_access_required
 def cliente_detalhes(request, pk):
     """Exibe os detalhes de um cliente"""
     cliente = get_object_or_404(Cliente, pk=pk)
@@ -67,7 +68,7 @@ def cliente_detalhes(request, pk):
     return render(request, 'clientes/detalhes.html', context)
 
 
-@login_required
+@clientes_access_required
 def cliente_editar(request, pk):
     """Edita um cliente existente"""
     cliente = get_object_or_404(Cliente, pk=pk)
@@ -92,7 +93,7 @@ def cliente_editar(request, pk):
     return render(request, 'clientes/editar.html', context)
 
 
-@login_required
+@clientes_access_required
 def cliente_deletar(request, pk):
     """Deleta um cliente"""
     cliente = get_object_or_404(Cliente, pk=pk)

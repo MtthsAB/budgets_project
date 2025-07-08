@@ -38,10 +38,10 @@ Você está editando o sofá <strong>{{ sofa.ref_produto }} - {{ sofa.nome_produ
 <div class="row">
     <div class="col-md-6">
         <div class="form-floating mb-3">
-            <select class="form-select" id="tipo_produto" name="tipo_produto" required>
+            <select class="form-select" id="tipo_produto" name="tipo_produto" required onchange="toggleCamposPorTipo()">
                 <option value="">Selecione o tipo</option>
                 {% for tipo in tipos %}
-                    <option value="{{ tipo.id }}" 
+                    <option value="{{ tipo.id }}" data-nome="{{ tipo.nome }}"
                             {% if sofa.id_tipo_produto.id == tipo.id %}selected{% endif %}>
                         {{ tipo.nome }}
                     </option>
@@ -53,7 +53,7 @@ Você está editando o sofá <strong>{{ sofa.ref_produto }} - {{ sofa.nome_produ
 </div>
 
 <!-- Características do Sofá -->
-<div class="row mt-4">
+<div class="row mt-4" id="campos-sofa">
     <div class="col-12">
         <h6 class="mb-3">
             <i class="bi bi-gear"></i> Características do Sofá

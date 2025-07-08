@@ -2,6 +2,7 @@
 <script>
 let moduloCount = 0;
 let produtosDisponiveis = [];
+let modulosColapsados = true;
 
 // Carregar produtos para vinculação
 document.addEventListener('DOMContentLoaded', function() {
@@ -43,6 +44,11 @@ function toggleCamposEspecificos(tipoNome) {
     if (dimensoesAlmofada) dimensoesAlmofada.style.display = 'none';
     if (secaoModulos) secaoModulos.style.display = 'none';
     if (vinculacaoProdutos) vinculacaoProdutos.style.display = 'none';
+    
+    // Se nenhum tipo está selecionado, manter tudo escondido
+    if (!tipoNome || tipoNome === '') {
+        return;
+    }
     
     // Mostrar campos conforme o tipo
     if (tipoNome === 'Sofás') {
@@ -126,14 +132,26 @@ function adicionarModulo() {
     if (noModulosAlert) noModulosAlert.style.display = 'none';
     
     const moduloHTML = `
-        <div class="card mb-3" id="modulo_${moduloCount}">
-            <div class="card-header d-flex justify-content-between align-items-center">
-                <h6 class="mb-0">Módulo ${moduloCount}</h6>
-                <button type="button" class="btn btn-sm btn-danger" onclick="removerModulo(${moduloCount})">
+        <div class="card mb-3 modulo-expandido" id="modulo_${moduloCount}">
+            <div class="card-header d-flex justify-content-between align-items-center" 
+                 style="cursor: pointer; user-select: none; background-color: #e3f2fd !important; border-bottom: 1px solid #bbdefb !important;" 
+                 onclick="toggleModuloIndividual(${moduloCount})">
+                <div class="d-flex align-items-center">
+                    <button type="button" class="btn btn-sm btn-outline-secondary me-2" 
+                            onclick="event.stopPropagation(); toggleModuloIndividual(${moduloCount})" 
+                            id="toggleBtn_${moduloCount}" title="Recolher módulo">
+                        <i class="bi bi-dash-lg"></i>
+                    </button>
+                    <div class="modulo-header-container">
+                        <h6 class="mb-0" id="moduloTitle_${moduloCount}">Módulo ${moduloCount}</h6>
+                        <div class="modulo-status-indicator ativo"></div>
+                    </div>
+                </div>
+                <button type="button" class="btn btn-sm btn-danger" onclick="event.stopPropagation(); removerModulo(${moduloCount})">
                     <i class="bi bi-trash"></i> Remover
                 </button>
             </div>
-            <div class="card-body">
+            <div class="card-body" id="cardBody_${moduloCount}">
                 <!-- Nome do Módulo -->
                 <div class="row mb-3">
                     <div class="col-md-6">
@@ -166,7 +184,7 @@ function adicionarModulo() {
                     </div>
                     <div class="col-md-3">
                         <div class="form-floating">
-                            <textarea class="form-control" id="modulo_descricao_${moduloCount}" name="modulo_descricao_${moduloCount}" placeholder="Descrição" style="height: 58px;"></textarea>
+                            <textarea class="form-control auto-resize-textarea" id="modulo_descricao_${moduloCount}" name="modulo_descricao_${moduloCount}" placeholder="Descrição" style="height: 58px;"></textarea>
                             <label for="modulo_descricao_${moduloCount}">Descrição (Opcional)</label>
                         </div>
                     </div>
@@ -219,11 +237,16 @@ function adicionarModulo() {
                 <div class="mt-4">
                     <div class="d-flex justify-content-between align-items-center mb-3">
                         <h6 class="mb-0">
-                            <i class="bi bi-rulers"></i> Tamanhos (Opcional)
+                            <i class="bi bi-rulers"></i> Tamanhos
                         </h6>
-                        <button type="button" class="btn btn-sm btn-outline-success" onclick="adicionarTamanho(${moduloCount})">
-                            <i class="bi bi-plus"></i> Adicionar Tamanho
-                        </button>
+                        <div class="btn-group" role="group">
+                            <button type="button" class="btn btn-sm btn-outline-secondary" onclick="toggleTodosTamanhos(${moduloCount})" id="toggleTamanhosBtn_${moduloCount}">
+                                <i class="bi bi-arrows-expand"></i> <span id="toggleTamanhosText_${moduloCount}">Expandir Todos</span>
+                            </button>
+                            <button type="button" class="btn btn-sm btn-outline-success" onclick="adicionarTamanho(${moduloCount})">
+                                <i class="bi bi-plus"></i> Adicionar Tamanho
+                            </button>
+                        </div>
                     </div>
                     <div id="tamanhosContainer_${moduloCount}">
                         <!-- Tamanhos serão adicionados aqui -->
@@ -246,6 +269,78 @@ function removerModulo(moduloId) {
     const noModulosAlert = document.getElementById('noModulosAlert');
     if (container && container.children.length === 0 && noModulosAlert) {
         noModulosAlert.style.display = 'block';
+    }
+}
+
+// Função para expandir/recolher todos os módulos
+function toggleTodosModulos() {
+    const btn = document.getElementById('toggleModulosBtn');
+    const btnText = document.getElementById('toggleModulosText');
+    const btnIcon = btn ? btn.querySelector('i') : null;
+    
+    if (!btn || !btnText || !btnIcon) {
+        console.error('Elementos do botão de módulos não encontrados');
+        return;
+    }
+    
+    modulosColapsados = !modulosColapsados;
+    
+    // Buscar todos os módulos
+    const modulos = document.querySelectorAll('[id^="modulo_"]');
+    
+    modulos.forEach(modulo => {
+        const cardBody = modulo.querySelector('.card-body[id^="cardBody_"]');
+        const toggleBtn = modulo.querySelector('[id^="toggleBtn_"]');
+        const icon = toggleBtn ? toggleBtn.querySelector('i') : null;
+        
+        if (cardBody && toggleBtn && icon) {
+            if (modulosColapsados) {
+                // Recolher módulo
+                cardBody.style.display = 'none';
+                icon.className = 'bi bi-plus-lg';
+                toggleBtn.title = 'Expandir módulo';
+            } else {
+                // Expandir módulo
+                cardBody.style.display = 'block';
+                icon.className = 'bi bi-dash-lg';
+                toggleBtn.title = 'Recolher módulo';
+            }
+        }
+    });
+    
+    // Atualizar botão
+    if (modulosColapsados) {
+        btnText.textContent = 'Expandir Todos';
+        btnIcon.className = 'bi bi-arrows-expand';
+    } else {
+        btnText.textContent = 'Recolher Todos';
+        btnIcon.className = 'bi bi-arrows-collapse';
+    }
+}
+
+// Função para expandir/recolher um módulo individual
+function toggleModuloIndividual(moduloId) {
+    const cardBody = document.getElementById(`cardBody_${moduloId}`);
+    const toggleBtn = document.getElementById(`toggleBtn_${moduloId}`);
+    const icon = toggleBtn ? toggleBtn.querySelector('i') : null;
+    const card = document.getElementById(`modulo_${moduloId}`);
+    
+    if (cardBody && toggleBtn && icon && card) {
+        if (cardBody.style.display === 'none') {
+            // Expandir módulo
+            cardBody.style.display = 'block';
+            icon.className = 'bi bi-dash-lg';
+            toggleBtn.title = 'Recolher módulo';
+            card.classList.remove('modulo-recolhido');
+            card.classList.add('modulo-expandido');
+        } else {
+            // Recolher módulo
+            cardBody.style.display = 'none';
+            icon.className = 'bi bi-plus-lg';
+            toggleBtn.title = 'Expandir módulo';
+            card.classList.remove('modulo-expandido');
+            card.classList.add('modulo-recolhido');
+        }
     }
 }
 
@@ -280,8 +375,26 @@ function adicionarTamanho(moduloId) {
     const tamanhoCount = container.children.length + 1;
     
     const tamanhoHTML = `
-        <div class="card mb-2" id="tamanho_${moduloId}_${tamanhoCount}">
-            <div class="card-body">
+        <div class="card mb-2 tamanho-expandido" id="tamanho_${moduloId}_${tamanhoCount}">
+            <div class="card-header d-flex justify-content-between align-items-center py-2"
+                 style="cursor: pointer; user-select: none; background-color: #e8f5e8 !important; border-bottom: 1px solid #c8e6c9 !important;"
+                 onclick="toggleTamanhoIndividual(${moduloId}, ${tamanhoCount})">
+                <div class="d-flex align-items-center">
+                    <button type="button" class="btn btn-sm btn-outline-secondary me-2" 
+                            onclick="event.stopPropagation(); toggleTamanhoIndividual(${moduloId}, ${tamanhoCount})" 
+                            id="toggleBtnTamanho_${moduloId}_${tamanhoCount}" title="Recolher tamanho">
+                        <i class="bi bi-dash-lg"></i>
+                    </button>
+                    <div class="tamanho-header-container">
+                        <small class="mb-0 fw-medium" id="tamanhoTitle_${moduloId}_${tamanhoCount}">Tamanho ${tamanhoCount}</small>
+                        <div class="tamanho-status-indicator ativo"></div>
+                    </div>
+                </div>
+                <button type="button" class="btn btn-sm btn-danger" onclick="event.stopPropagation(); removerTamanho('tamanho_${moduloId}_${tamanhoCount}')">
+                    <i class="bi bi-trash"></i>
+                </button>
+            </div>
+            <div class="card-body" id="cardBodyTamanho_${moduloId}_${tamanhoCount}">
                 <div class="row">
                     <div class="col-md-3">
                         <div class="form-floating mb-2">
@@ -323,7 +436,7 @@ function adicionarTamanho(moduloId) {
                     </div>
                     <div class="col-md-6">
                         <div class="form-floating mb-2">
-                            <textarea class="form-control" name="tamanho_descricao_${moduloId}" placeholder="Descrição" style="height: 58px;"></textarea>
+                            <textarea class="form-control auto-resize-textarea" name="tamanho_descricao_${moduloId}" placeholder="Descrição" style="height: 58px;"></textarea>
                             <label>Descrição</label>
                         </div>
                     </div>
@@ -346,6 +459,79 @@ function adicionarTamanho(moduloId) {
 function removerTamanho(tamanhoId) {
     const element = document.getElementById(tamanhoId);
     if (element) element.remove();
+}
+
+// Função para expandir/recolher todos os tamanhos de um módulo
+function toggleTodosTamanhos(moduloId) {
+    const btn = document.getElementById(`toggleTamanhosBtn_${moduloId}`);
+    const btnText = document.getElementById(`toggleTamanhosText_${moduloId}`);
+    const btnIcon = btn ? btn.querySelector('i') : null;
+    
+    if (!btn || !btnText || !btnIcon) {
+        console.error('Elementos do botão de tamanhos não encontrados para módulo:', moduloId);
+        return;
+    }
+    
+    // Determinar estado atual baseado no texto do botão
+    const isCollapsed = btnText.textContent.includes('Expandir');
+    
+    // Buscar todos os tamanhos deste módulo
+    const tamanhos = document.querySelectorAll(`#tamanhosContainer_${moduloId} .card`);
+    
+    tamanhos.forEach(tamanho => {
+        const cardBody = tamanho.querySelector('.card-body[id^="cardBodyTamanho_"]');
+        const toggleBtn = tamanho.querySelector('[id^="toggleBtnTamanho_"]');
+        const icon = toggleBtn ? toggleBtn.querySelector('i') : null;
+        
+        if (cardBody && toggleBtn && icon) {
+            if (isCollapsed) {
+                // Expandir
+                cardBody.style.display = 'block';
+                icon.className = 'bi bi-dash-lg';
+                toggleBtn.title = 'Recolher tamanho';
+            } else {
+                // Recolher
+                cardBody.style.display = 'none';
+                icon.className = 'bi bi-plus-lg';
+                toggleBtn.title = 'Expandir tamanho';
+            }
+        }
+    });
+    
+    // Atualizar botão
+    if (isCollapsed) {
+        btnText.textContent = 'Recolher Todos';
+        btnIcon.className = 'bi bi-arrows-collapse';
+    } else {
+        btnText.textContent = 'Expandir Todos';
+        btnIcon.className = 'bi bi-arrows-expand';
+    }
+}
+
+// Função para expandir/recolher um tamanho individual
+function toggleTamanhoIndividual(moduloId, tamanhoId) {
+    const cardBody = document.getElementById(`cardBodyTamanho_${moduloId}_${tamanhoId}`);
+    const toggleBtn = document.getElementById(`toggleBtnTamanho_${moduloId}_${tamanhoId}`);
+    const icon = toggleBtn ? toggleBtn.querySelector('i') : null;
+    const card = document.getElementById(`tamanho_${moduloId}_${tamanhoId}`);
+    
+    if (cardBody && toggleBtn && icon && card) {
+        if (cardBody.style.display === 'none') {
+            // Expandir tamanho
+            cardBody.style.display = 'block';
+            icon.className = 'bi bi-dash-lg';
+            toggleBtn.title = 'Recolher tamanho';
+            card.classList.remove('tamanho-recolhido');
+            card.classList.add('tamanho-expandido');
+        } else {
+            // Recolher tamanho
+            cardBody.style.display = 'none';
+            icon.className = 'bi bi-plus-lg';
+            toggleBtn.title = 'Expandir tamanho';
+            card.classList.remove('tamanho-expandido');
+            card.classList.add('tamanho-recolhido');
+        }
+    }
 }
 
 // Validação específica unificada

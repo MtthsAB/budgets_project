@@ -50,9 +50,16 @@ function toggleCamposPorTipo() {
     // Esconder seção de imagens primeiro
     if (secaoImagens) secaoImagens.style.display = 'none';
     
-    if (!tipoNome) return;
+    // Se nenhum tipo está selecionado, esconder tudo e sair
+    if (!tipoNome || tipoNome === '') {
+        // Chamar função específica para esconder todos os campos
+        if (typeof toggleCamposEspecificos === 'function') {
+            toggleCamposEspecificos(''); // Passa string vazia para esconder tudo
+        }
+        return;
+    }
     
-    // Mostrar seção de imagens para todos os tipos
+    // Mostrar seção de imagens para todos os tipos selecionados
     if (secaoImagens) secaoImagens.style.display = 'block';
     
     // Chamar função específica do produto se existir
