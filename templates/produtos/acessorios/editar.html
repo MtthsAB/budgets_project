@@ -82,6 +82,9 @@ Você está editando o acessório <strong>{{ acessorio.ref_acessorio }} - {{ ace
 </div>
 {% endif %}
 
+<!-- Seção de Imagens Reutilizável -->
+{% include 'produtos/includes/secao_imagens.html' with objeto=acessorio %}
+
 <!-- Produtos Vinculados (Sofás) -->
 <div class="row mt-4">
     <div class="col-12">
@@ -139,48 +142,6 @@ Você está editando o acessório <strong>{{ acessorio.ref_acessorio }} - {{ ace
                     <i class="bi bi-exclamation-triangle"></i>
                     Campo de produtos vinculados não disponível.
                 </div>
-            {% endif %}
-        </div>
-    </div>
-</div>
-
-<!-- Seção de Imagens -->
-<div class="row mt-4">
-    <div class="col-12">
-        <h6 class="mb-3">
-            <i class="bi bi-images"></i> Imagens
-        </h6>
-    </div>
-</div>
-
-<div class="row">
-    <div class="col-md-6">
-        <div class="mb-3">
-            <label for="{{ form.imagem_principal.id_for_label }}" class="form-label">{{ form.imagem_principal.label }}</label>
-            {{ form.imagem_principal }}
-            {% if acessorio.imagem_principal %}
-                <div class="mt-2">
-                    <img src="{{ acessorio.imagem_principal.url }}" alt="Imagem atual" class="img-thumbnail" style="max-height: 100px;">
-                    <small class="text-muted d-block">Imagem atual</small>
-                </div>
-            {% endif %}
-            {% if form.imagem_principal.errors %}
-                <div class="invalid-feedback d-block">{{ form.imagem_principal.errors }}</div>
-            {% endif %}
-        </div>
-    </div>
-    <div class="col-md-6">
-        <div class="mb-3">
-            <label for="{{ form.imagem_secundaria.id_for_label }}" class="form-label">{{ form.imagem_secundaria.label }}</label>
-            {{ form.imagem_secundaria }}
-            {% if acessorio.imagem_secundaria %}
-                <div class="mt-2">
-                    <img src="{{ acessorio.imagem_secundaria.url }}" alt="Imagem atual" class="img-thumbnail" style="max-height: 100px;">
-                    <small class="text-muted d-block">Imagem atual</small>
-                </div>
-            {% endif %}
-            {% if form.imagem_secundaria.errors %}
-                <div class="invalid-feedback d-block">{{ form.imagem_secundaria.errors }}</div>
             {% endif %}
         </div>
     </div>

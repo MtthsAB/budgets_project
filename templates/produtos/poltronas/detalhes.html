@@ -65,7 +65,7 @@
                 <a href="{% url 'poltrona_editar' poltrona.id %}" class="btn btn-warning">
                     <i class="bi bi-pencil"></i> Editar
                 </a>
-                <a href="{% url 'poltronas_lista' %}" class="btn btn-outline-secondary">
+                <a href="{% url 'produtos_lista' %}" class="btn btn-outline-secondary">
                     <i class="bi bi-arrow-left"></i> Voltar
                 </a>
             </div>
@@ -158,6 +158,48 @@
                     </div>
                 </div>
                 {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Características da Poltrona -->
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="bi bi-gear"></i> Características
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-4">
+                        <div class="text-center p-3 border rounded">
+                            <i class="bi bi-palette fs-3 text-info mb-2"></i>
+                            <h6>Cor de Tecido</h6>
+                            <span class="badge {% if poltrona.tem_cor_tecido %}bg-success{% else %}bg-secondary{% endif %}">
+                                {% if poltrona.tem_cor_tecido %}Sim{% else %}Não{% endif %}
+                            </span>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="text-center p-3 border rounded">
+                            <i class="bi bi-check-circle fs-3 text-success mb-2"></i>
+                            <h6>Status</h6>
+                            <span class="badge {% if poltrona.ativo %}bg-success{% else %}bg-danger{% endif %}">
+                                {% if poltrona.ativo %}Ativo{% else %}Inativo{% endif %}
+                            </span>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="text-center p-3 border rounded">
+                            <i class="bi bi-currency-dollar fs-3 text-warning mb-2"></i>
+                            <h6>Preço</h6>
+                            <span class="badge bg-warning text-dark">R$ {{ poltrona.preco|floatformat:2 }}</span>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
     </div>

@@ -103,41 +103,8 @@ Você está editando o sofá <strong>{{ sofa.ref_produto }} - {{ sofa.nome_produ
     </div>
 </div>
 
-<!-- Seção de Imagens -->
-<div class="row mt-4">
-    <div class="col-12">
-        <h6 class="mb-3">
-            <i class="bi bi-images"></i> Imagens
-        </h6>
-    </div>
-</div>
-
-<div class="row">
-    <div class="col-md-6">
-        <div class="mb-3">
-            <label for="imagem_principal" class="form-label">Imagem Principal</label>
-            <input type="file" class="form-control" id="imagem_principal" name="imagem_principal" accept="image/*">
-            {% if sofa.imagem_principal %}
-                <div class="mt-2">
-                    <img src="{{ sofa.imagem_principal.url }}" alt="Imagem atual" class="img-thumbnail" style="max-height: 100px;">
-                    <small class="text-muted d-block">Imagem atual</small>
-                </div>
-            {% endif %}
-        </div>
-    </div>
-    <div class="col-md-6">
-        <div class="mb-3">
-            <label for="imagem_secundaria" class="form-label">Imagem Secundária</label>
-            <input type="file" class="form-control" id="imagem_secundaria" name="imagem_secundaria" accept="image/*">
-            {% if sofa.imagem_secundaria %}
-                <div class="mt-2">
-                    <img src="{{ sofa.imagem_secundaria.url }}" alt="Imagem atual" class="img-thumbnail" style="max-height: 100px;">
-                    <small class="text-muted d-block">Imagem atual</small>
-                </div>
-            {% endif %}
-        </div>
-    </div>
-</div>
+<!-- Seção de Imagens Reutilizável -->
+{% include 'produtos/includes/secao_imagens.html' with objeto=sofa %}
 
 <!-- Módulos do Sofá -->
 {% include 'produtos/includes/secao_modulos_sofa.html' %}

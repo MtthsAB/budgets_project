@@ -345,6 +345,7 @@ class CadeiraForm(forms.ModelForm):
             'peso_kg',
             'preco',
             'ativo',
+            'tem_cor_tecido',
             'imagem_principal',
             'imagem_secundaria',
             'descricao'
@@ -439,6 +440,7 @@ class PoltronaForm(forms.ModelForm):
             'peso_kg',
             'preco',
             'ativo',
+            'tem_cor_tecido',
             'imagem_principal',
             'imagem_secundaria',
             'descricao'

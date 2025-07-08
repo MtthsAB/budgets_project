@@ -594,6 +594,11 @@ class Cadeira(BaseModel):
     
     # Status e imagens
     ativo = models.BooleanField(default=True, verbose_name="Ativo")
+    tem_cor_tecido = models.BooleanField(
+        default=False, 
+        verbose_name="Tem Cor Tecido",
+        help_text="Indica se a cadeira utiliza diferentes cores de tecido"
+    )
     imagem_principal = models.ImageField(
         upload_to='produtos/cadeiras/',
         blank=True,
@@ -707,6 +712,11 @@ class Poltrona(BaseModel):
     
     # Status e imagens
     ativo = models.BooleanField(default=True, verbose_name="Ativo")
+    tem_cor_tecido = models.BooleanField(
+        default=False, 
+        verbose_name="Tem Cor Tecido",
+        help_text="Indica se a poltrona utiliza diferentes cores de tecido"
+    )
     imagem_principal = models.ImageField(
         upload_to='produtos/poltronas/',
         blank=True,

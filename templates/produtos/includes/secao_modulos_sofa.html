@@ -70,15 +70,9 @@
                                     <label>Braço (cm)</label>
                                 </div>
                             </div>
-                            <div class="col-md-4">
-                                <div class="mb-3">
-                                    <label class="form-label">Imagem do Módulo</label>
-                                    <input type="file" class="form-control" name="modulo_imagem_principal_{{ forloop.counter }}" 
-                                           accept="image/*">
-                                    {% if modulo.imagem_principal %}
-                                        <small class="text-muted">Imagem atual: {{ modulo.imagem_principal.name }}</small>
-                                    {% endif %}
-                                </div>
+                            <div class="col-md-12">
+                                <!-- Seção de Imagens do Módulo -->
+                                {% include 'produtos/includes/secao_imagens_modulo.html' with modulo=modulo modulo_index=forloop.counter %}
                             </div>
                         </div>
                         

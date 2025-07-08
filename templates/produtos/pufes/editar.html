@@ -103,39 +103,6 @@ Você está editando o pufe <strong>{{ pufe.ref_pufe }} - {{ pufe.nome }}</stron
 </div>
 {% endif %}
 
-<!-- Seção de Imagens -->
-<div class="row mt-4">
-    <div class="col-12">
-        <h6 class="mb-3">
-            <i class="bi bi-images"></i> Imagens
-        </h6>
-    </div>
-</div>
-
-<div class="row">
-    <div class="col-md-6">
-        <div class="mb-3">
-            <label for="{{ form.imagem_principal.id_for_label }}" class="form-label">{{ form.imagem_principal.label }}</label>
-            {{ form.imagem_principal }}
-            {% if pufe.imagem_principal %}
-                <div class="mt-2">
-                    <img src="{{ pufe.imagem_principal.url }}" alt="Imagem atual" class="img-thumbnail" style="max-height: 100px;">
-                    <small class="text-muted d-block">Imagem atual</small>
-                </div>
-            {% endif %}
-        </div>
-    </div>
-    <div class="col-md-6">
-        <div class="mb-3">
-            <label for="{{ form.imagem_secundaria.id_for_label }}" class="form-label">{{ form.imagem_secundaria.label }}</label>
-            {{ form.imagem_secundaria }}
-            {% if pufe.imagem_secundaria %}
-                <div class="mt-2">
-                    <img src="{{ pufe.imagem_secundaria.url }}" alt="Imagem atual" class="img-thumbnail" style="max-height: 100px;">
-                    <small class="text-muted d-block">Imagem atual</small>
-                </div>
-            {% endif %}
-        </div>
-    </div>
-</div>
+<!-- Seção de Imagens Reutilizável -->
+{% include 'produtos/includes/secao_imagens.html' with objeto=pufe %}
 {% endblock %}

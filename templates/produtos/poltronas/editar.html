@@ -82,11 +82,19 @@ Você está editando a poltrona <strong>{{ poltrona.ref_poltrona }} - {{ poltron
             <label for="{{ form.preco.id_for_label }}">{{ form.preco.label }}</label>
         </div>
     </div>
-    <div class="col-md-6">
+    <div class="col-md-3">
         <div class="form-check form-switch mt-3">
             {{ form.ativo }}
             <label class="form-check-label" for="{{ form.ativo.id_for_label }}">
                 {{ form.ativo.label }}
+            </label>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="form-check form-switch mt-3">
+            {{ form.tem_cor_tecido }}
+            <label class="form-check-label" for="{{ form.tem_cor_tecido.id_for_label }}">
+                {{ form.tem_cor_tecido.label }}
             </label>
         </div>
     </div>
@@ -103,39 +111,6 @@ Você está editando a poltrona <strong>{{ poltrona.ref_poltrona }} - {{ poltron
 </div>
 {% endif %}
 
-<!-- Seção de Imagens -->
-<div class="row mt-4">
-    <div class="col-12">
-        <h6 class="mb-3">
-            <i class="bi bi-images"></i> Imagens
-        </h6>
-    </div>
-</div>
-
-<div class="row">
-    <div class="col-md-6">
-        <div class="mb-3">
-            <label for="{{ form.imagem_principal.id_for_label }}" class="form-label">{{ form.imagem_principal.label }}</label>
-            {{ form.imagem_principal }}
-            {% if poltrona.imagem_principal %}
-                <div class="mt-2">
-                    <img src="{{ poltrona.imagem_principal.url }}" alt="Imagem atual" class="img-thumbnail" style="max-height: 100px;">
-                    <small class="text-muted d-block">Imagem atual</small>
-                </div>
-            {% endif %}
-        </div>
-    </div>
-    <div class="col-md-6">
-        <div class="mb-3">
-            <label for="{{ form.imagem_secundaria.id_for_label }}" class="form-label">{{ form.imagem_secundaria.label }}</label>
-            {{ form.imagem_secundaria }}
-            {% if poltrona.imagem_secundaria %}
-                <div class="mt-2">
-                    <img src="{{ poltrona.imagem_secundaria.url }}" alt="Imagem atual" class="img-thumbnail" style="max-height: 100px;">
-                    <small class="text-muted d-block">Imagem atual</small>
-                </div>
-            {% endif %}
-        </div>
-    </div>
-</div>
+<!-- Seção de Imagens Reutilizável -->
+{% include 'produtos/includes/secao_imagens.html' with objeto=poltrona %}
 {% endblock %}

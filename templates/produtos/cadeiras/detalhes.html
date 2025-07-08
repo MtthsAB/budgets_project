@@ -179,13 +179,48 @@
     </div>
 </div>
 
+<!-- Características da Cadeira -->
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="bi bi-gear"></i> Características
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="text-center p-3 border rounded">
+                            <i class="bi bi-palette fs-3 text-info mb-2"></i>
+                            <h6>Cor de Tecido</h6>
+                            <span class="badge {% if cadeira.tem_cor_tecido %}bg-success{% else %}bg-secondary{% endif %}">
+                                {% if cadeira.tem_cor_tecido %}Sim{% else %}Não{% endif %}
+                            </span>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="text-center p-3 border rounded">
+                            <i class="bi bi-check-circle fs-3 text-success mb-2"></i>
+                            <h6>Status</h6>
+                            <span class="badge {% if cadeira.ativo %}bg-success{% else %}bg-danger{% endif %}">
+                                {% if cadeira.ativo %}Ativo{% else %}Inativo{% endif %}
+                            </span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
 <!-- Especificações Técnicas -->
 <div class="row mb-4">
     <div class="col-12">
         <div class="card">
             <div class="card-header">
                 <h5 class="mb-0">
-                    <i class="bi bi-gear"></i> Especificações Técnicas
+                    <i class="bi bi-wrench"></i> Especificações Técnicas
                 </h5>
             </div>
             <div class="card-body">

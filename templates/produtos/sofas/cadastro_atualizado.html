@@ -186,61 +186,8 @@
                     </h5>
                 </div>
                 <div class="card-body">
-                    <div class="row">
-                        <!-- Imagem Principal - Espaço aumentado -->
-                        <div class="col-md-8">
-                            <div class="mb-3">
-                                <label for="imagem_principal" class="form-label fw-bold">
-                                    <i class="bi bi-image"></i> Imagem Principal
-                                </label>
-                                <div class="image-upload-area" onclick="document.getElementById('imagem_principal').click()">
-                                    <input type="file" class="d-none" id="imagem_principal" name="imagem_principal" 
-                                           accept="image/*" onchange="previewImage(this, 'preview_principal')">
-                                    <div id="preview_principal" style="display: none;">
-                                        <div class="image-container">
-                                            <img id="img_preview_principal" src="" alt="Preview" class="image-preview">
-                                            <!-- Botão para imagem secundária -->
-                                            <button type="button" class="btn btn-sm btn-outline-primary secondary-image-btn" 
-                                                    onclick="event.stopPropagation(); document.getElementById('imagem_secundaria').click()">
-                                                <i class="bi bi-plus"></i> 2ª Imagem
-                                            </button>
-                                        </div>
-                                    </div>
-                                    <div id="upload_text_principal">
-                                        <i class="bi bi-cloud-upload display-4 text-primary"></i>
-                                        <p class="mb-0 mt-2">Clique para adicionar a imagem principal</p>
-                                        <small class="text-muted">JPG, PNG, GIF (máx. 5MB)</small>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                        
-                        <!-- Área para Segunda Imagem -->
-                        <div class="col-md-4">
-                            <div class="mb-3">
-                                <input type="file" class="d-none" id="imagem_secundaria" name="imagem_secundaria" 
-                                       accept="image/*" onchange="previewImage(this, 'preview_secundaria')">
-                                <div id="preview_secundaria" style="display: none;">
-                                    <label class="form-label fw-bold">
-                                        <i class="bi bi-image"></i> Segunda Imagem
-                                    </label>
-                                    <img id="img_preview_secundaria" src="" alt="Preview" 
-                                         class="img-thumbnail border border-primary" style="max-width: 100%; max-height: 200px;">
-                                    <button type="button" class="btn btn-sm btn-outline-danger mt-2" 
-                                            onclick="removeSecondaryImage()">
-                                        <i class="bi bi-trash"></i> Remover
-                                    </button>
-                                </div>
-                                <div class="text-end mt-3">
-                                    <button type="button" class="btn btn-outline-primary btn-sm btn-add-image" 
-                                            onclick="document.getElementById('imagem_secundaria').click()"
-                                            title="Adicionar outra imagem">
-                                        <i class="bi bi-camera-fill"></i><i class="bi bi-plus-circle-fill" style="font-size: 0.7em; margin-left: -3px;"></i>
-                                    </button>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
+                    <!-- Seção de Imagens Reutilizável -->
+                    {% include 'produtos/includes/secao_imagens.html' with objeto=None %}
                 </div>
             </div>
         </div>

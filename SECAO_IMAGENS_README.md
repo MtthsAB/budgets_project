@@ -97,7 +97,18 @@ imagem_secundaria = models.ImageField(blank=True, null=True)
 4. **Menos código**: Reduz duplicação massivamente
 
 ## 📝 Templates Atualizados
-- ✅ `templates/produtos/cadeiras/cadastro.html`
+- ✅ `templates/produtos/sofas/editar.html`
+- ✅ `templates/produtos/cadeiras/editar.html`
+- ✅ `templates/produtos/acessorios/editar.html`
+- ✅ `templates/produtos/banquetas/editar.html`
+- ✅ `templates/produtos/poltronas/editar.html`
+- ✅ `templates/produtos/almofadas/editar.html`
+- ✅ `templates/produtos/pufes/editar.html`
+- ✅ `templates/produtos/editar.html`
+- ✅ `templates/produtos/editar_novo.html`
+- ✅ `templates/produtos/sofas/cadastro_atualizado.html`
+- ✅ `templates/produtos/includes/secao_modulos_sofa.html` (para módulos)
+- ✅ Todos os templates de cadastro já estavam corretos
 - ✅ `templates/produtos/banquetas/cadastro.html`
 - ✅ `templates/produtos/sofas/cadastro.html`
 - 🎯 Pronto para novos produtos!
