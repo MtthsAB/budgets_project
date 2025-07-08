@@ -1,0 +1,974 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{{ titulo }} - Sistema de Produtos{% endblock %}
+
+{% block extra_css %}
+<style>
+    .item-orcamento {
+        border: 1px solid #dee2e6;
+        border-radius: 0.375rem;
+        padding: 1rem;
+        margin-bottom: 1rem;
+        background-color: #f8f9fa;
+    }
+    
+    .totais-orcamento {
+        position: sticky;
+        top: 20px;
+    }
+    
+    .busca-cliente, .busca-produto {
+        position: relative;
+    }
+    
+    .resultados-busca {
+        position: absolute;
+        top: 100%;
+        left: 0;
+        right: 0;
+        z-index: 1000;
+        background: white;
+        border: 1px solid #dee2e6;
+        border-radius: 0.375rem;
+        max-height: 200px;
+        overflow-y: auto;
+        display: none;
+    }
+    
+    .resultado-item {
+        padding: 0.5rem;
+        cursor: pointer;
+        border-bottom: 1px solid #f8f9fa;
+    }
+    
+    .resultado-item:hover {
+        background-color: #f8f9fa;
+    }
+    
+    .resultado-item:last-child {
+        border-bottom: none;
+    }
+    
+    /* Esconder campos originais de desconto e acréscimo */
+    #id_desconto_valor,
+    #id_desconto_percentual,
+    #id_acrescimo_valor,
+    #id_acrescimo_percentual {
+        display: none !important;
+    }
+    
+    /* Estilos para campos unificados */
+    .input-group .form-select {
+        flex: 0 0 auto;
+    }
+    
+    /* Estilo para seção de dependências do produto */
+    .produto-dependencias {
+        background-color: #f8f9fa;
+        border: 1px solid #dee2e6;
+        border-radius: 0.375rem;
+        padding: 1rem;
+        margin-top: 1rem;
+    }
+    
+    .loading-spinner {
+        text-align: center;
+        padding: 2rem;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h1 class="h3 mb-0">
+                    <i class="bi bi-receipt text-primary"></i> {{ titulo }}
+                </h1>
+                <div>
+                    {% if orcamento %}
+                        <a href="{% url 'orcamentos:visualizar' orcamento.pk %}" class="btn btn-outline-info">
+                            <i class="bi bi-eye"></i> Visualizar
+                        </a>
+                        <a href="{% url 'orcamentos:gerar_pdf' orcamento.pk %}" class="btn btn-outline-success" target="_blank">
+                            <i class="bi bi-file-pdf"></i> Gerar PDF
+                        </a>
+                    {% endif %}
+                    <a href="{% url 'orcamentos:listar' %}" class="btn btn-outline-secondary">
+                        <i class="bi bi-arrow-left"></i> Voltar
+                    </a>
+                </div>
+            </div>
+
+            <div class="row">
+                <div class="col-lg-8">
+                    <!-- Formulário Principal -->
+                    <div class="card mb-4">
+                        <div class="card-header">
+                            <i class="bi bi-info-circle"></i> Dados do Orçamento
+                        </div>
+                        <div class="card-body">
+                            <form method="post" id="orcamento-form">
+                                {% csrf_token %}
+                                
+                                {% if form.non_field_errors %}
+                                    <div class="alert alert-danger">
+                                        {{ form.non_field_errors }}
+                                    </div>
+                                {% endif %}
+
+                                <div class="row g-3">
+                                    <!-- Cliente -->
+                                    <div class="col-md-6">
+                                        <label for="{{ form.cliente.id_for_label }}" class="form-label">
+                                            {{ form.cliente.label }}
+                                        </label>
+                                        <div class="input-group">
+                                            {{ form.cliente }}
+                                            <a href="{% url 'cliente_cadastro' %}" class="btn btn-outline-secondary" target="_blank">
+                                                <i class="bi bi-plus-circle"></i>
+                                            </a>
+                                        </div>
+                                        {% if form.cliente.errors %}
+                                            <div class="text-danger small">{{ form.cliente.errors }}</div>
+                                        {% endif %}
+                                    </div>
+
+                                    <!-- Vendedor -->
+                                    <div class="col-md-6">
+                                        <label class="form-label">Vendedor</label>
+                                        <input type="text" class="form-control" value="{{ user.get_full_name }}" readonly>
+                                        <small class="text-muted">Vendedor responsável pelo orçamento</small>
+                                    </div>
+
+                                    <!-- Faixa de Preço -->
+                                    <div class="col-md-4">
+                                        <label for="{{ form.faixa_preco.id_for_label }}" class="form-label">
+                                            {{ form.faixa_preco.label }}
+                                        </label>
+                                        {{ form.faixa_preco }}
+                                        {% if form.faixa_preco.errors %}
+                                            <div class="text-danger small">{{ form.faixa_preco.errors }}</div>
+                                        {% endif %}
+                                    </div>
+
+                                    <!-- Forma de Pagamento -->
+                                    <div class="col-md-4">
+                                        <label for="{{ form.forma_pagamento.id_for_label }}" class="form-label">
+                                            {{ form.forma_pagamento.label }}
+                                        </label>
+                                        {{ form.forma_pagamento }}
+                                        {% if form.forma_pagamento.errors %}
+                                            <div class="text-danger small">{{ form.forma_pagamento.errors }}</div>
+                                        {% endif %}
+                                    </div>
+
+                                    <!-- Status -->
+                                    <div class="col-md-4">
+                                        <label for="{{ form.status.id_for_label }}" class="form-label">
+                                            {{ form.status.label }}
+                                        </label>
+                                        {{ form.status }}
+                                        {% if form.status.errors %}
+                                            <div class="text-danger small">{{ form.status.errors }}</div>
+                                        {% endif %}
+                                    </div>
+
+                                    <!-- Datas -->
+                                    <div class="col-md-6">
+                                        <label for="{{ form.data_entrega.id_for_label }}" class="form-label">
+                                            {{ form.data_entrega.label }}
+                                        </label>
+                                        {{ form.data_entrega }}
+                                        {% if form.data_entrega.errors %}
+                                            <div class="text-danger small">{{ form.data_entrega.errors }}</div>
+                                        {% endif %}
+                                    </div>
+
+                                    <div class="col-md-6">
+                                        <label for="{{ form.data_validade.id_for_label }}" class="form-label">
+                                            {{ form.data_validade.label }}
+                                        </label>
+                                        {{ form.data_validade }}
+                                        {% if form.data_validade.errors %}
+                                            <div class="text-danger small">{{ form.data_validade.errors }}</div>
+                                        {% endif %}
+                                    </div>
+
+                                    <!-- Descontos e Acréscimos Unificados -->
+                                    <div class="col-md-6">
+                                        <label class="form-label">
+                                            <i class="bi bi-dash-circle"></i> Desconto
+                                        </label>
+                                        <div class="input-group">
+                                            <input type="number" class="form-control" id="desconto_valor_unificado" 
+                                                   step="0.01" min="0" placeholder="0,00" value="0">
+                                            <select class="form-select" id="desconto_tipo" style="max-width: 80px;">
+                                                <option value="valor">R$</option>
+                                                <option value="percentual">%</option>
+                                            </select>
+                                        </div>
+                                        <!-- Campos originais ocultos -->
+                                        {{ form.desconto_valor }}
+                                        {{ form.desconto_percentual }}
+                                        {% if form.desconto_valor.errors or form.desconto_percentual.errors %}
+                                            <div class="text-danger small">{{ form.desconto_valor.errors }}{{ form.desconto_percentual.errors }}</div>
+                                        {% endif %}
+                                    </div>
+
+                                    <div class="col-md-6">
+                                        <label class="form-label">
+                                            <i class="bi bi-plus-circle"></i> Acréscimo
+                                        </label>
+                                        <div class="input-group">
+                                            <input type="number" class="form-control" id="acrescimo_valor_unificado" 
+                                                   step="0.01" min="0" placeholder="0,00" value="0">
+                                            <select class="form-select" id="acrescimo_tipo" style="max-width: 80px;">
+                                                <option value="valor">R$</option>
+                                                <option value="percentual">%</option>
+                                            </select>
+                                        </div>
+                                        <!-- Campos originais ocultos -->
+                                        {{ form.acrescimo_valor }}
+                                        {{ form.acrescimo_percentual }}
+                                        {% if form.acrescimo_valor.errors or form.acrescimo_percentual.errors %}
+                                            <div class="text-danger small">{{ form.acrescimo_valor.errors }}{{ form.acrescimo_percentual.errors }}</div>
+                                        {% endif %}
+                                    </div>
+
+                                    <!-- Observações -->
+                                    <div class="col-12">
+                                        <label for="{{ form.observacoes.id_for_label }}" class="form-label">
+                                            {{ form.observacoes.label }}
+                                        </label>
+                                        {{ form.observacoes }}
+                                        {% if form.observacoes.errors %}
+                                            <div class="text-danger small">{{ form.observacoes.errors }}</div>
+                                        {% endif %}
+                                    </div>
+                                </div>
+
+                                <div class="mt-3">
+                                    <button type="submit" class="btn btn-primary">
+                                        <i class="bi bi-save"></i> Salvar Orçamento
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+
+                    <!-- Seção de Itens do Pedido -->
+                    <div class="card mt-4">
+                        <div class="card-header d-flex justify-content-between align-items-center">
+                            <h5 class="mb-0">
+                                <i class="bi bi-cart-plus"></i> Itens do Pedido
+                            </h5>
+                            <button type="button" class="btn btn-success btn-sm" id="btnAdicionarItem" data-bs-toggle="modal" data-bs-target="#modalAdicionarItem">
+                                <i class="bi bi-plus-circle"></i> Adicionar Item
+                            </button>
+                        </div>
+                        <div class="card-body">
+                            <div id="itens-pedido">
+                                <div class="text-muted text-center py-4" id="sem-itens">
+                                    <i class="bi bi-cart-x fs-1"></i>
+                                    <p class="mt-2">Nenhum item adicionado ainda.<br>
+                                    Clique em "Adicionar Item" para começar.</p>
+                                </div>
+                                
+                                <!-- Tabela de itens será inserida aqui via JavaScript -->
+                                <div class="table-responsive" id="tabela-itens" style="display: none;">
+                                    <table class="table table-striped">
+                                        <thead>
+                                            <tr>
+                                                <th>Produto</th>
+                                                <th>Referência</th>
+                                                <th>Quantidade</th>
+                                                <th>Preço Unit.</th>
+                                                <th>Total</th>
+                                                <th width="100">Ações</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="tbody-itens">
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                            
+                            <!-- Resumo dos totais -->
+                            <div class="row mt-4 border-top pt-3" id="resumo-totais" style="display: none;">
+                                <div class="col-12">
+                                    <div class="card">
+                                        <div class="card-header bg-primary text-white">
+                                            <h6 class="mb-0"><i class="bi bi-calculator"></i> Resumo Financeiro do Pedido</h6>
+                                        </div>
+                                        <div class="card-body">
+                                            <div class="row">
+                                                <div class="col-md-6">
+                                                    <table class="table table-sm table-borderless">
+                                                        <tr>
+                                                            <td><strong>Subtotal dos Itens:</strong></td>
+                                                            <td class="text-end"><span id="subtotal">R$ 0,00</span></td>
+                                                        </tr>
+                                                        <tr class="text-danger">
+                                                            <td><strong>Desconto Aplicado:</strong></td>
+                                                            <td class="text-end">- <span id="desconto">R$ 0,00</span></td>
+                                                        </tr>
+                                                        <tr class="text-success">
+                                                            <td><strong>Acréscimo Aplicado:</strong></td>
+                                                            <td class="text-end">+ <span id="acrescimo">R$ 0,00</span></td>
+                                                        </tr>
+                                                    </table>
+                                                </div>
+                                                <div class="col-md-6">
+                                                    <div class="d-flex justify-content-center align-items-center h-100">
+                                                        <div class="text-center">
+                                                            <div class="text-muted">Valor Total do Pedido</div>
+                                                            <h3 class="text-primary mb-0"><span id="total">R$ 0,00</span></h3>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+
+                <!-- Sidebar com Totais -->
+                <div class="col-lg-4">
+                    {% if orcamento %}
+                    <div class="card totais-orcamento">
+                        <div class="card-header">
+                            <i class="bi bi-calculator"></i> Totais do Orçamento
+                        </div>
+                        <div class="card-body">
+                            <div class="row g-2">
+                                <div class="col-6">
+                                    <small class="text-muted">Subtotal:</small>
+                                </div>
+                                <div class="col-6 text-end">
+                                    <strong id="subtotal">R$ {{ orcamento.get_subtotal|floatformat:2 }}</strong>
+                                </div>
+                                
+                                <div class="col-6">
+                                    <small class="text-muted">Desconto:</small>
+                                </div>
+                                <div class="col-6 text-end">
+                                    <span id="desconto" class="text-danger">- R$ {{ orcamento.get_total_desconto|floatformat:2 }}</span>
+                                </div>
+                                
+                                <div class="col-6">
+                                    <small class="text-muted">Acréscimo:</small>
+                                </div>
+                                <div class="col-6 text-end">
+                                    <span id="acrescimo" class="text-success">+ R$ {{ orcamento.get_total_acrescimo|floatformat:2 }}</span>
+                                </div>
+                                
+                                <div class="col-12">
+                                    <hr>
+                                </div>
+                                
+                                <div class="col-6">
+                                    <strong>Total Final:</strong>
+                                </div>
+                                <div class="col-6 text-end">
+                                    <strong id="total-final" class="text-primary fs-5">R$ {{ orcamento.get_total_final|floatformat:2 }}</strong>
+                                </div>
+                                
+                                <div class="col-12">
+                                    <hr>
+                                </div>
+                                
+                                <div class="col-6">
+                                    <small class="text-muted">Peso Total:</small>
+                                </div>
+                                <div class="col-6 text-end">
+                                    <small id="peso-total">{{ orcamento.get_peso_total|floatformat:2 }} kg</small>
+                                </div>
+                                
+                                <div class="col-6">
+                                    <small class="text-muted">Cubagem Total:</small>
+                                </div>
+                                <div class="col-6 text-end">
+                                    <small id="cubagem-total">{{ orcamento.get_cubagem_total|floatformat:3 }} m³</small>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal para Adicionar Item -->
+<div class="modal fade" id="modalAdicionarItem" tabindex="-1">
+    <div class="modal-dialog modal-xl">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">
+                    <i class="bi bi-plus-circle"></i> Adicionar Item ao Pedido
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="form-adicionar-item">
+                    {% csrf_token %}
+                    
+                    <!-- Seleção do Tipo de Produto -->
+                    <div class="mb-3">
+                        <label for="tipo-produto" class="form-label">
+                            <i class="bi bi-tags"></i> Tipo de Produto *
+                        </label>
+                        <select class="form-select" id="tipo-produto" required>
+                            <option value="">Selecione o tipo de produto...</option>
+                            <option value="sofa">Sofás</option>
+                            <option value="banqueta">Banquetas</option>
+                            <option value="cadeira">Cadeiras</option>
+                            <option value="poltrona">Poltronas</option>
+                            <option value="pufe">Pufes</option>
+                            <option value="almofada">Almofadas</option>
+                            <option value="acessorio">Acessórios</option>
+                        </select>
+                    </div>
+                    
+                    <!-- Seleção do Produto -->
+                    <div class="mb-3" id="selecao-produto" style="display: none;">
+                        <label for="produto" class="form-label">
+                            <i class="bi bi-box-seam"></i> Produto *
+                        </label>
+                        <select class="form-select" id="produto" required>
+                            <option value="">Carregando produtos...</option>
+                        </select>
+                        <div class="form-text">
+                            <small id="info-produto" class="text-muted"></small>
+                        </div>
+                    </div>
+                    
+                    <!-- Dependências do Produto -->
+                    <div class="mb-3" id="produto-dependencias" style="display: none;">
+                        <div id="dependencias-conteudo">
+                            <!-- Conteúdo será carregado dinamicamente -->
+                        </div>
+                    </div>
+                    
+                    <!-- Quantidade -->
+                    <div class="mb-3">
+                        <label for="quantidade" class="form-label">
+                            <i class="bi bi-123"></i> Quantidade *
+                        </label>
+                        <input type="number" class="form-control" id="quantidade" value="1" min="1" required>
+                    </div>
+                    
+                    <!-- Preço Unitário -->
+                    <div class="mb-3">
+                        <label for="preco-unitario" class="form-label">
+                            <i class="bi bi-currency-dollar"></i> Preço Unitário (R$) *
+                        </label>
+                        <input type="number" class="form-control" id="preco-unitario" 
+                               step="0.01" min="0" required readonly>
+                        <div class="form-text">
+                            <small class="text-muted">Preço calculado automaticamente</small>
+                        </div>
+                    </div>
+                    
+                    <!-- Observações -->
+                    <div class="mb-3">
+                        <label for="observacoes" class="form-label">
+                            <i class="bi bi-chat-left-text"></i> Observações
+                        </label>
+                        <textarea class="form-control" id="observacoes" rows="3" 
+                                  placeholder="Observações adicionais sobre o item..."></textarea>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                    <i class="bi bi-x-circle"></i> Cancelar
+                </button>
+                <button type="button" class="btn btn-success" id="btn-confirmar-item">
+                    <i class="bi bi-check-circle"></i> Adicionar Item
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    console.log('DOM carregado - Inicializando modal Adicionar Item');
+    
+    // Inicializar campos unificados de desconto e acréscimo
+    inicializarCamposUnificados();
+    
+    // Variáveis globais para o modal
+    let itensPedido = [];
+    let contadorItens = 0;
+    
+    // Elementos do DOM
+    const tipoSelect = document.getElementById('tipo-produto');
+    const produtoSelect = document.getElementById('produto');
+    const quantidadeInput = document.getElementById('quantidade');
+    const precoInput = document.getElementById('preco-unitario');
+    const infoRoduto = document.getElementById('info-produto');
+    const selecaoProduto = document.getElementById('selecao-produto');
+    const produtoDependencias = document.getElementById('produto-dependencias');
+    const dependenciasConteudo = document.getElementById('dependencias-conteudo');
+    const btnConfirmar = document.getElementById('btn-confirmar-item');
+    
+    // Função para inicializar campos unificados
+    function inicializarCamposUnificados() {
+        // Configurar desconto
+        const descontoValorUnif = document.getElementById('desconto_valor_unificado');
+        const descontoTipo = document.getElementById('desconto_tipo');
+        const descontoValorOrig = document.getElementById('id_desconto_valor');
+        const descontoPercOrig = document.getElementById('id_desconto_percentual');
+        
+        // Configurar acréscimo
+        const acrescimoValorUnif = document.getElementById('acrescimo_valor_unificado');
+        const acrescimoTipo = document.getElementById('acrescimo_tipo');
+        const acrescimoValorOrig = document.getElementById('id_acrescimo_valor');
+        const acrescimoPercOrig = document.getElementById('id_acrescimo_percentual');
+        
+        // Verificar se os elementos existem antes de continuar
+        if (!descontoValorUnif || !acrescimoValorUnif) {
+            console.log('Campos unificados não encontrados, pulando inicialização');
+            return;
+        }
+        
+        // Carregar valores iniciais
+        if (descontoValorOrig && descontoValorOrig.value && parseFloat(descontoValorOrig.value) > 0) {
+            descontoValorUnif.value = descontoValorOrig.value;
+            descontoTipo.value = 'valor';
+        } else if (descontoPercOrig && descontoPercOrig.value && parseFloat(descontoPercOrig.value) > 0) {
+            descontoValorUnif.value = descontoPercOrig.value;
+            descontoTipo.value = 'percentual';
+        }
+        
+        if (acrescimoValorOrig && acrescimoValorOrig.value && parseFloat(acrescimoValorOrig.value) > 0) {
+            acrescimoValorUnif.value = acrescimoValorOrig.value;
+            acrescimoTipo.value = 'valor';
+        } else if (acrescimoPercOrig && acrescimoPercOrig.value && parseFloat(acrescimoPercOrig.value) > 0) {
+            acrescimoValorUnif.value = acrescimoPercOrig.value;
+            acrescimoTipo.value = 'percentual';
+        }
+        
+        // Event listeners para sincronizar campos
+        descontoValorUnif.addEventListener('input', function() {
+            const valor = parseFloat(this.value) || 0;
+            const tipo = descontoTipo.value;
+            
+            if (tipo === 'valor') {
+                descontoValorOrig.value = valor;
+                descontoPercOrig.value = '';
+            } else {
+                descontoPercOrig.value = valor;
+                descontoValorOrig.value = '';
+            }
+        });
+        
+        descontoTipo.addEventListener('change', function() {
+            const valor = parseFloat(descontoValorUnif.value) || 0;
+            
+            if (this.value === 'valor') {
+                descontoValorOrig.value = valor;
+                descontoPercOrig.value = '';
+            } else {
+                descontoPercOrig.value = valor;
+                descontoValorOrig.value = '';
+            }
+        });
+        
+        acrescimoValorUnif.addEventListener('input', function() {
+            const valor = parseFloat(this.value) || 0;
+            const tipo = acrescimoTipo.value;
+            
+            if (tipo === 'valor') {
+                acrescimoValorOrig.value = valor;
+                acrescimoPercOrig.value = '';
+            } else {
+                acrescimoPercOrig.value = valor;
+                acrescimoValorOrig.value = '';
+            }
+        });
+        
+        acrescimoTipo.addEventListener('change', function() {
+            const valor = parseFloat(acrescimoValorUnif.value) || 0;
+            
+            if (this.value === 'valor') {
+                acrescimoValorOrig.value = valor;
+                acrescimoPercOrig.value = '';
+            } else {
+                acrescimoPercOrig.value = valor;
+                acrescimoValorOrig.value = '';
+            }
+        });
+    }
+    
+    // Event listeners para o modal
+    if (tipoSelect) {
+        tipoSelect.addEventListener('change', function() {
+            const tipo = this.value;
+            if (tipo) {
+                carregarProdutosPorTipo(tipo);
+            } else {
+                if (selecaoProduto) selecaoProduto.style.display = 'none';
+                if (produtoDependencias) produtoDependencias.style.display = 'none';
+            }
+        });
+    }
+    
+    if (produtoSelect) {
+        produtoSelect.addEventListener('change', function() {
+            const produtoId = this.value;
+            if (produtoId) {
+                carregarDetalhesProduto(produtoId);
+            } else {
+                if (produtoDependencias) produtoDependencias.style.display = 'none';
+            }
+        });
+    }
+    
+    // Função para carregar produtos por tipo
+    function carregarProdutosPorTipo(tipo) {
+        if (!produtoSelect) return;
+        
+        fetch(`/orcamentos/produtos-por-tipo/?tipo=${tipo}`)
+            .then(response => response.json())
+            .then(data => {
+                produtoSelect.innerHTML = '<option value="">Selecione o produto...</option>';
+                
+                if (data.produtos && data.produtos.length > 0) {
+                    data.produtos.forEach(produto => {
+                        const option = document.createElement('option');
+                        option.value = produto.id;
+                        option.textContent = `${produto.nome_produto} - ${produto.ref_produto}`;
+                        produtoSelect.appendChild(option);
+                    });
+                }
+                
+                if (selecaoProduto) selecaoProduto.style.display = 'block';
+            })
+            .catch(error => {
+                console.error('Erro ao carregar produtos:', error);
+                alert('Erro ao carregar produtos');
+            });
+    }
+    
+    // Função para carregar detalhes do produto
+    function carregarDetalhesProduto(produtoId) {
+        fetch(`/orcamentos/detalhes-produto/?produto_id=${produtoId}`)
+            .then(response => response.json())
+            .then(data => {
+                if (data.erro) {
+                    alert('Erro ao carregar detalhes do produto');
+                    return;
+                }
+                
+                const produto = data.produto;
+                
+                // Atualizar informações do produto
+                if (infoRoduto) {
+                    infoRoduto.textContent = `Preço: R$ ${produto.preco ? produto.preco.toFixed(2) : '0,00'}`;
+                }
+                
+                if (precoInput) {
+                    precoInput.value = produto.preco ? produto.preco.toFixed(2) : '0.00';
+                }
+                
+                // Mostrar dependências se necessário
+                if (produto.tem_modulos && produto.modulos) {
+                    mostrarModulosSofa(produto.modulos);
+                } else {
+                    if (produtoDependencias) produtoDependencias.style.display = 'none';
+                }
+            })
+            .catch(error => {
+                console.error('Erro ao carregar detalhes do produto:', error);
+                alert('Erro ao carregar detalhes do produto');
+            });
+    }
+    
+    // Função para mostrar módulos de sofá
+    function mostrarModulosSofa(modulos) {
+        if (!dependenciasConteudo) return;
+        
+        let html = '<h6>Módulos disponíveis:</h6>';
+        
+        modulos.forEach(modulo => {
+            html += `
+                <div class="mb-3">
+                    <div class="form-check">
+                        <input class="form-check-input modulo-check" type="checkbox" 
+                               id="modulo_${modulo.id}" data-modulo-id="${modulo.id}">
+                        <label class="form-check-label" for="modulo_${modulo.id}">
+                            ${modulo.nome}
+                        </label>
+                    </div>
+                    <div class="ms-4">
+                        <small class="text-muted">${modulo.descricao}</small>
+                        <select class="form-select form-select-sm mt-1 tamanho-modulo" 
+                                data-modulo-id="${modulo.id}" style="display: none;">
+                            <option value="">Selecione o tamanho...</option>
+            `;
+            
+            if (modulo.tamanhos && modulo.tamanhos.length > 0) {
+                modulo.tamanhos.forEach(tamanho => {
+                    html += `<option value="${tamanho.id}" data-preco="${tamanho.preco}">
+                        ${tamanho.largura_total}cm - R$ ${tamanho.preco.toFixed(2)}
+                    </option>`;
+                });
+            }
+            
+            html += '</select></div></div>';
+        });
+        
+        dependenciasConteudo.innerHTML = html;
+        if (produtoDependencias) produtoDependencias.style.display = 'block';
+        
+        // Event listeners para módulos
+        document.querySelectorAll('.modulo-check').forEach(checkbox => {
+            checkbox.addEventListener('change', function() {
+                const moduloId = this.dataset.moduloId;
+                const tamanhoSelect = document.querySelector(`[data-modulo-id="${moduloId}"].tamanho-modulo`);
+                
+                if (this.checked) {
+                    tamanhoSelect.style.display = 'block';
+                } else {
+                    tamanhoSelect.style.display = 'none';
+                    tamanhoSelect.value = '';
+                }
+                
+                calcularPrecoSofa();
+            });
+        });
+        
+        document.querySelectorAll('.tamanho-modulo').forEach(select => {
+            select.addEventListener('change', calcularPrecoSofa);
+        });
+    }
+    
+    // Função para calcular preço do sofá
+    function calcularPrecoSofa() {
+        let precoTotal = 0;
+        
+        document.querySelectorAll('.modulo-check:checked').forEach(checkbox => {
+            const moduloId = checkbox.dataset.moduloId;
+            const tamanhoSelect = document.querySelector(`[data-modulo-id="${moduloId}"].tamanho-modulo`);
+            const tamanhoOption = tamanhoSelect ? tamanhoSelect.selectedOptions[0] : null;
+            
+            if (tamanhoOption && tamanhoOption.dataset.preco) {
+                precoTotal += parseFloat(tamanhoOption.dataset.preco);
+            }
+        });
+        
+        if (precoInput) {
+            precoInput.value = precoTotal.toFixed(2);
+        }
+    }
+    
+    // Adicionar item ao pedido
+    if (btnConfirmar) {
+        btnConfirmar.addEventListener('click', function() {
+            const tipoProduto = tipoSelect ? tipoSelect.value : '';
+            const produtoId = produtoSelect ? produtoSelect.value : '';
+            const produtoTexto = produtoSelect && produtoSelect.selectedOptions[0] ? 
+                                produtoSelect.selectedOptions[0].textContent : '';
+            const quantidade = quantidadeInput ? parseInt(quantidadeInput.value) : 1;
+            const preco = precoInput ? parseFloat(precoInput.value) : 0;
+            const observacoes = document.getElementById('observacoes') ? 
+                               document.getElementById('observacoes').value : '';
+            
+            // Validações
+            if (!tipoProduto || !produtoId || !quantidade || !preco) {
+                alert('Por favor, preencha todos os campos obrigatórios (marcados com *).');
+                return;
+            }
+            
+            // Coletar dados específicos do produto
+            const dadosEspecificos = coletarDadosEspecificos(tipoProduto);
+            
+            // Criar objeto do item
+            const item = {
+                id: ++contadorItens,
+                produto_id: produtoId,
+                produto_nome: produtoTexto.split(' - ')[0],
+                produto_ref: produtoTexto.split(' - ')[1] || '',
+                tipo_produto: tipoProduto,
+                quantidade: quantidade,
+                preco_unitario: preco,
+                preco_total: quantidade * preco,
+                observacoes: observacoes,
+                dados_especificos: dadosEspecificos
+            };
+            
+            // Adicionar à lista
+            itensPedido.push(item);
+            
+            // Atualizar interface
+            atualizarTabelaItens();
+            calcularTotaisGerais();
+            
+            // Limpar e fechar modal
+            limparFormulario();
+            const modal = document.getElementById('modalAdicionarItem');
+            if (modal) {
+                const bootstrapModal = bootstrap.Modal.getInstance(modal);
+                if (bootstrapModal) {
+                    bootstrapModal.hide();
+                }
+            }
+        });
+    }
+    
+    // Função para coletar dados específicos do produto
+    function coletarDadosEspecificos(tipo) {
+        const dados = { tipo: tipo };
+        
+        switch(tipo) {
+            case 'sofa':
+                // Coletar módulos selecionados
+                const modulosSelecionados = [];
+                const modulosChecked = document.querySelectorAll('.modulo-check:checked');
+                
+                modulosChecked.forEach(checkbox => {
+                    const moduloId = checkbox.dataset.moduloId;
+                    const tamanhoSelect = document.querySelector(`[data-modulo-id="${moduloId}"].tamanho-modulo`);
+                    
+                    if (tamanhoSelect && tamanhoSelect.value) {
+                        modulosSelecionados.push({
+                            modulo_id: moduloId,
+                            tamanho_id: tamanhoSelect.value,
+                            preco: parseFloat(tamanhoSelect.selectedOptions[0].dataset.preco || 0)
+                        });
+                    }
+                });
+                
+                dados.modulos = modulosSelecionados;
+                break;
+                
+            default:
+                // Para outros tipos, não há dados específicos adicionais
+                break;
+        }
+        
+        return dados;
+    }
+    
+    // Função para atualizar tabela de itens
+    function atualizarTabelaItens() {
+        const tabelaItens = document.getElementById('tabela-itens');
+        const semItens = document.getElementById('sem-itens');
+        
+        if (itensPedido.length === 0) {
+            if (tabelaItens) tabelaItens.style.display = 'none';
+            if (semItens) semItens.style.display = 'block';
+            return;
+        }
+        
+        if (semItens) semItens.style.display = 'none';
+        if (tabelaItens) tabelaItens.style.display = 'block';
+        
+        if (!tabelaItens) return;
+        
+        let html = `
+            <table class="table table-striped">
+                <thead>
+                    <tr>
+                        <th>Produto</th>
+                        <th>Quantidade</th>
+                        <th>Preço Unit.</th>
+                        <th>Total</th>
+                        <th>Ações</th>
+                    </tr>
+                </thead>
+                <tbody>
+        `;
+        
+        itensPedido.forEach(item => {
+            html += `
+                <tr>
+                    <td>
+                        <div class="fw-bold">${item.produto_nome}</div>
+                        <small class="text-muted">Ref: ${item.produto_ref}</small>
+                        ${item.observacoes ? `<br><small class="text-info">${item.observacoes}</small>` : ''}
+                    </td>
+                    <td>${item.quantidade}</td>
+                    <td>R$ ${item.preco_unitario.toFixed(2)}</td>
+                    <td>R$ ${item.preco_total.toFixed(2)}</td>
+                    <td>
+                        <button class="btn btn-sm btn-outline-danger" onclick="removerItem(${item.id})">
+                            <i class="bi bi-trash"></i>
+                        </button>
+                    </td>
+                </tr>
+            `;
+        });
+        
+        html += '</tbody></table>';
+        
+        tabelaItens.innerHTML = html;
+    }
+    
+    // Função para remover item
+    window.removerItem = function(itemId) {
+        const index = itensPedido.findIndex(item => item.id === itemId);
+        if (index !== -1) {
+            itensPedido.splice(index, 1);
+            atualizarTabelaItens();
+            calcularTotaisGerais();
+        }
+    };
+    
+    // Função para calcular totais gerais
+    function calcularTotaisGerais() {
+        const subtotal = itensPedido.reduce((total, item) => total + item.preco_total, 0);
+        
+        // Atualizar campo subtotal se existir
+        const subtotalElement = document.getElementById('subtotal-itens');
+        if (subtotalElement) {
+            subtotalElement.textContent = `R$ ${subtotal.toFixed(2)}`;
+        }
+        
+        console.log('Subtotal calculado:', subtotal);
+        
+        // Trigger calcular totais se função existir
+        if (typeof calcularTotais === 'function') {
+            calcularTotais();
+        }
+    }
+    
+    // Função para limpar formulário
+    function limparFormulario() {
+        if (tipoSelect) tipoSelect.value = '';
+        if (produtoSelect) produtoSelect.innerHTML = '<option value="">Selecione o produto...</option>';
+        if (quantidadeInput) quantidadeInput.value = '1';
+        if (precoInput) precoInput.value = '';
+        const observacoes = document.getElementById('observacoes');
+        if (observacoes) observacoes.value = '';
+        if (selecaoProduto) selecaoProduto.style.display = 'none';
+        if (produtoDependencias) produtoDependencias.style.display = 'none';
+        if (dependenciasConteudo) dependenciasConteudo.innerHTML = '';
+    }
+    
+    // Função para calcular totais (compatibilidade)
+    function calcularTotais() {
+        calcularTotaisGerais();
+    }
+    
+    // Inicializar totais se existirem itens
+    calcularTotaisGerais();
+    
+    console.log('Inicialização completa do modal Adicionar Item');
+});
+</script>
+{% endblock %}

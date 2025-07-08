@@ -29,7 +29,7 @@ def home_view(request):
     if not request.user.can_access_home():
         # Redirecionar baseado no tipo de permissão
         if request.user.tipo_permissao == 'vendedor':
-            return redirect('orcamentos_em_desenvolvimento')
+            return redirect('orcamentos:listar')
         elif request.user.tipo_permissao == 'operador_produtos':
             return redirect('produtos_lista')
         else:

@@ -12,6 +12,4 @@ urlpatterns = [
     path('usuarios/<int:pk>/editar/', views.usuario_editar, name='usuario_editar'),
     path('usuarios/<int:pk>/alterar-senha/', views.usuario_alterar_senha, name='usuario_alterar_senha'),
     path('usuarios/<int:pk>/toggle-ativo/', views.usuario_toggle_ativo, name='usuario_toggle_ativo'),
-    # URL temporária para orçamentos
-    path('orcamentos/', views.orcamentos_em_desenvolvimento, name='orcamentos_em_desenvolvimento'),
 ]

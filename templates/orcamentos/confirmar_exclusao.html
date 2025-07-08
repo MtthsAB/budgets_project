@@ -1,0 +1,133 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Excluir Orçamento - Sistema de Produtos{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-header bg-danger text-white">
+                    <h5 class="mb-0">
+                        <i class="bi bi-exclamation-triangle"></i> Confirmar Exclusão
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="alert alert-warning">
+                        <i class="bi bi-exclamation-triangle"></i>
+                        <strong>Atenção!</strong> Esta ação não pode ser desfeita.
+                    </div>
+
+                    <p class="mb-3">
+                        Tem certeza que deseja excluir o orçamento <strong>{{ orcamento.numero }}</strong>?
+                    </p>
+
+                    <!-- Resumo do Orçamento -->
+                    <div class="card mb-4">
+                        <div class="card-header">
+                            <i class="bi bi-info-circle"></i> Resumo do Orçamento
+                        </div>
+                        <div class="card-body">
+                            <div class="row g-3">
+                                <div class="col-md-6">
+                                    <strong>Cliente:</strong> {{ orcamento.cliente.nome_empresa }}
+                                </div>
+                                <div class="col-md-6">
+                                    <strong>Representante:</strong> {{ orcamento.cliente.representante }}
+                                </div>
+                                <div class="col-md-6">
+                                    <strong>Vendedor:</strong> {{ orcamento.vendedor.get_full_name }}
+                                </div>
+                                <div class="col-md-6">
+                                    <strong>Status:</strong> 
+                                    {% if orcamento.status == 'rascunho' %}
+                                        <span class="badge bg-secondary">{{ orcamento.get_status_display }}</span>
+                                    {% elif orcamento.status == 'enviado' %}
+                                        <span class="badge bg-info">{{ orcamento.get_status_display }}</span>
+                                    {% elif orcamento.status == 'aprovado' %}
+                                        <span class="badge bg-success">{{ orcamento.get_status_display }}</span>
+                                    {% elif orcamento.status == 'rejeitado' %}
+                                        <span class="badge bg-danger">{{ orcamento.get_status_display }}</span>
+                                    {% elif orcamento.status == 'expirado' %}
+                                        <span class="badge bg-warning">{{ orcamento.get_status_display }}</span>
+                                    {% endif %}
+                                </div>
+                                <div class="col-md-6">
+                                    <strong>Data de Entrega:</strong> {{ orcamento.data_entrega|date:"d/m/Y" }}
+                                </div>
+                                <div class="col-md-6">
+                                    <strong>Data de Validade:</strong> {{ orcamento.data_validade|date:"d/m/Y" }}
+                                </div>
+                                <div class="col-md-6">
+                                    <strong>Total de Itens:</strong> {{ orcamento.itens.count }}
+                                </div>
+                                <div class="col-md-6">
+                                    <strong>Valor Total:</strong> R$ {{ orcamento.get_total_final|floatformat:2 }}
+                                </div>
+                                <div class="col-md-6">
+                                    <strong>Criado em:</strong> {{ orcamento.created_at|date:"d/m/Y H:i" }}
+                                </div>
+                                <div class="col-md-6">
+                                    <strong>Última alteração:</strong> {{ orcamento.updated_at|date:"d/m/Y H:i" }}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Itens que serão excluídos -->
+                    {% if orcamento.itens.exists %}
+                    <div class="card mb-4">
+                        <div class="card-header">
+                            <i class="bi bi-list-ul"></i> Itens que serão excluídos
+                        </div>
+                        <div class="card-body">
+                            <div class="table-responsive">
+                                <table class="table table-sm">
+                                    <thead>
+                                        <tr>
+                                            <th>Produto</th>
+                                            <th>Quantidade</th>
+                                            <th>Preço Unit.</th>
+                                            <th>Total</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {% for item in orcamento.itens.all %}
+                                        <tr>
+                                            <td>
+                                                <strong>{{ item.produto.nome_produto }}</strong>
+                                                <br>
+                                                <small class="text-muted">{{ item.produto.ref_produto }}</small>
+                                            </td>
+                                            <td>{{ item.quantidade }}</td>
+                                            <td>R$ {{ item.preco_unitario|floatformat:2 }}</td>
+                                            <td>R$ {{ item.get_total|floatformat:2 }}</td>
+                                        </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                    {% endif %}
+
+                    <!-- Botões de ação -->
+                    <div class="d-flex justify-content-between">
+                        <a href="{% url 'orcamentos:visualizar' orcamento.pk %}" class="btn btn-outline-secondary">
+                            <i class="bi bi-arrow-left"></i> Cancelar
+                        </a>
+                        
+                        <form method="post" style="display: inline;">
+                            {% csrf_token %}
+                            <button type="submit" class="btn btn-danger">
+                                <i class="bi bi-trash"></i> Sim, Excluir Orçamento
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

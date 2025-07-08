@@ -260,12 +260,12 @@
                         </a>
                         <ul class="dropdown-menu">
                             <li>
-                                <a class="dropdown-item" href="{% url 'orcamentos_em_desenvolvimento' %}">
+                                <a class="dropdown-item" href="{% url 'orcamentos:listar' %}">
                                     <i class="bi bi-receipt"></i> Listar Orçamentos
                                 </a>
                             </li>
                             <li>
-                                <a class="dropdown-item" href="{% url 'orcamentos_em_desenvolvimento' %}">
+                                <a class="dropdown-item" href="{% url 'orcamentos:novo' %}">
                                     <i class="bi bi-plus-circle"></i> Novo Orçamento
                                 </a>
                             </li>
@@ -390,10 +390,10 @@
                         </button>
                         <div class="collapse" id="orcamentosMenu">
                             <div class="menu-submenu">
-                                <a href="{% url 'orcamentos_em_desenvolvimento' %}" class="list-group-item list-group-item-action">
+                                <a href="{% url 'orcamentos:listar' %}" class="list-group-item list-group-item-action {% if 'orcamentos' in request.resolver_match.namespace %}active{% endif %}">
                                     <i class="bi bi-receipt"></i> Listar Orçamentos
                                 </a>
-                                <a href="{% url 'orcamentos_em_desenvolvimento' %}" class="list-group-item list-group-item-action">
+                                <a href="{% url 'orcamentos:novo' %}" class="list-group-item list-group-item-action {% if request.resolver_match.url_name == 'novo' %}active{% endif %}">
                                     <i class="bi bi-plus-circle"></i> Novo Orçamento
                                 </a>
                             </div>

@@ -25,6 +25,7 @@ urlpatterns = [
     path('auth/', include('authentication.urls')),
     path('api/', include('authentication.api_urls')),
     path('clientes/', include('clientes.urls')),
+    path('orcamentos/', include('orcamentos.urls')),
 ]
 
 if settings.DEBUG:

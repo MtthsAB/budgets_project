@@ -1,0 +1,288 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Orçamento {{ orcamento.numero }} - Sistema de Produtos{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h1 class="h3 mb-0">
+                    <i class="bi bi-receipt text-primary"></i> Orçamento {{ orcamento.numero }}
+                </h1>
+                <div>
+                    <a href="{% url 'orcamentos:editar' orcamento.pk %}" class="btn btn-primary">
+                        <i class="bi bi-pencil"></i> Editar
+                    </a>
+                    <a href="{% url 'orcamentos:gerar_pdf' orcamento.pk %}" class="btn btn-success" target="_blank">
+                        <i class="bi bi-file-pdf"></i> Gerar PDF
+                    </a>
+                    <a href="{% url 'orcamentos:duplicar' orcamento.pk %}" class="btn btn-warning">
+                        <i class="bi bi-copy"></i> Duplicar
+                    </a>
+                    <a href="{% url 'orcamentos:listar' %}" class="btn btn-outline-secondary">
+                        <i class="bi bi-arrow-left"></i> Voltar
+                    </a>
+                </div>
+            </div>
+
+            <div class="row">
+                <div class="col-lg-8">
+                    <!-- Informações do Orçamento -->
+                    <div class="card mb-4">
+                        <div class="card-header">
+                            <i class="bi bi-info-circle"></i> Informações do Orçamento
+                        </div>
+                        <div class="card-body">
+                            <div class="row g-3">
+                                <div class="col-md-6">
+                                    <label class="form-label fw-bold">Número do Orçamento</label>
+                                    <p class="form-control-plaintext">{{ orcamento.numero }}</p>
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label fw-bold">Status</label>
+                                    <p class="form-control-plaintext">
+                                        {% if orcamento.status == 'rascunho' %}
+                                            <span class="badge bg-secondary">{{ orcamento.get_status_display }}</span>
+                                        {% elif orcamento.status == 'enviado' %}
+                                            <span class="badge bg-info">{{ orcamento.get_status_display }}</span>
+                                        {% elif orcamento.status == 'aprovado' %}
+                                            <span class="badge bg-success">{{ orcamento.get_status_display }}</span>
+                                        {% elif orcamento.status == 'rejeitado' %}
+                                            <span class="badge bg-danger">{{ orcamento.get_status_display }}</span>
+                                        {% elif orcamento.status == 'expirado' %}
+                                            <span class="badge bg-warning">{{ orcamento.get_status_display }}</span>
+                                        {% endif %}
+                                    </p>
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label fw-bold">Data de Entrega</label>
+                                    <p class="form-control-plaintext">{{ orcamento.data_entrega|date:"d/m/Y" }}</p>
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label fw-bold">Data de Validade</label>
+                                    <p class="form-control-plaintext">{{ orcamento.data_validade|date:"d/m/Y" }}</p>
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label fw-bold">Faixa de Preço</label>
+                                    <p class="form-control-plaintext">{{ orcamento.faixa_preco.nome }}</p>
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label fw-bold">Forma de Pagamento</label>
+                                    <p class="form-control-plaintext">{{ orcamento.forma_pagamento.nome }}</p>
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label fw-bold">Vendedor</label>
+                                    <p class="form-control-plaintext">{{ orcamento.vendedor.get_full_name }}</p>
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label fw-bold">Criado em</label>
+                                    <p class="form-control-plaintext">{{ orcamento.created_at|date:"d/m/Y H:i" }}</p>
+                                </div>
+                                {% if orcamento.observacoes %}
+                                <div class="col-12">
+                                    <label class="form-label fw-bold">Observações</label>
+                                    <p class="form-control-plaintext">{{ orcamento.observacoes }}</p>
+                                </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Dados do Cliente -->
+                    <div class="card mb-4">
+                        <div class="card-header">
+                            <i class="bi bi-person-badge"></i> Dados do Cliente
+                        </div>
+                        <div class="card-body">
+                            <div class="row g-3">
+                                <div class="col-md-6">
+                                    <label class="form-label fw-bold">Nome da Empresa</label>
+                                    <p class="form-control-plaintext">{{ orcamento.cliente.nome_empresa }}</p>
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label fw-bold">Representante</label>
+                                    <p class="form-control-plaintext">{{ orcamento.cliente.representante }}</p>
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label fw-bold">CNPJ</label>
+                                    <p class="form-control-plaintext">{{ orcamento.cliente.cnpj }}</p>
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label fw-bold">E-mail</label>
+                                    <p class="form-control-plaintext">{{ orcamento.cliente.email }}</p>
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label fw-bold">Telefone</label>
+                                    <p class="form-control-plaintext">{{ orcamento.cliente.telefone }}</p>
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label fw-bold">Endereço</label>
+                                    <p class="form-control-plaintext">{{ orcamento.cliente.get_endereco_completo }}</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Itens do Orçamento -->
+                    <div class="card">
+                        <div class="card-header">
+                            <i class="bi bi-list-ul"></i> Itens do Orçamento
+                            <span class="badge bg-primary ms-2">{{ orcamento.itens.count }} itens</span>
+                        </div>
+                        <div class="card-body">
+                            {% if orcamento.itens.exists %}
+                                <div class="table-responsive">
+                                    <table class="table table-striped">
+                                        <thead>
+                                            <tr>
+                                                <th>Produto</th>
+                                                <th>Tipo</th>
+                                                <th>Qtd</th>
+                                                <th>Preço Unit.</th>
+                                                <th>Total</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            {% for item in orcamento.itens.all %}
+                                            <tr>
+                                                <td>
+                                                    <div class="fw-bold">{{ item.produto.nome_produto }}</div>
+                                                    <small class="text-muted">Ref: {{ item.produto.ref_produto }}</small>
+                                                    {% if item.observacoes %}
+                                                        <br>
+                                                        <small class="text-info">
+                                                            <i class="bi bi-chat-left-text"></i> {{ item.observacoes }}
+                                                        </small>
+                                                    {% endif %}
+                                                </td>
+                                                <td>
+                                                    <span class="badge bg-info">{{ item.produto.id_tipo_produto.nome }}</span>
+                                                </td>
+                                                <td>{{ item.quantidade }}</td>
+                                                <td>R$ {{ item.preco_unitario|floatformat:2 }}</td>
+                                                <td><strong>R$ {{ item.get_total|floatformat:2 }}</strong></td>
+                                            </tr>
+                                            {% endfor %}
+                                        </tbody>
+                                    </table>
+                                </div>
+                            {% else %}
+                                <div class="text-center py-4">
+                                    <i class="bi bi-inbox display-4 text-muted"></i>
+                                    <p class="text-muted mt-2">Nenhum item encontrado neste orçamento</p>
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Sidebar com Totais -->
+                <div class="col-lg-4">
+                    <div class="card">
+                        <div class="card-header">
+                            <i class="bi bi-calculator"></i> Resumo Financeiro
+                        </div>
+                        <div class="card-body">
+                            <div class="row g-2">
+                                <div class="col-6">
+                                    <span class="text-muted">Subtotal:</span>
+                                </div>
+                                <div class="col-6 text-end">
+                                    <strong>R$ {{ orcamento.get_subtotal|floatformat:2 }}</strong>
+                                </div>
+                                
+                                {% if orcamento.get_total_desconto > 0 %}
+                                <div class="col-6">
+                                    <span class="text-muted">Desconto:</span>
+                                </div>
+                                <div class="col-6 text-end">
+                                    <span class="text-danger">- R$ {{ orcamento.get_total_desconto|floatformat:2 }}</span>
+                                </div>
+                                {% endif %}
+                                
+                                {% if orcamento.get_total_acrescimo > 0 %}
+                                <div class="col-6">
+                                    <span class="text-muted">Acréscimo:</span>
+                                </div>
+                                <div class="col-6 text-end">
+                                    <span class="text-success">+ R$ {{ orcamento.get_total_acrescimo|floatformat:2 }}</span>
+                                </div>
+                                {% endif %}
+                                
+                                <div class="col-12">
+                                    <hr>
+                                </div>
+                                
+                                <div class="col-6">
+                                    <strong>Total Final:</strong>
+                                </div>
+                                <div class="col-6 text-end">
+                                    <strong class="text-primary fs-4">R$ {{ orcamento.get_total_final|floatformat:2 }}</strong>
+                                </div>
+                                
+                                <div class="col-12">
+                                    <hr>
+                                </div>
+                                
+                                <div class="col-6">
+                                    <small class="text-muted">Peso Total:</small>
+                                </div>
+                                <div class="col-6 text-end">
+                                    <small>{{ orcamento.get_peso_total|floatformat:2 }} kg</small>
+                                </div>
+                                
+                                <div class="col-6">
+                                    <small class="text-muted">Cubagem Total:</small>
+                                </div>
+                                <div class="col-6 text-end">
+                                    <small>{{ orcamento.get_cubagem_total|floatformat:3 }} m³</small>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Histórico de Alterações -->
+                    <div class="card mt-4">
+                        <div class="card-header">
+                            <i class="bi bi-clock-history"></i> Histórico
+                        </div>
+                        <div class="card-body">
+                            <div class="row g-2">
+                                <div class="col-6">
+                                    <small class="text-muted">Criado em:</small>
+                                </div>
+                                <div class="col-6 text-end">
+                                    <small>{{ orcamento.created_at|date:"d/m/Y H:i" }}</small>
+                                </div>
+                                
+                                <div class="col-6">
+                                    <small class="text-muted">Criado por:</small>
+                                </div>
+                                <div class="col-6 text-end">
+                                    <small>{{ orcamento.created_by.get_full_name|default:"Sistema" }}</small>
+                                </div>
+                                
+                                <div class="col-6">
+                                    <small class="text-muted">Última alteração:</small>
+                                </div>
+                                <div class="col-6 text-end">
+                                    <small>{{ orcamento.updated_at|date:"d/m/Y H:i" }}</small>
+                                </div>
+                                
+                                <div class="col-6">
+                                    <small class="text-muted">Alterado por:</small>
+                                </div>
+                                <div class="col-6 text-end">
+                                    <small>{{ orcamento.updated_by.get_full_name|default:"Sistema" }}</small>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

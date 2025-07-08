@@ -32,8 +32,8 @@ def login_view(request):
                 
                 # Redirecionar baseado no tipo de permissão
                 if user.tipo_permissao == TipoPermissao.VENDEDOR:
-                    # Redirecionar para módulo de orçamentos temporário
-                    return redirect('orcamentos_em_desenvolvimento')
+                    # Redirecionar para módulo de orçamentos
+                    return redirect('orcamentos:listar')
                 elif user.tipo_permissao == TipoPermissao.OPERADOR_PRODUTOS:
                     return redirect('produtos_lista')
                 else:
@@ -261,8 +261,3 @@ def usuario_toggle_ativo(request, pk):
     messages.success(request, f'Usuário {usuario.get_full_name()} {status_text} com sucesso!')
     
     return redirect('usuarios_lista')
-
-@login_required
-def orcamentos_em_desenvolvimento(request):
-    """View temporária para módulo de orçamentos"""
-    return render(request, 'orcamentos/em_desenvolvimento.html')
