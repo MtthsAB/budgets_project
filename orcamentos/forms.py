@@ -22,8 +22,9 @@ class OrcamentoForm(forms.ModelForm):
         ]
         widgets = {
             'cliente': forms.Select(attrs={
-                'class': 'form-select',
-                'required': True
+                'class': 'form-select cliente-select',
+                'required': True,
+                'id': 'id_cliente'
             }),
             'faixa_preco': forms.Select(attrs={
                 'class': 'form-select',
@@ -37,37 +38,41 @@ class OrcamentoForm(forms.ModelForm):
                 'class': 'form-control',
                 'step': '0.01',
                 'min': '0',
-                'placeholder': '0,00'
+                'placeholder': '0,00',
+                'required': False
             }),
             'desconto_percentual': forms.NumberInput(attrs={
                 'class': 'form-control',
                 'step': '0.01',
                 'min': '0',
                 'max': '100',
-                'placeholder': '0,00'
+                'placeholder': '0,00',
+                'required': False
             }),
             'acrescimo_valor': forms.NumberInput(attrs={
                 'class': 'form-control',
                 'step': '0.01',
                 'min': '0',
-                'placeholder': '0,00'
+                'placeholder': '0,00',
+                'required': False
             }),
             'acrescimo_percentual': forms.NumberInput(attrs={
                 'class': 'form-control',
                 'step': '0.01',
                 'min': '0',
-                'placeholder': '0,00'
+                'placeholder': '0,00',
+                'required': False
             }),
             'data_entrega': forms.DateInput(attrs={
                 'class': 'form-control',
                 'type': 'date',
                 'required': True
-            }),
+            }, format='%Y-%m-%d'),
             'data_validade': forms.DateInput(attrs={
                 'class': 'form-control',
                 'type': 'date',
                 'required': True
-            }),
+            }, format='%Y-%m-%d'),
             'status': forms.Select(attrs={
                 'class': 'form-select'
             }),
@@ -97,7 +102,59 @@ class OrcamentoForm(forms.ModelForm):
         self.fields['data_entrega'].label = 'Data de Entrega'
         self.fields['data_validade'].label = 'Data de Validade'
         self.fields['observacoes'].label = 'Observações'
+        
+        # Tornar campos de desconto e acréscimo não obrigatórios
+        self.fields['desconto_valor'].required = False
+        self.fields['desconto_percentual'].required = False
+        self.fields['acrescimo_valor'].required = False
+        self.fields['acrescimo_percentual'].required = False
+        
+        # Definir valor padrão para data de validade se for novo orçamento
+        if not self.instance.pk:
+            from django.utils import timezone
+            from datetime import timedelta
+            # Só definir se não foi passado um initial value
+            if not self.initial.get('data_validade'):
+                self.fields['data_validade'].initial = timezone.now().date() + timedelta(days=15)
+            if not self.initial.get('data_entrega'):
+                self.fields['data_entrega'].initial = timezone.now().date() + timedelta(days=30)
     
+    def clean_desconto_valor(self):
+        value = self.cleaned_data.get('desconto_valor')
+        if value == '' or value is None:
+            return None
+        try:
+            return float(value) if value else None
+        except (ValueError, TypeError):
+            return None
+    
+    def clean_desconto_percentual(self):
+        value = self.cleaned_data.get('desconto_percentual')
+        if value == '' or value is None:
+            return None
+        try:
+            return float(value) if value else None
+        except (ValueError, TypeError):
+            return None
+    
+    def clean_acrescimo_valor(self):
+        value = self.cleaned_data.get('acrescimo_valor')
+        if value == '' or value is None:
+            return None
+        try:
+            return float(value) if value else None
+        except (ValueError, TypeError):
+            return None
+    
+    def clean_acrescimo_percentual(self):
+        value = self.cleaned_data.get('acrescimo_percentual')
+        if value == '' or value is None:
+            return None
+        try:
+            return float(value) if value else None
+        except (ValueError, TypeError):
+            return None
+
     def clean_data_entrega(self):
         data_entrega = self.cleaned_data.get('data_entrega')
         if data_entrega and data_entrega <= timezone.now().date():
@@ -114,15 +171,37 @@ class OrcamentoForm(forms.ModelForm):
         cleaned_data = super().clean()
         
         # Validar se apenas um tipo de desconto é usado
-        desconto_valor = cleaned_data.get('desconto_valor', 0)
-        desconto_percentual = cleaned_data.get('desconto_percentual', 0)
+        desconto_valor = cleaned_data.get('desconto_valor')
+        desconto_percentual = cleaned_data.get('desconto_percentual')
+        
+        # Converter para float e tratar valores None/vazios
+        try:
+            desconto_valor = float(desconto_valor) if desconto_valor not in [None, ''] else 0
+        except (ValueError, TypeError):
+            desconto_valor = 0
+            
+        try:
+            desconto_percentual = float(desconto_percentual) if desconto_percentual not in [None, ''] else 0
+        except (ValueError, TypeError):
+            desconto_percentual = 0
         
         if desconto_valor > 0 and desconto_percentual > 0:
             raise ValidationError('Use apenas desconto em valor OU percentual, não ambos.')
         
         # Validar se apenas um tipo de acréscimo é usado
-        acrescimo_valor = cleaned_data.get('acrescimo_valor', 0)
-        acrescimo_percentual = cleaned_data.get('acrescimo_percentual', 0)
+        acrescimo_valor = cleaned_data.get('acrescimo_valor')
+        acrescimo_percentual = cleaned_data.get('acrescimo_percentual')
+        
+        # Converter para float e tratar valores None/vazios
+        try:
+            acrescimo_valor = float(acrescimo_valor) if acrescimo_valor not in [None, ''] else 0
+        except (ValueError, TypeError):
+            acrescimo_valor = 0
+            
+        try:
+            acrescimo_percentual = float(acrescimo_percentual) if acrescimo_percentual not in [None, ''] else 0
+        except (ValueError, TypeError):
+            acrescimo_percentual = 0
         
         if acrescimo_valor > 0 and acrescimo_percentual > 0:
             raise ValidationError('Use apenas acréscimo em valor OU percentual, não ambos.')

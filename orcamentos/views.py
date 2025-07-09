@@ -68,10 +68,17 @@ def novo_orcamento(request):
             messages.success(request, 'Orçamento criado com sucesso!')
             return redirect('orcamentos:editar', pk=orcamento.pk)
     else:
-        form = OrcamentoForm()
-        # Definir valores padrão
-        form.fields['data_entrega'].initial = timezone.now().date() + timedelta(days=30)
-        form.fields['data_validade'].initial = timezone.now().date() + timedelta(days=15)
+        # Criar dados iniciais explícitos
+        data_entrega = timezone.now().date() + timedelta(days=30)
+        data_validade = timezone.now().date() + timedelta(days=15)
+        
+        inicial_data = {
+            'data_entrega': data_entrega,
+            'data_validade': data_validade,
+            'status': 'rascunho'
+        }
+        
+        form = OrcamentoForm(initial=inicial_data)
     
     context = {
         'form': form,
@@ -150,7 +157,19 @@ def excluir_orcamento(request, pk):
 def buscar_cliente(request):
     """Busca clientes via AJAX"""
     termo = request.GET.get('termo', '')
+    iniciais = request.GET.get('iniciais', '')
     
+    # Se for solicitação de clientes iniciais
+    if iniciais:
+        try:
+            limite = int(iniciais)
+            clientes = Cliente.objects.all().order_by('nome_empresa')[:limite]
+            clientes_data = clientes.values('id', 'nome_empresa', 'representante', 'cnpj')
+            return JsonResponse({'clientes': list(clientes_data)})
+        except ValueError:
+            return JsonResponse({'clientes': []})
+    
+    # Busca normal por termo
     if len(termo) < 2:
         return JsonResponse({'clientes': []})
     

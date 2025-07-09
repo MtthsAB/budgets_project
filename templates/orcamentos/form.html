@@ -18,6 +18,74 @@
         top: 20px;
     }
     
+    .cliente-expandido .form-control {
+        min-height: 48px;
+        font-size: 16px;
+    }
+    
+    .cliente-busca {
+        border-radius: 0.375rem !important;
+    }
+    
+    .cliente-resultados {
+        border-top: none !important;
+        border-top-left-radius: 0 !important;
+        border-top-right-radius: 0 !important;
+    }
+    
+    .cliente-item {
+        padding: 12px 16px;
+        cursor: pointer;
+        border-bottom: 1px solid #f0f0f0;
+        transition: background-color 0.2s ease;
+    }
+    
+    .cliente-item:hover {
+        background-color: #f8f9fa;
+    }
+    
+    .cliente-item:last-child {
+        border-bottom: none;
+    }
+    
+    .cliente-item .empresa {
+        font-weight: 600;
+        color: #333;
+        margin-bottom: 2px;
+    }
+    
+    .cliente-item .detalhes {
+        font-size: 0.875rem;
+        color: #666;
+        margin-top: 2px;
+    }
+    
+    /* Melhorias responsivas */
+    @media (max-width: 768px) {
+        .cliente-expandido {
+            margin-bottom: 1rem;
+        }
+        
+        .cliente-resultados {
+            max-height: 250px;
+        }
+        
+        .cliente-item {
+            padding: 10px 12px;
+        }
+    }
+    
+    /* Estados de foco e ativo */
+    .cliente-busca:focus {
+        border-color: #007bff;
+        box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
+    }
+    
+    .cliente-expandido .border-success {
+        border-color: #28a745 !important;
+        box-shadow: 0 0 0 0.2rem rgba(40, 167, 69, 0.25) !important;
+    }
+    
     .busca-cliente, .busca-produto {
         position: relative;
     }
@@ -63,6 +131,95 @@
         flex: 0 0 auto;
     }
     
+    /* Estilos para os botões de tipo de desconto/acréscimo */
+    .tipo-desconto-btn {
+        min-width: 60px;
+        font-weight: 600;
+        border-color: #dee2e6;
+        background-color: #f8f9fa;
+        transition: all 0.2s ease-in-out;
+        position: relative;
+        border-radius: 0.5rem !important;
+        border-top-left-radius: 0 !important;
+        border-bottom-left-radius: 0 !important;
+    }
+    
+    .tipo-desconto-btn:hover {
+        background-color: #e9ecef;
+        border-color: #adb5bd;
+        transform: translateY(-1px);
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+    
+    .tipo-desconto-btn:active {
+        transform: translateY(0);
+        box-shadow: 0 1px 2px rgba(0,0,0,0.1);
+    }
+    
+    .tipo-desconto-btn[data-tipo="valor"] {
+        color: #198754;
+        border-color: #198754;
+        background-color: #d1e7dd;
+    }
+    
+    .tipo-desconto-btn[data-tipo="percentual"] {
+        color: #0d6efd;
+        border-color: #0d6efd;
+        background-color: #cfe2ff;
+    }
+    
+    .tipo-desconto-btn[data-tipo="valor"]:hover {
+        background-color: #a3cfbb;
+        border-color: #146c43;
+    }
+    
+    .tipo-desconto-btn[data-tipo="percentual"]:hover {
+        background-color: #9ec5fe;
+        border-color: #0a58ca;
+    }
+    
+    .tipo-texto {
+        font-size: 0.9rem;
+        letter-spacing: 0.5px;
+    }
+    
+    /* Animação suave na troca de tipo */
+    .tipo-texto {
+        transition: all 0.15s ease-in-out;
+    }
+    
+    /* Estilos para campos de desconto e acréscimo - menor largura */
+    #desconto_valor_unificado,
+    #acrescimo_valor_unificado {
+        max-width: 120px !important;
+        text-align: right;
+        border-top-right-radius: 0 !important;
+        border-bottom-right-radius: 0 !important;
+    }
+    
+    /* Remover botões de incremento/decremento dos campos numéricos */
+    input[type="number"]::-webkit-outer-spin-button,
+    input[type="number"]::-webkit-inner-spin-button {
+        -webkit-appearance: none;
+        margin: 0;
+    }
+    
+    input[type="number"] {
+        -moz-appearance: textfield;
+        appearance: textfield;
+    }
+    
+    /* Forçar layout correto do campo cliente - versão simplificada */
+    .cliente-expandido {
+        flex: 0 0 66.666667% !important;
+        max-width: 66.666667% !important;
+    }
+    
+    .vendedor-compacto {
+        flex: 0 0 33.333333% !important;
+        max-width: 33.333333% !important;
+    }
+    
     /* Estilo para seção de dependências do produto */
     .produto-dependencias {
         background-color: #f8f9fa;
@@ -96,6 +253,12 @@
                             <i class="bi bi-file-pdf"></i> Gerar PDF
                         </a>
                     {% endif %}
+                    <a href="{% url 'cliente_cadastro' %}" 
+                       class="btn btn-outline-primary" 
+                       target="_blank" 
+                       title="Cadastrar novo cliente">
+                        <i class="bi bi-person-plus"></i> Novo Cliente
+                    </a>
                     <a href="{% url 'orcamentos:listar' %}" class="btn btn-outline-secondary">
                         <i class="bi bi-arrow-left"></i> Voltar
                     </a>
@@ -120,16 +283,28 @@
                                 {% endif %}
 
                                 <div class="row g-3">
-                                    <!-- Cliente -->
-                                    <div class="col-md-6">
+                                    <!-- Cliente - Campo expandido com busca dinâmica -->
+                                    <div class="col-12 col-md-8 cliente-expandido">
                                         <label for="{{ form.cliente.id_for_label }}" class="form-label">
                                             {{ form.cliente.label }}
                                         </label>
                                         <div class="input-group">
-                                            {{ form.cliente }}
-                                            <a href="{% url 'cliente_cadastro' %}" class="btn btn-outline-secondary" target="_blank">
-                                                <i class="bi bi-plus-circle"></i>
-                                            </a>
+                                            <div class="position-relative flex-grow-1">
+                                                <!-- Input de busca dinâmica -->
+                                                <input type="text" 
+                                                       class="form-control cliente-busca" 
+                                                       id="cliente-busca" 
+                                                       placeholder="Digite nome da empresa, representante ou CNPJ..." 
+                                                       autocomplete="off">
+                                                <!-- Select original (oculto inicialmente) -->
+                                                <div class="d-none">
+                                                    {{ form.cliente }}
+                                                </div>
+                                                <!-- Dropdown de resultados -->
+                                                <div class="cliente-resultados position-absolute w-100 bg-white border rounded-3 shadow-sm" 
+                                                     style="top: 100%; z-index: 1000; max-height: 300px; overflow-y: auto; display: none;">
+                                                </div>
+                                            </div>
                                         </div>
                                         {% if form.cliente.errors %}
                                             <div class="text-danger small">{{ form.cliente.errors }}</div>
@@ -137,10 +312,9 @@
                                     </div>
 
                                     <!-- Vendedor -->
-                                    <div class="col-md-6">
+                                    <div class="col-12 col-md-4 vendedor-compacto">
                                         <label class="form-label">Vendedor</label>
                                         <input type="text" class="form-control" value="{{ user.get_full_name }}" readonly>
-                                        <small class="text-muted">Vendedor responsável pelo orçamento</small>
                                     </div>
 
                                     <!-- Faixa de Preço -->
@@ -205,7 +379,12 @@
                                         <div class="input-group">
                                             <input type="number" class="form-control" id="desconto_valor_unificado" 
                                                    step="0.01" min="0" placeholder="0,00" value="0">
-                                            <select class="form-select" id="desconto_tipo" style="max-width: 80px;">
+                                            <button type="button" class="btn btn-outline-secondary tipo-desconto-btn" 
+                                                    id="desconto_tipo_btn" data-tipo="valor" title="Clique para alternar entre R$ e %">
+                                                <span class="tipo-texto">R$</span>
+                                            </button>
+                                            <!-- Select oculto para manter funcionalidade -->
+                                            <select class="form-select d-none" id="desconto_tipo">
                                                 <option value="valor">R$</option>
                                                 <option value="percentual">%</option>
                                             </select>
@@ -225,7 +404,12 @@
                                         <div class="input-group">
                                             <input type="number" class="form-control" id="acrescimo_valor_unificado" 
                                                    step="0.01" min="0" placeholder="0,00" value="0">
-                                            <select class="form-select" id="acrescimo_tipo" style="max-width: 80px;">
+                                            <button type="button" class="btn btn-outline-secondary tipo-desconto-btn" 
+                                                    id="acrescimo_tipo_btn" data-tipo="valor" title="Clique para alternar entre R$ e %">
+                                                <span class="tipo-texto">R$</span>
+                                            </button>
+                                            <!-- Select oculto para manter funcionalidade -->
+                                            <select class="form-select d-none" id="acrescimo_tipo">
                                                 <option value="valor">R$</option>
                                                 <option value="percentual">%</option>
                                             </select>
@@ -530,12 +714,14 @@ document.addEventListener('DOMContentLoaded', function() {
         // Configurar desconto
         const descontoValorUnif = document.getElementById('desconto_valor_unificado');
         const descontoTipo = document.getElementById('desconto_tipo');
+        const descontoTipoBtn = document.getElementById('desconto_tipo_btn');
         const descontoValorOrig = document.getElementById('id_desconto_valor');
         const descontoPercOrig = document.getElementById('id_desconto_percentual');
         
         // Configurar acréscimo
         const acrescimoValorUnif = document.getElementById('acrescimo_valor_unificado');
         const acrescimoTipo = document.getElementById('acrescimo_tipo');
+        const acrescimoTipoBtn = document.getElementById('acrescimo_tipo_btn');
         const acrescimoValorOrig = document.getElementById('id_acrescimo_valor');
         const acrescimoPercOrig = document.getElementById('id_acrescimo_percentual');
         
@@ -545,41 +731,97 @@ document.addEventListener('DOMContentLoaded', function() {
             return;
         }
         
-        // Carregar valores iniciais
+        // Carregar valores iniciais e sincronizar botões
         if (descontoValorOrig && descontoValorOrig.value && parseFloat(descontoValorOrig.value) > 0) {
             descontoValorUnif.value = descontoValorOrig.value;
             descontoTipo.value = 'valor';
+            atualizarBotaoTipo(descontoTipoBtn, 'valor');
         } else if (descontoPercOrig && descontoPercOrig.value && parseFloat(descontoPercOrig.value) > 0) {
             descontoValorUnif.value = descontoPercOrig.value;
             descontoTipo.value = 'percentual';
+            atualizarBotaoTipo(descontoTipoBtn, 'percentual');
         }
         
         if (acrescimoValorOrig && acrescimoValorOrig.value && parseFloat(acrescimoValorOrig.value) > 0) {
             acrescimoValorUnif.value = acrescimoValorOrig.value;
             acrescimoTipo.value = 'valor';
+            atualizarBotaoTipo(acrescimoTipoBtn, 'valor');
         } else if (acrescimoPercOrig && acrescimoPercOrig.value && parseFloat(acrescimoPercOrig.value) > 0) {
             acrescimoValorUnif.value = acrescimoPercOrig.value;
             acrescimoTipo.value = 'percentual';
+            atualizarBotaoTipo(acrescimoTipoBtn, 'percentual');
         }
         
-        // Event listeners para sincronizar campos
+        // Função para atualizar visual do botão
+        function atualizarBotaoTipo(botao, tipo) {
+            const textoSpan = botao.querySelector('.tipo-texto');
+            botao.setAttribute('data-tipo', tipo);
+            
+            // Definir o tipo correto baseado no ID do botão
+            if (botao.id === 'desconto_tipo_btn') {
+                descontoTipo.value = tipo;
+            } else if (botao.id === 'acrescimo_tipo_btn') {
+                acrescimoTipo.value = tipo;
+            }
+            
+            if (tipo === 'valor') {
+                textoSpan.textContent = 'R$';
+            } else {
+                textoSpan.textContent = '%';
+            }
+        }
+        
+        // Event listeners para os botões de tipo
+        if (descontoTipoBtn) {
+            descontoTipoBtn.addEventListener('click', function() {
+                const tipoAtual = this.getAttribute('data-tipo');
+                const novoTipo = tipoAtual === 'valor' ? 'percentual' : 'valor';
+                
+                atualizarBotaoTipo(this, novoTipo);
+                descontoTipo.value = novoTipo;
+                
+                // Sincronizar com campos originais
+                const valor = parseFloat(descontoValorUnif.value) || 0;
+                if (valor > 0) {
+                    if (novoTipo === 'valor') {
+                        descontoValorOrig.value = valor;
+                        descontoPercOrig.value = '';
+                    } else {
+                        descontoPercOrig.value = valor;
+                        descontoValorOrig.value = '';
+                    }
+                }
+            });
+        }
+        
+        if (acrescimoTipoBtn) {
+            acrescimoTipoBtn.addEventListener('click', function() {
+                const tipoAtual = this.getAttribute('data-tipo');
+                const novoTipo = tipoAtual === 'valor' ? 'percentual' : 'valor';
+                
+                atualizarBotaoTipo(this, novoTipo);
+                acrescimoTipo.value = novoTipo;
+                
+                // Sincronizar com campos originais
+                const valor = parseFloat(acrescimoValorUnif.value) || 0;
+                if (valor > 0) {
+                    if (novoTipo === 'valor') {
+                        acrescimoValorOrig.value = valor;
+                        acrescimoPercOrig.value = '';
+                    } else {
+                        acrescimoPercOrig.value = valor;
+                        acrescimoValorOrig.value = '';
+                    }
+                }
+            });
+        }
+        
+        // Event listeners para sincronizar campos quando valor muda
         descontoValorUnif.addEventListener('input', function() {
             const valor = parseFloat(this.value) || 0;
             const tipo = descontoTipo.value;
             
             if (tipo === 'valor') {
-                descontoValorOrig.value = valor;
-                descontoPercOrig.value = '';
-            } else {
-                descontoPercOrig.value = valor;
-                descontoValorOrig.value = '';
-            }
-        });
-        
-        descontoTipo.addEventListener('change', function() {
-            const valor = parseFloat(descontoValorUnif.value) || 0;
-            
-            if (this.value === 'valor') {
                 descontoValorOrig.value = valor;
                 descontoPercOrig.value = '';
             } else {
@@ -601,17 +843,43 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         });
         
-        acrescimoTipo.addEventListener('change', function() {
-            const valor = parseFloat(acrescimoValorUnif.value) || 0;
-            
-            if (this.value === 'valor') {
-                acrescimoValorOrig.value = valor;
-                acrescimoPercOrig.value = '';
-            } else {
-                acrescimoPercOrig.value = valor;
-                acrescimoValorOrig.value = '';
-            }
-        });
+        // Validação personalizada antes do envio do formulário
+        const orcamentoForm = document.getElementById('orcamento-form');
+        if (orcamentoForm) {
+            orcamentoForm.addEventListener('submit', function(e) {
+                // Garantir que os valores dos campos unificados sejam sincronizados
+                // com os campos originais antes do envio
+                const descontoValor = parseFloat(descontoValorUnif.value) || 0;
+                if (descontoValor > 0) {
+                    if (descontoTipo.value === 'valor') {
+                        descontoValorOrig.value = descontoValor;
+                        descontoPercOrig.value = '';
+                    } else {
+                        descontoPercOrig.value = descontoValor;
+                        descontoValorOrig.value = '';
+                    }
+                } else {
+                    // Definir como vazio para ser tratado como None no backend
+                    descontoValorOrig.value = '';
+                    descontoPercOrig.value = '';
+                }
+                
+                const acrescimoValor = parseFloat(acrescimoValorUnif.value) || 0;
+                if (acrescimoValor > 0) {
+                    if (acrescimoTipo.value === 'valor') {
+                        acrescimoValorOrig.value = acrescimoValor;
+                        acrescimoPercOrig.value = '';
+                    } else {
+                        acrescimoPercOrig.value = acrescimoValor;
+                        acrescimoValorOrig.value = '';
+                    }
+                } else {
+                    // Definir como vazio para ser tratado como None no backend
+                    acrescimoValorOrig.value = '';
+                    acrescimoPercOrig.value = '';
+                }
+            });
+        }
     }
     
     // Event listeners para o modal
@@ -968,7 +1236,284 @@ document.addEventListener('DOMContentLoaded', function() {
     // Inicializar totais se existirem itens
     calcularTotaisGerais();
     
+    // Inicializar datas padrão se estiverem vazias - versão otimizada
+    function preencherDatasAutomaticamente() {
+        console.log('Verificando preenchimento automático de datas...');
+        
+        const dataValidadeInput = document.getElementById('id_data_validade');
+        const dataEntregaInput = document.getElementById('id_data_entrega');
+        
+        // Função auxiliar para formatar data no padrão YYYY-MM-DD
+        function formatarDataParaInput(data) {
+            const ano = data.getFullYear();
+            const mes = String(data.getMonth() + 1).padStart(2, '0');
+            const dia = String(data.getDate()).padStart(2, '0');
+            return `${ano}-${mes}-${dia}`;
+        }
+        
+        const hoje = new Date();
+        
+        // Configurar data de validade (hoje + 15 dias) apenas se estiver vazia
+        if (dataValidadeInput && (!dataValidadeInput.value || dataValidadeInput.value === '')) {
+            const dataValidade = new Date(hoje);
+            dataValidade.setDate(hoje.getDate() + 15);
+            
+            const dataFormatada = formatarDataParaInput(dataValidade);
+            dataValidadeInput.value = dataFormatada;
+            console.log('Data de validade preenchida:', dataFormatada);
+            
+            // Disparar evento change
+            dataValidadeInput.dispatchEvent(new Event('change', { bubbles: true }));
+        }
+        
+        // Configurar data de entrega (hoje + 30 dias) apenas se estiver vazia
+        if (dataEntregaInput && (!dataEntregaInput.value || dataEntregaInput.value === '')) {
+            const dataEntrega = new Date(hoje);
+            dataEntrega.setDate(hoje.getDate() + 30);
+            
+            const dataFormatada = formatarDataParaInput(dataEntrega);
+            dataEntregaInput.value = dataFormatada;
+            console.log('Data de entrega preenchida:', dataFormatada);
+            
+            // Disparar evento change
+            dataEntregaInput.dispatchEvent(new Event('change', { bubbles: true }));
+        }
+    }
+    
+    // Executar quando a página carregar
+    window.addEventListener('load', preencherDatasAutomaticamente);
+    document.addEventListener('DOMContentLoaded', preencherDatasAutomaticamente);
+    
     console.log('Inicialização completa do modal Adicionar Item');
+    
+    // Fallback com timeout para garantir que as datas sejam preenchidas
+    setTimeout(function() {
+        preencherDatasAutomaticamente();
+        
+        // Forçar layout do campo cliente
+        const clienteCol = document.querySelector('.cliente-expandido');
+        const vendedorCol = document.querySelector('.vendedor-compacto');
+        
+        if (clienteCol) {
+            clienteCol.style.flex = '0 0 66.666667%';
+            clienteCol.style.maxWidth = '66.666667%';
+        }
+        
+        if (vendedorCol) {
+            vendedorCol.style.flex = '0 0 33.333333%';
+            vendedorCol.style.maxWidth = '33.333333%';
+        }
+    }, 500);
 });
+
+// Forçar atualização do cache - versão 4.0 - Busca dinâmica de clientes
+
+// Debug adicional - verificar carregamento da página
+document.addEventListener('DOMContentLoaded', function() {
+    // Aplicar estilo forçado novamente
+    const clienteCol = document.querySelector('.cliente-expandido');
+    const vendedorCol = document.querySelector('.vendedor-compacto');
+    
+    if (clienteCol) {
+        clienteCol.style.cssText = 'flex: 0 0 66.666667% !important; max-width: 66.666667% !important;';
+    }
+    
+    if (vendedorCol) {
+        vendedorCol.style.cssText = 'flex: 0 0 33.333333% !important; max-width: 33.333333% !important;';
+    }
+});
+
+// Sistema de busca dinâmica de clientes
+document.addEventListener('DOMContentLoaded', function() {
+    const clienteBusca = document.getElementById('cliente-busca');
+    const clienteSelect = document.getElementById('id_cliente');
+    const clienteResultados = document.querySelector('.cliente-resultados');
+    let timeoutBusca;
+    let clienteSelecionado = null;
+
+    // Função para buscar clientes
+    function buscarClientes(termo) {
+        if (termo.length < 2) {
+            clienteResultados.style.display = 'none';
+            return;
+        }
+
+        fetch(`{% url 'orcamentos:buscar_cliente' %}?termo=${encodeURIComponent(termo)}`)
+            .then(response => response.json())
+            .then(data => {
+                mostrarResultados(data.clientes);
+            })
+            .catch(error => {
+                console.error('Erro na busca de clientes:', error);
+                clienteResultados.style.display = 'none';
+            });
+    }
+
+    // Função para carregar clientes iniciais (10 primeiros)
+    function carregarClientesIniciais() {
+        fetch(`{% url 'orcamentos:buscar_cliente' %}?iniciais=10`)
+            .then(response => response.json())
+            .then(data => {
+                mostrarResultados(data.clientes);
+            })
+            .catch(error => {
+                console.error('Erro ao carregar clientes iniciais:', error);
+                clienteResultados.style.display = 'none';
+            });
+    }
+
+    // Função para mostrar resultados
+    function mostrarResultados(clientes) {
+        clienteResultados.innerHTML = '';
+        
+        if (clientes.length === 0) {
+            clienteResultados.innerHTML = '<div class="cliente-item text-muted">Nenhum cliente encontrado</div>';
+        } else {
+            clientes.forEach(cliente => {
+                const item = document.createElement('div');
+                item.className = 'cliente-item';
+                item.setAttribute('data-cliente-id', cliente.id);
+                item.innerHTML = `
+                    <div class="empresa">${cliente.nome_empresa}</div>
+                    <div class="detalhes">
+                        <strong>Rep.:</strong> ${cliente.representante} | 
+                        <strong>CNPJ:</strong> ${cliente.cnpj}
+                    </div>
+                `;
+                
+                item.addEventListener('click', function() {
+                    selecionarCliente(cliente);
+                });
+                
+                clienteResultados.appendChild(item);
+            });
+        }
+        
+        clienteResultados.style.display = 'block';
+    }
+
+    // Função para selecionar cliente
+    function selecionarCliente(cliente) {
+        clienteSelecionado = cliente;
+        clienteBusca.value = cliente.nome_empresa;
+        clienteSelect.value = cliente.id;
+        clienteResultados.style.display = 'none';
+        
+        // Trigger change event no select original
+        clienteSelect.dispatchEvent(new Event('change'));
+        
+        // Feedback visual
+        clienteBusca.classList.add('border-success');
+        setTimeout(() => {
+            clienteBusca.classList.remove('border-success');
+        }, 2000);
+    }
+
+    // Event listeners
+    // Evento focus - carrega clientes iniciais se campo estiver vazio
+    clienteBusca.addEventListener('focus', function() {
+        if (!this.value.trim()) {
+            carregarClientesIniciais();
+        } else if (this.value.trim().length >= 2) {
+            buscarClientes(this.value.trim());
+        }
+    });
+
+    // Evento click - carrega clientes iniciais se campo estiver vazio
+    clienteBusca.addEventListener('click', function() {
+        if (!this.value.trim()) {
+            carregarClientesIniciais();
+        }
+    });
+
+    clienteBusca.addEventListener('input', function() {
+        const termo = this.value.trim();
+        
+        // Limpar timeout anterior
+        clearTimeout(timeoutBusca);
+        
+        // Se o campo está vazio, limpar seleção mas exibir clientes iniciais
+        if (termo === '') {
+            clienteSelect.value = '';
+            clienteSelecionado = null;
+            carregarClientesIniciais();
+            return;
+        }
+        
+        // Se tem menos de 2 caracteres, esconder resultados
+        if (termo.length < 2) {
+            clienteResultados.style.display = 'none';
+            return;
+        }
+        
+        // Buscar com delay para evitar muitas requisições
+        timeoutBusca = setTimeout(() => {
+            buscarClientes(termo);
+        }, 300);
+    });
+
+    // Fechar resultados ao clicar fora
+    document.addEventListener('click', function(e) {
+        if (!e.target.closest('.position-relative')) {
+            clienteResultados.style.display = 'none';
+        }
+    });
+
+    // Navegação por teclado
+    clienteBusca.addEventListener('keydown', function(e) {
+        const items = clienteResultados.querySelectorAll('.cliente-item');
+        let ativo = clienteResultados.querySelector('.cliente-item.active');
+        
+        if (e.key === 'ArrowDown') {
+            e.preventDefault();
+            if (!ativo) {
+                items[0]?.classList.add('active');
+            } else {
+                ativo.classList.remove('active');
+                const next = ativo.nextElementSibling || items[0];
+                next.classList.add('active');
+            }
+        } else if (e.key === 'ArrowUp') {
+            e.preventDefault();
+            if (!ativo) {
+                items[items.length - 1]?.classList.add('active');
+            } else {
+                ativo.classList.remove('active');
+                const prev = ativo.previousElementSibling || items[items.length - 1];
+                prev.classList.add('active');
+            }
+        } else if (e.key === 'Enter') {
+            e.preventDefault();
+            if (ativo) {
+                ativo.click();
+            }
+        } else if (e.key === 'Escape') {
+            clienteResultados.style.display = 'none';
+        }
+    });
+
+    // Inicializar campo se já existe seleção
+    if (clienteSelect.value) {
+        const option = clienteSelect.options[clienteSelect.selectedIndex];
+        if (option && option.text) {
+            clienteBusca.value = option.text;
+        }
+    }
+
+    // CSS adicional para navegação por teclado
+    const style = document.createElement('style');
+    style.textContent = `
+        .cliente-item.active {
+            background-color: #007bff !important;
+            color: white !important;
+        }
+        .cliente-item.active .detalhes {
+            color: rgba(255,255,255,0.8) !important;
+        }
+    `;
+    document.head.appendChild(style);
+});
+
+console.log('Sistema de busca dinâmica de clientes carregado');
 </script>
 {% endblock %}

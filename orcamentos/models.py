@@ -95,6 +95,8 @@ class Orcamento(BaseModel):
         max_digits=10,
         decimal_places=2,
         default=0.00,
+        null=True,
+        blank=True,
         verbose_name="Desconto (R$)",
         help_text="Valor do desconto em reais"
     )
@@ -102,6 +104,8 @@ class Orcamento(BaseModel):
         max_digits=5,
         decimal_places=2,
         default=0.00,
+        null=True,
+        blank=True,
         verbose_name="Desconto (%)",
         help_text="Percentual de desconto"
     )
@@ -109,6 +113,8 @@ class Orcamento(BaseModel):
         max_digits=10,
         decimal_places=2,
         default=0.00,
+        null=True,
+        blank=True,
         verbose_name="Acréscimo (R$)",
         help_text="Valor do acréscimo em reais"
     )
@@ -116,6 +122,8 @@ class Orcamento(BaseModel):
         max_digits=5,
         decimal_places=2,
         default=0.00,
+        null=True,
+        blank=True,
         verbose_name="Acréscimo (%)",
         help_text="Percentual de acréscimo"
     )
@@ -170,6 +178,10 @@ class Orcamento(BaseModel):
         if not self.data_validade:
             self.data_validade = timezone.now().date() + timedelta(days=15)
         
+        # Definir data de entrega padrão (30 dias)
+        if not self.data_entrega:
+            self.data_entrega = timezone.now().date() + timedelta(days=30)
+        
         super().save(*args, **kwargs)
     
     def gerar_numero_orcamento(self):
@@ -201,16 +213,16 @@ class Orcamento(BaseModel):
         """Calcula total de desconto"""
         from decimal import Decimal
         subtotal = self.get_subtotal()
-        desconto_valor = self.desconto_valor
-        desconto_percentual = (subtotal * Decimal(str(self.desconto_percentual)) / Decimal('100'))
+        desconto_valor = Decimal(str(self.desconto_valor or 0))
+        desconto_percentual = (subtotal * Decimal(str(self.desconto_percentual or 0)) / Decimal('100'))
         return desconto_valor + desconto_percentual
     
     def get_total_acrescimo(self):
         """Calcula total de acréscimo"""
         from decimal import Decimal
         subtotal = self.get_subtotal()
-        acrescimo_valor = self.acrescimo_valor
-        acrescimo_percentual = (subtotal * Decimal(str(self.acrescimo_percentual)) / Decimal('100'))
+        acrescimo_valor = Decimal(str(self.acrescimo_valor or 0))
+        acrescimo_percentual = (subtotal * Decimal(str(self.acrescimo_percentual or 0)) / Decimal('100'))
         return acrescimo_valor + acrescimo_percentual
     
     def get_total_final(self):

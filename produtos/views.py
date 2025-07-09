@@ -1075,7 +1075,28 @@ def acessorio_cadastro_view(request):
 @produtos_access_required
 def acessorio_detalhes_view(request, acessorio_id):
     """View para visualizar detalhes de um acessório"""
-    acessorio = get_object_or_404(Acessorio, id=acessorio_id)
+    # Primeiro tentar buscar diretamente na tabela Acessorio
+    try:
+        acessorio = Acessorio.objects.get(id=acessorio_id)
+    except Acessorio.DoesNotExist:
+        # Se não encontrar, pode ser que o ID seja de um produto
+        # Buscar o produto e depois o acessório correspondente
+        try:
+            produto = Produto.objects.get(id=acessorio_id)
+            # Verificar se é realmente um acessório
+            if produto.id_tipo_produto and 'acessório' in produto.id_tipo_produto.nome.lower():
+                # Buscar acessório pela referência
+                try:
+                    acessorio = Acessorio.objects.get(ref_acessorio=produto.ref_produto)
+                except Acessorio.DoesNotExist:
+                    # Se não existe acessório correspondente, criar um temporariamente para exibição
+                    # ou retornar 404
+                    raise Http404("Acessório não encontrado")
+            else:
+                raise Http404("Produto não é um acessório")
+        except Produto.DoesNotExist:
+            raise Http404("Acessório não encontrado")
+    
     produtos_vinculados = acessorio.produtos_vinculados.all()
     
     context = {
@@ -1087,23 +1108,33 @@ def acessorio_detalhes_view(request, acessorio_id):
 @produtos_access_required
 @csrf_protect
 def acessorio_editar_view(request, acessorio_id):
-    """View para editar um acessório - busca por ID do Produto"""
-    # Primeiro buscar o produto correspondente
-    produto = get_object_or_404(Produto, id=acessorio_id)
-    
-    # Depois buscar o acessório correspondente
+    """View para editar um acessório"""
+    # Primeiro tentar buscar diretamente na tabela Acessorio
     try:
-        acessorio = Acessorio.objects.get(ref_acessorio=produto.ref_produto)
+        acessorio = Acessorio.objects.get(id=acessorio_id)
     except Acessorio.DoesNotExist:
-        # Se não existir acessório, criar um baseado no produto
-        acessorio = Acessorio.objects.create(
-            ref_acessorio=produto.ref_produto,
-            nome=produto.nome_produto,
-            ativo=produto.ativo,
-            imagem_principal=produto.imagem_principal,
-            imagem_secundaria=produto.imagem_secundaria
-        )
-        messages.info(request, f'Acessório criado automaticamente para {produto.ref_produto}')
+        # Se não encontrar, pode ser que o ID seja de um produto
+        try:
+            produto = Produto.objects.get(id=acessorio_id)
+            # Verificar se é realmente um acessório
+            if produto.id_tipo_produto and 'acessório' in produto.id_tipo_produto.nome.lower():
+                # Buscar acessório pela referência
+                try:
+                    acessorio = Acessorio.objects.get(ref_acessorio=produto.ref_produto)
+                except Acessorio.DoesNotExist:
+                    # Se não existe acessório correspondente, criar um baseado no produto
+                    acessorio = Acessorio.objects.create(
+                        ref_acessorio=produto.ref_produto,
+                        nome=produto.nome_produto,
+                        ativo=produto.ativo,
+                        imagem_principal=produto.imagem_principal,
+                        imagem_secundaria=produto.imagem_secundaria
+                    )
+                    messages.info(request, f'Acessório criado automaticamente para {produto.ref_produto}')
+            else:
+                raise Http404("Produto não é um acessório")
+        except Produto.DoesNotExist:
+            raise Http404("Acessório não encontrado")
     
     if request.method == 'POST':
         form = AcessorioForm(request.POST, request.FILES, instance=acessorio)
@@ -1141,14 +1172,43 @@ def acessorio_editar_view(request, acessorio_id):
 @csrf_protect
 def acessorio_excluir_view(request, acessorio_id):
     """View para excluir um acessório"""
-    acessorio = get_object_or_404(Acessorio, id=acessorio_id)
+    # Primeiro tentar buscar diretamente na tabela Acessorio
+    try:
+        acessorio = Acessorio.objects.get(id=acessorio_id)
+    except Acessorio.DoesNotExist:
+        # Se não encontrar, pode ser que o ID seja de um produto
+        try:
+            produto = Produto.objects.get(id=acessorio_id)
+            if produto.id_tipo_produto and 'acessório' in produto.id_tipo_produto.nome.lower():
+                try:
+                    acessorio = Acessorio.objects.get(ref_acessorio=produto.ref_produto)
+                except Acessorio.DoesNotExist:
+                    raise Http404("Acessório não encontrado")
+            else:
+                raise Http404("Produto não é um acessório")
+        except Produto.DoesNotExist:
+            raise Http404("Acessório não encontrado")
     
     if request.method == 'POST':
         try:
-            nome_acessorio = f"{acessorio.ref_acessorio} - {acessorio.nome}"
-            acessorio.delete()
-            messages.success(request, f'Acessório "{nome_acessorio}" excluído com sucesso!')
-            return redirect('acessorios_lista')
+            with transaction.atomic():
+                nome_acessorio = f"{acessorio.ref_acessorio} - {acessorio.nome}"
+                produtos_vinculados_count = acessorio.produtos_vinculados.count()
+                
+                # Log da exclusão
+                logger.info(f"Excluindo acessório {acessorio.ref_acessorio} com {produtos_vinculados_count} produtos vinculados")
+                
+                # Excluir apenas o acessório (os produtos vinculados permanecerão)
+                acessorio.delete()
+                logger.info(f"Acessório {acessorio.ref_acessorio} excluído com sucesso")
+                
+                # Mensagem informativa
+                if produtos_vinculados_count > 0:
+                    messages.success(request, f'Acessório "{nome_acessorio}" excluído com sucesso! Os {produtos_vinculados_count} produto(s) vinculado(s) permaneceram no sistema.')
+                else:
+                    messages.success(request, f'Acessório "{nome_acessorio}" excluído com sucesso!')
+                
+                return redirect('acessorios_lista')
         except Exception as e:
             logger.error(f"Erro ao excluir acessório: {str(e)}")
             messages.error(request, f'Erro ao excluir acessório: {str(e)}')

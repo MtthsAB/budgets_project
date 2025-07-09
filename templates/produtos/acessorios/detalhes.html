@@ -242,6 +242,41 @@
             </div>
             <div class="modal-body">
                 <p>Tem certeza que deseja excluir o acessório <strong>{{ acessorio.ref_acessorio }} - {{ acessorio.nome }}</strong>?</p>
+                
+                {% if produtos_vinculados %}
+                    <div class="alert alert-warning">
+                        <div class="d-flex align-items-start">
+                            <i class="bi bi-exclamation-triangle me-2 fs-5"></i>
+                            <div>
+                                <strong>Atenção!</strong> Este acessório está vinculado a <strong>{{ produtos_vinculados.count }} produto(s)</strong>:
+                                <ul class="mt-2 mb-0">
+                                    {% for produto in produtos_vinculados %}
+                                        <li><strong>{{ produto.ref_produto }}</strong> - {{ produto.nome_produto }}</li>
+                                    {% endfor %}
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="alert alert-info">
+                        <div class="d-flex align-items-start">
+                            <i class="bi bi-info-circle me-2 fs-5"></i>
+                            <div>
+                                <strong>O que será excluído:</strong>
+                                <ul class="mb-0 mt-1">
+                                    <li>✅ Apenas o acessório <strong>{{ acessorio.ref_acessorio }}</strong></li>
+                                    <li>✅ As vinculações serão removidas automaticamente</li>
+                                    <li>❌ Os sofás vinculados <strong>NÃO</strong> serão excluídos</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                {% else %}
+                    <div class="alert alert-info">
+                        <i class="bi bi-info-circle"></i>
+                        Este acessório não possui produtos vinculados.
+                    </div>
+                {% endif %}
+                
                 <p class="text-danger"><strong>Esta ação não pode ser desfeita!</strong></p>
             </div>
             <div class="modal-footer">
