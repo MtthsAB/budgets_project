@@ -25,6 +25,8 @@ urlpatterns = [
     path('buscar-cliente/', views.buscar_cliente, name='buscar_cliente'),
     path('buscar-produto/', views.buscar_produto, name='buscar_produto'),
     path('produtos-por-tipo/', views.produtos_por_tipo, name='produtos_por_tipo'),
+    path('buscar-produtos-por-tipo/', views.buscar_produtos_por_tipo, name='buscar_produtos_por_tipo'),
     path('detalhes-produto/', views.obter_detalhes_produto, name='obter_detalhes_produto'),
+    path('informacoes-produto/', views.obter_informacoes_produto, name='obter_informacoes_produto'),
     path('catalogo-produtos/', views.catalogo_produtos, name='catalogo_produtos'),
 ]

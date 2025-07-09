@@ -691,6 +691,147 @@ def produtos_por_tipo(request):
 
 @login_required
 @orcamentos_access_required
+def buscar_produtos_por_tipo(request):
+    """Busca produtos filtrados por tipo com busca dinâmica"""
+    tipo = request.GET.get('tipo', '')
+    busca = request.GET.get('busca', '')
+    
+    if not tipo:
+        return JsonResponse({'produtos': []})
+        
+    produtos_com_preco = []
+    
+    try:
+        if tipo == 'cadeira':
+            # Buscar na tabela Cadeira
+            from produtos.models import Cadeira
+            cadeiras = Cadeira.objects.filter(ativo=True).order_by('nome')
+            
+            # Filtrar por busca se fornecida
+            if busca:
+                cadeiras = cadeiras.filter(
+                    Q(nome__icontains=busca) | Q(ref_cadeira__icontains=busca)
+                )
+            
+            # Limitar resultados
+            cadeiras = cadeiras[:20]
+            
+            for cadeira in cadeiras:
+                produtos_com_preco.append({
+                    'id': f'cadeira_{cadeira.id}',
+                    'nome_produto': cadeira.nome,
+                    'ref_produto': cadeira.ref_cadeira,
+                    'tipo': 'Cadeira',
+                    'preco': float(cadeira.preco) if cadeira.preco else 0.00,
+                    'tem_modulos': False,
+                    'display_name': f"{cadeira.nome} - {cadeira.ref_cadeira}"
+                })
+        
+        elif tipo == 'banqueta':
+            # Buscar na tabela Banqueta
+            from produtos.models import Banqueta
+            banquetas = Banqueta.objects.filter(ativo=True).order_by('nome')
+            
+            if busca:
+                banquetas = banquetas.filter(
+                    Q(nome__icontains=busca) | Q(ref_banqueta__icontains=busca)
+                )
+            
+            banquetas = banquetas[:20]
+            
+            for banqueta in banquetas:
+                produtos_com_preco.append({
+                    'id': f'banqueta_{banqueta.id}',
+                    'nome_produto': banqueta.nome,
+                    'ref_produto': banqueta.ref_banqueta,
+                    'tipo': 'Banqueta',
+                    'preco': float(banqueta.preco) if banqueta.preco else 0.00,
+                    'tem_modulos': False,
+                    'display_name': f"{banqueta.nome} - {banqueta.ref_banqueta}"
+                })
+        
+        elif tipo == 'poltrona':
+            # Buscar na tabela Poltrona
+            from produtos.models import Poltrona
+            poltronas = Poltrona.objects.filter(ativo=True).order_by('nome')
+            
+            if busca:
+                poltronas = poltronas.filter(
+                    Q(nome__icontains=busca) | Q(ref_poltrona__icontains=busca)
+                )
+            
+            poltronas = poltronas[:20]
+            
+            for poltrona in poltronas:
+                produtos_com_preco.append({
+                    'id': f'poltrona_{poltrona.id}',
+                    'nome_produto': poltrona.nome,
+                    'ref_produto': poltrona.ref_poltrona,
+                    'tipo': 'Poltrona',
+                    'preco': float(poltrona.preco) if poltrona.preco else 0.00,
+                    'tem_modulos': False,
+                    'display_name': f"{poltrona.nome} - {poltrona.ref_poltrona}"
+                })
+        
+        elif tipo == 'pufe':
+            # Buscar na tabela Pufe
+            from produtos.models import Pufe
+            pufes = Pufe.objects.filter(ativo=True).order_by('nome')
+            
+            if busca:
+                pufes = pufes.filter(
+                    Q(nome__icontains=busca) | Q(ref_pufe__icontains=busca)
+                )
+            
+            pufes = pufes[:20]
+            
+            for pufe in pufes:
+                produtos_com_preco.append({
+                    'id': f'pufe_{pufe.id}',
+                    'nome_produto': pufe.nome,
+                    'ref_produto': pufe.ref_pufe,
+                    'tipo': 'Pufe',
+                    'preco': float(pufe.preco) if pufe.preco else 0.00,
+                    'tem_modulos': False,
+                    'display_name': f"{pufe.nome} - {pufe.ref_pufe}"
+                })
+        
+        elif tipo == 'almofada':
+            # Buscar na tabela Almofada
+            from produtos.models import Almofada
+            almofadas = Almofada.objects.filter(ativo=True).order_by('nome')
+            
+            if busca:
+                almofadas = almofadas.filter(
+                    Q(nome__icontains=busca) | Q(ref_almofada__icontains=busca)
+                )
+            
+            almofadas = almofadas[:20]
+            
+            for almofada in almofadas:
+                produtos_com_preco.append({
+                    'id': f'almofada_{almofada.id}',
+                    'nome_produto': almofada.nome,
+                    'ref_produto': almofada.ref_almofada,
+                    'tipo': 'Almofada',
+                    'preco': float(almofada.preco) if almofada.preco else 0.00,
+                    'tem_modulos': False,
+                    'display_name': f"{almofada.nome} - {almofada.ref_almofada}"
+                })
+        
+        # Deixar sofás e acessórios de lado conforme solicitado
+        elif tipo in ['sofa', 'acessorio']:
+            # Retornar lista vazia para tipos não implementados nesta melhoria
+            produtos_com_preco = []
+        
+        return JsonResponse({'produtos': produtos_com_preco})
+        
+    except Exception as e:
+        return JsonResponse({'erro': str(e)}, status=500)
+
+
+@login_required
+@orcamentos_access_required
 def obter_detalhes_produto(request):
     """Retorna detalhes específicos de um produto para o modal"""
     produto_id = request.GET.get('produto_id', '')
@@ -742,107 +883,213 @@ def obter_detalhes_produto(request):
         elif produto_id.startswith('cadeira_'):
             # Cadeira
             from produtos.models import Cadeira
-            produto_real_id = produto_id.replace('cadeira_', '')
-            cadeira = Cadeira.objects.get(id=produto_real_id)
+            cadeira_id = produto_id.replace('cadeira_', '')
+            cadeira = Cadeira.objects.get(id=cadeira_id)
             
             return JsonResponse({
                 'produto': {
-                    'id': cadeira.id,
+                    'id': produto_id,
                     'nome': cadeira.nome,
                     'ref': cadeira.ref_cadeira,
                     'tipo': 'Cadeira',
                     'preco': float(cadeira.preco) if cadeira.preco else 0.00,
                     'tem_modulos': False,
-                    'dimensoes': f"{cadeira.largura}x{cadeira.profundidade}x{cadeira.altura}cm"
+                    'descricao': f'Cadeira {cadeira.nome} - Preço: R$ {cadeira.preco:.2f}'
                 }
             })
             
         elif produto_id.startswith('banqueta_'):
             # Banqueta
             from produtos.models import Banqueta
-            produto_real_id = produto_id.replace('banqueta_', '')
-            banqueta = Banqueta.objects.get(id=produto_real_id)
+            banqueta_id = produto_id.replace('banqueta_', '')
+            banqueta = Banqueta.objects.get(id=banqueta_id)
             
             return JsonResponse({
                 'produto': {
-                    'id': banqueta.id,
+                    'id': produto_id,
                     'nome': banqueta.nome,
                     'ref': banqueta.ref_banqueta,
                     'tipo': 'Banqueta',
                     'preco': float(banqueta.preco) if banqueta.preco else 0.00,
                     'tem_modulos': False,
-                    'dimensoes': f"{banqueta.largura}x{banqueta.profundidade}x{banqueta.altura}cm"
+                    'descricao': f'Banqueta {banqueta.nome} - Preço: R$ {banqueta.preco:.2f}'
                 }
             })
             
         elif produto_id.startswith('poltrona_'):
             # Poltrona
             from produtos.models import Poltrona
-            produto_real_id = produto_id.replace('poltrona_', '')
-            poltrona = Poltrona.objects.get(id=produto_real_id)
+            poltrona_id = produto_id.replace('poltrona_', '')
+            poltrona = Poltrona.objects.get(id=poltrona_id)
             
             return JsonResponse({
                 'produto': {
-                    'id': poltrona.id,
+                    'id': produto_id,
                     'nome': poltrona.nome,
                     'ref': poltrona.ref_poltrona,
                     'tipo': 'Poltrona',
                     'preco': float(poltrona.preco) if poltrona.preco else 0.00,
                     'tem_modulos': False,
-                    'dimensoes': f"{poltrona.largura}x{poltrona.profundidade}x{poltrona.altura}cm"
+                    'descricao': f'Poltrona {poltrona.nome} - Preço: R$ {poltrona.preco:.2f}'
                 }
             })
             
         elif produto_id.startswith('pufe_'):
             # Pufe
             from produtos.models import Pufe
-            produto_real_id = produto_id.replace('pufe_', '')
-            pufe = Pufe.objects.get(id=produto_real_id)
+            pufe_id = produto_id.replace('pufe_', '')
+            pufe = Pufe.objects.get(id=pufe_id)
             
             return JsonResponse({
                 'produto': {
-                    'id': pufe.id,
+                    'id': produto_id,
                     'nome': pufe.nome,
                     'ref': pufe.ref_pufe,
                     'tipo': 'Pufe',
                     'preco': float(pufe.preco) if pufe.preco else 0.00,
                     'tem_modulos': False,
-                    'dimensoes': f"{pufe.largura}x{pufe.profundidade}x{pufe.altura}cm"
+                    'descricao': f'Pufe {pufe.nome} - Preço: R$ {pufe.preco:.2f}'
                 }
             })
             
         elif produto_id.startswith('almofada_'):
             # Almofada
             from produtos.models import Almofada
-            produto_real_id = produto_id.replace('almofada_', '')
-            almofada = Almofada.objects.get(id=produto_real_id)
+            almofada_id = produto_id.replace('almofada_', '')
+            almofada = Almofada.objects.get(id=almofada_id)
             
             return JsonResponse({
                 'produto': {
-                    'id': almofada.id,
+                    'id': produto_id,
                     'nome': almofada.nome,
                     'ref': almofada.ref_almofada,
                     'tipo': 'Almofada',
                     'preco': float(almofada.preco) if almofada.preco else 0.00,
                     'tem_modulos': False,
-                    'dimensoes': f"{almofada.largura}x{almofada.altura}cm"
+                    'descricao': f'Almofada {almofada.nome} - Preço: R$ {almofada.preco:.2f}'
+                }
+            })
+        
+        else:
+            return JsonResponse({'erro': 'Tipo de produto não reconhecido'}, status=400)
+            
+    except Exception as e:
+        return JsonResponse({'erro': str(e)}, status=500)
+
+
+@login_required
+@orcamentos_access_required
+def obter_informacoes_produto(request):
+    """Retorna informações básicas de um produto para preview (nome, foto, dimensões)"""
+    try:
+        produto_id = request.GET.get('produto_id')
+        if not produto_id:
+            return JsonResponse({'erro': 'ID do produto não fornecido'}, status=400)
+        
+        # Determinar tipo e buscar produto
+        if produto_id.startswith('sofa_'):
+            # Sofá
+            from produtos.models import Produto
+            sofa_id = produto_id.replace('sofa_', '')
+            sofa = Produto.objects.get(id=sofa_id)
+            
+            # Para sofás, não temos dimensões fixas pois dependem dos módulos
+            return JsonResponse({
+                'produto': {
+                    'nome': sofa.nome_produto,
+                    'foto': sofa.imagem_principal.url if sofa.imagem_principal else None,
+                    'dimensoes': 'Varia conforme módulos selecionados',
+                    'tipo': 'Sofá'
+                }
+            })
+            
+        elif produto_id.startswith('banqueta_'):
+            # Banqueta
+            from produtos.models import Banqueta
+            banqueta_id = produto_id.replace('banqueta_', '')
+            banqueta = Banqueta.objects.get(id=banqueta_id)
+            
+            return JsonResponse({
+                'produto': {
+                    'nome': banqueta.nome,
+                    'foto': banqueta.imagem_principal.url if banqueta.imagem_principal else None,
+                    'dimensoes': f"{banqueta.largura} x {banqueta.profundidade} x {banqueta.altura} cm",
+                    'tipo': 'Banqueta'
+                }
+            })
+            
+        elif produto_id.startswith('cadeira_'):
+            # Cadeira
+            from produtos.models import Cadeira
+            cadeira_id = produto_id.replace('cadeira_', '')
+            cadeira = Cadeira.objects.get(id=cadeira_id)
+            
+            return JsonResponse({
+                'produto': {
+                    'nome': cadeira.nome,
+                    'foto': cadeira.imagem_principal.url if cadeira.imagem_principal else None,
+                    'dimensoes': f"{cadeira.largura} x {cadeira.profundidade} x {cadeira.altura} cm",
+                    'tipo': 'Cadeira'
+                }
+            })
+            
+        elif produto_id.startswith('poltrona_'):
+            # Poltrona
+            from produtos.models import Poltrona
+            poltrona_id = produto_id.replace('poltrona_', '')
+            poltrona = Poltrona.objects.get(id=poltrona_id)
+            
+            return JsonResponse({
+                'produto': {
+                    'nome': poltrona.nome,
+                    'foto': poltrona.imagem_principal.url if poltrona.imagem_principal else None,
+                    'dimensoes': f"{poltrona.largura} x {poltrona.profundidade} x {poltrona.altura} cm",
+                    'tipo': 'Poltrona'
+                }
+            })
+            
+        elif produto_id.startswith('pufe_'):
+            # Pufe
+            from produtos.models import Pufe
+            pufe_id = produto_id.replace('pufe_', '')
+            pufe = Pufe.objects.get(id=pufe_id)
+            
+            return JsonResponse({
+                'produto': {
+                    'nome': pufe.nome,
+                    'foto': pufe.imagem_principal.url if pufe.imagem_principal else None,
+                    'dimensoes': f"{pufe.largura} x {pufe.profundidade} x {pufe.altura} cm",
+                    'tipo': 'Pufe'
+                }
+            })
+            
+        elif produto_id.startswith('almofada_'):
+            # Almofada
+            from produtos.models import Almofada
+            almofada_id = produto_id.replace('almofada_', '')
+            almofada = Almofada.objects.get(id=almofada_id)
+            
+            return JsonResponse({
+                'produto': {
+                    'nome': almofada.nome,
+                    'foto': almofada.imagem_principal.url if almofada.imagem_principal else None,
+                    'dimensoes': f"{almofada.largura} x {almofada.altura} cm (Almofada)",
+                    'tipo': 'Almofada'
                 }
             })
             
         elif produto_id.startswith('acessorio_'):
             # Acessório
             from produtos.models import Acessorio
-            produto_real_id = produto_id.replace('acessorio_', '')
-            acessorio = Acessorio.objects.get(id=produto_real_id)
+            acessorio_id = produto_id.replace('acessorio_', '')
+            acessorio = Acessorio.objects.get(id=acessorio_id)
             
             return JsonResponse({
                 'produto': {
-                    'id': acessorio.id,
                     'nome': acessorio.nome,
-                    'ref': acessorio.ref_acessorio,
-                    'tipo': 'Acessório',
-                    'preco': float(acessorio.preco) if acessorio.preco else 0.00,
-                    'tem_modulos': False
+                    'foto': acessorio.imagem_principal.url if acessorio.imagem_principal else None,
+                    'dimensoes': 'Acessório',
+                    'tipo': 'Acessório'
                 }
             })
             
