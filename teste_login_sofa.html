@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Teste de Login e Sofá</title>
+    <script>
+        // Fazer login automaticamente
+        async function fazerLogin() {
+            const formData = new FormData();
+            formData.append('username', 'admin@essere.com');
+            formData.append('password', 'admin123');
+            
+            // Buscar CSRF token
+            const response = await fetch('/auth/login/');
+            const html = await response.text();
+            const parser = new DOMParser();
+            const doc = parser.parseFromString(html, 'text/html');
+            const csrfToken = doc.querySelector('[name=csrfmiddlewaretoken]').value;
+            
+            formData.append('csrfmiddlewaretoken', csrfToken);
+            
+            const loginResponse = await fetch('/auth/login/', {
+                method: 'POST',
+                body: formData,
+                credentials: 'include'
+            });
+            
+            console.log('Login status:', loginResponse.status);
+            return loginResponse.ok;
+        }
+        
+        // Testar busca de sofás
+        async function testarSofas() {
+            try {
+                const response = await fetch('/orcamentos/produtos-por-tipo/?tipo=sofa', {
+                    credentials: 'include'
+                });
+                const data = await response.json();
+                console.log('Sofás encontrados:', data);
+                
+                if (data.produtos && data.produtos.length > 0) {
+                    const produto = data.produtos[0];
+                    console.log('Testando primeiro produto:', produto.id);
+                    
+                    const detalhesResponse = await fetch(`/orcamentos/detalhes-produto/?produto_id=${produto.id}`, {
+                        credentials: 'include'
+                    });
+                    const detalhes = await detalhesResponse.json();
+                    console.log('Detalhes do produto:', detalhes);
+                    
+                    if (detalhes.produto && detalhes.produto.imagem_principal) {
+                        console.log('URL da imagem:', detalhes.produto.imagem_principal);
+                        
+                        // Testar se a imagem carrega
+                        const img = new Image();
+                        img.onload = () => console.log('✅ Imagem carregou com sucesso!');
+                        img.onerror = () => console.log('❌ Erro ao carregar imagem');
+                        img.src = detalhes.produto.imagem_principal;
+                    }
+                }
+            } catch (error) {
+                console.error('Erro ao testar sofás:', error);
+            }
+        }
+        
+        // Executar testes
+        window.onload = async function() {
+            console.log('🔑 Fazendo login...');
+            const loginOk = await fazerLogin();
+            
+            if (loginOk) {
+                console.log('✅ Login realizado com sucesso');
+                console.log('🛋️ Testando busca de sofás...');
+                await testarSofas();
+            } else {
+                console.log('❌ Erro no login');
+            }
+        };
+    </script>
+</head>
+<body>
+    <h1>Teste de Login e Sofá</h1>
+    <p>Verifique o console para ver os resultados dos testes.</p>
+    <p>Após os testes, <a href="/orcamentos/novo/">clique aqui para ir ao formulário de orçamentos</a>.</p>
+</body>
+</html>

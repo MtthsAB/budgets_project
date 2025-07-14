@@ -1,0 +1,313 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Teste Direto - Seleção de Sofás</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css" rel="stylesheet">
+</head>
+<body>
+    <div class="container mt-4">
+        <div class="row">
+            <div class="col-12">
+                <div class="alert alert-warning">
+                    <h4>🔧 Teste Direto - Problema: Seleção de Sofás Não Aparece</h4>
+                    <p><strong>Situação:</strong> Durante as modificações, a seleção funcionou, mas depois parou de funcionar.</p>
+                    <p><strong>Objetivo:</strong> Identificar o que está impedindo a interface de aparecer.</p>
+                </div>
+            </div>
+        </div>
+        
+        <div class="row">
+            <div class="col-md-8">
+                <div class="card">
+                    <div class="card-header">
+                        <h5>🎯 Teste Passo a Passo</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="mb-3">
+                            <label class="form-label">1. Produto ID para testar:</label>
+                            <input type="text" class="form-control" id="produto-id" value="produto_7" placeholder="produto_X">
+                        </div>
+                        
+                        <div class="mb-3">
+                            <button class="btn btn-primary me-2" onclick="testarDeteccao()">
+                                🔍 1. Testar Detecção
+                            </button>
+                            <button class="btn btn-info me-2" onclick="testarEndpoint()">
+                                📡 2. Testar Endpoint
+                            </button>
+                            <button class="btn btn-success me-2" onclick="testarFluxoCompleto()">
+                                ⚡ 3. Fluxo Completo
+                            </button>
+                            <button class="btn btn-danger" onclick="limparLogs()">
+                                🗑️ Limpar
+                            </button>
+                        </div>
+                        
+                        <div id="logs" style="background: #f8f9fa; padding: 15px; border-radius: 5px; height: 300px; overflow-y: auto; font-family: monospace; font-size: 0.9em;">
+                            <!-- Logs aparecerão aqui -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-md-4">
+                <div class="card">
+                    <div class="card-header">
+                        <h5>📋 Checklist de Diagnóstico</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" id="check-detection">
+                            <label class="form-check-label" for="check-detection">
+                                Detecção de Sofá (produto_X)
+                            </label>
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" id="check-endpoint">
+                            <label class="form-check-label" for="check-endpoint">
+                                Endpoint /detalhes-produto/ responde
+                            </label>
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" id="check-elements">
+                            <label class="form-check-label" for="check-elements">
+                                Elementos DOM existem
+                            </label>
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" id="check-functions">
+                            <label class="form-check-label" for="check-functions">
+                                Funções JavaScript existem
+                            </label>
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" id="check-display">
+                            <label class="form-check-label" for="check-display">
+                                Seção de configuração aparece
+                            </label>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="card mt-3">
+                    <div class="card-header">
+                        <h5>🎬 Simular Interface</h5>
+                    </div>
+                    <div class="card-body">
+                        <!-- Simular elementos que deveriam aparecer -->
+                        <div id="simulated-sofa-config" style="display: none;">
+                            <div class="alert alert-info">
+                                <h6>✅ Configuração do Sofá</h6>
+                                <div id="simulated-preview">
+                                    <strong>Nome:</strong> <span id="sim-nome">-</span><br>
+                                    <strong>Ref:</strong> <span id="sim-ref">-</span><br>
+                                    <strong>Módulos:</strong> <span id="sim-modulos">-</span>
+                                </div>
+                                <hr>
+                                <h6>Módulos Disponíveis:</h6>
+                                <div id="simulated-modules">
+                                    <!-- Lista de módulos simulada -->
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <button class="btn btn-outline-success w-100" onclick="mostrarSimulacao()">
+                            👁️ Mostrar Como Deveria Ser
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function log(message, type = 'info') {
+            const logsDiv = document.getElementById('logs');
+            const timestamp = new Date().toLocaleTimeString();
+            const color = type === 'error' ? '#dc3545' : type === 'success' ? '#28a745' : type === 'warning' ? '#ffc107' : '#007bff';
+            
+            logsDiv.innerHTML += `<div style="color: ${color}; margin: 2px 0;">[${timestamp}] ${message}</div>`;
+            logsDiv.scrollTop = logsDiv.scrollHeight;
+        }
+        
+        function updateCheck(checkId, status) {
+            const checkbox = document.getElementById(checkId);
+            if (checkbox) {
+                checkbox.checked = status;
+            }
+        }
+        
+        function limparLogs() {
+            document.getElementById('logs').innerHTML = '';
+            log('🧹 Logs limpos', 'info');
+        }
+        
+        function testarDeteccao() {
+            log('🔍 Testando detecção de sofás...', 'info');
+            
+            const produtoId = document.getElementById('produto-id').value;
+            log(`📝 Produto ID: ${produtoId}`);
+            
+            const isSofa = produtoId.startsWith('produto_');
+            log(`🔍 startsWith('produto_'): ${isSofa}`);
+            
+            if (isSofa) {
+                log('✅ Produto detectado como sofá', 'success');
+                updateCheck('check-detection', true);
+            } else {
+                log('❌ Produto NÃO detectado como sofá', 'error');
+                updateCheck('check-detection', false);
+            }
+        }
+        
+        async function testarEndpoint() {
+            log('📡 Testando endpoint...', 'info');
+            
+            const produtoId = document.getElementById('produto-id').value;
+            const url = `/orcamentos/detalhes-produto/?produto_id=${produtoId}`;
+            
+            log(`🌐 URL: ${url}`);
+            
+            try {
+                const response = await fetch(url);
+                log(`📊 Status: ${response.status}`);
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    log('✅ Endpoint respondeu com sucesso', 'success');
+                    log(`📦 Dados: ${JSON.stringify(data).substring(0, 200)}...`);
+                    updateCheck('check-endpoint', true);
+                    
+                    // Mostrar dados principais
+                    if (data.produto) {
+                        log(`📋 Nome: ${data.produto.nome}`);
+                        log(`📋 Módulos: ${data.produto.modulos ? data.produto.modulos.length : 0}`);
+                        log(`📋 Acessórios: ${data.produto.acessorios_vinculados ? data.produto.acessorios_vinculados.length : 0}`);
+                    }
+                } else {
+                    log(`❌ Endpoint retornou erro: ${response.status}`, 'error');
+                    updateCheck('check-endpoint', false);
+                }
+            } catch (error) {
+                log(`❌ Erro na requisição: ${error.message}`, 'error');
+                updateCheck('check-endpoint', false);
+            }
+        }
+        
+        function testarFluxoCompleto() {
+            log('⚡ Iniciando teste completo...', 'warning');
+            
+            // 1. Detecção
+            testarDeteccao();
+            
+            // 2. Endpoint (após 1 segundo)
+            setTimeout(() => {
+                testarEndpoint();
+            }, 1000);
+            
+            // 3. Verificar elementos DOM (após 2 segundos)
+            setTimeout(() => {
+                log('🏗️ Verificando elementos DOM...', 'info');
+                
+                const elementos = [
+                    'sofa-configuracao',
+                    'sofa-nome-preview', 
+                    'sofa-info-preview',
+                    'modulos-lista',
+                    'sofa-resumo'
+                ];
+                
+                let todosExistem = true;
+                elementos.forEach(id => {
+                    const elemento = document.getElementById(id);
+                    if (elemento) {
+                        log(`✅ Elemento #${id}: encontrado`, 'success');
+                    } else {
+                        log(`❌ Elemento #${id}: NÃO encontrado`, 'error');
+                        todosExistem = false;
+                    }
+                });
+                
+                updateCheck('check-elements', todosExistem);
+                
+                // 4. Verificar funções
+                log('🔧 Verificando funções JavaScript...', 'info');
+                
+                const funcoes = [
+                    'carregarDetalhesProduto',
+                    'carregarConfiguracaoSofa',
+                    'carregarSeletorModulos',
+                    'atualizarResumoSofa'
+                ];
+                
+                let todasExistem = true;
+                funcoes.forEach(funcao => {
+                    if (typeof window[funcao] === 'function') {
+                        log(`✅ Função ${funcao}: encontrada`, 'success');
+                    } else {
+                        log(`❌ Função ${funcao}: NÃO encontrada`, 'error');
+                        todasExistem = false;
+                    }
+                });
+                
+                updateCheck('check-functions', todasExistem);
+                
+                // 5. Teste final
+                if (todosExistem && todasExistem) {
+                    log('🎉 Todos os componentes estão prontos!', 'success');
+                    log('💡 O problema pode estar na chamada das funções ou dados ausentes.', 'warning');
+                } else {
+                    log('⚠️ Componentes faltando. Isso explica o problema.', 'error');
+                }
+                
+            }, 2000);
+        }
+        
+        function mostrarSimulacao() {
+            log('👁️ Mostrando simulação da interface...', 'info');
+            
+            const simulatedDiv = document.getElementById('simulated-sofa-config');
+            simulatedDiv.style.display = 'block';
+            
+            // Simular dados
+            document.getElementById('sim-nome').textContent = 'Sofá Modular Le Coultre';
+            document.getElementById('sim-ref').textContent = 'SOF-001';
+            document.getElementById('sim-modulos').textContent = '3 disponíveis';
+            
+            const modulesDiv = document.getElementById('simulated-modules');
+            modulesDiv.innerHTML = `
+                <div class="form-check">
+                    <input class="form-check-input" type="checkbox" id="sim-mod1">
+                    <label class="form-check-label" for="sim-mod1">
+                        📦 Módulo Base (2 tamanhos)
+                    </label>
+                </div>
+                <div class="form-check">
+                    <input class="form-check-input" type="checkbox" id="sim-mod2">
+                    <label class="form-check-label" for="sim-mod2">
+                        📦 Módulo Lateral (3 tamanhos)
+                    </label>
+                </div>
+                <div class="form-check">
+                    <input class="form-check-input" type="checkbox" id="sim-mod3">
+                    <label class="form-check-label" for="sim-mod3">
+                        📦 Módulo Chaise (1 tamanho)
+                    </label>
+                </div>
+            `;
+            
+            log('✅ Simulação exibida. ISTO é o que deveria aparecer!', 'success');
+            updateCheck('check-display', true);
+        }
+        
+        // Inicializar
+        document.addEventListener('DOMContentLoaded', () => {
+            log('🚀 Sistema de teste carregado', 'info');
+            log('💡 Dica: Execute "Fluxo Completo" para diagnóstico automático', 'warning');
+        });
+    </script>
+</body>
+</html>

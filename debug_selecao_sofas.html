@@ -1,0 +1,271 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Debug - Seleção de Sofás</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        .log-entry { 
+            font-family: monospace; 
+            font-size: 0.9em; 
+            margin: 2px 0; 
+            padding: 2px 5px;
+            border-left: 3px solid #007bff;
+            background: #f8f9fa;
+        }
+        .error { border-left-color: #dc3545; background: #f8d7da; }
+        .success { border-left-color: #28a745; background: #d4edda; }
+        .warning { border-left-color: #ffc107; background: #fff3cd; }
+    </style>
+</head>
+<body>
+    <div class="container mt-4">
+        <div class="row">
+            <div class="col-12">
+                <div class="alert alert-info">
+                    <h4>🐛 Debug - Problema na Seleção de Sofás</h4>
+                    <p><strong>Status:</strong> Investigando por que a configuração de sofás não aparece no dropdown</p>
+                </div>
+            </div>
+        </div>
+        
+        <div class="row">
+            <div class="col-md-8">
+                <div class="card">
+                    <div class="card-header">
+                        <h5>📊 Logs de Debug</h5>
+                        <button class="btn btn-sm btn-secondary float-end" onclick="clearLogs()">Limpar Logs</button>
+                    </div>
+                    <div class="card-body" style="max-height: 400px; overflow-y: auto;">
+                        <div id="debug-logs">
+                            <div class="log-entry">🚀 Sistema de debug iniciado...</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-md-4">
+                <div class="card">
+                    <div class="card-header">
+                        <h5>🔧 Ações de Teste</h5>
+                    </div>
+                    <div class="card-body">
+                        <button class="btn btn-primary mb-2 w-100" onclick="testarDeteccaoSofa()">
+                            🛋️ Testar Detecção de Sofá
+                        </button>
+                        <button class="btn btn-warning mb-2 w-100" onclick="simularSelecaoDropdown()">
+                            📋 Simular Seleção Dropdown
+                        </button>
+                        <button class="btn btn-info mb-2 w-100" onclick="verificarFuncoesExistem()">
+                            🔍 Verificar Funções
+                        </button>
+                        <button class="btn btn-success mb-2 w-100" onclick="testarFluxoCompleto()">
+                            ⚡ Testar Fluxo Completo
+                        </button>
+                        
+                        <hr>
+                        
+                        <div class="mb-2">
+                            <label class="form-label small">Produto ID para teste:</label>
+                            <input type="text" class="form-control form-control-sm" id="produto-id-teste" value="produto_7">
+                        </div>
+                        
+                        <button class="btn btn-outline-primary w-100" onclick="testarProdutoEspecifico()">
+                            🎯 Testar Produto Específico
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="row mt-4">
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-header">
+                        <h5>📈 Status dos Componentes</h5>
+                    </div>
+                    <div class="card-body">
+                        <div id="status-componentes" class="row">
+                            <div class="col-md-3">
+                                <div class="text-center">
+                                    <div id="status-dom" class="badge bg-secondary">Verificando...</div>
+                                    <div class="small">Elementos DOM</div>
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="text-center">
+                                    <div id="status-funcoes" class="badge bg-secondary">Verificando...</div>
+                                    <div class="small">Funções JS</div>
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="text-center">
+                                    <div id="status-endpoints" class="badge bg-secondary">Verificando...</div>
+                                    <div class="small">Endpoints</div>
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="text-center">
+                                    <div id="status-deteccao" class="badge bg-secondary">Verificando...</div>
+                                    <div class="small">Detecção Sofás</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function log(message, type = 'info') {
+            const logsDiv = document.getElementById('debug-logs');
+            const timestamp = new Date().toLocaleTimeString();
+            const logClass = type === 'error' ? 'error' : type === 'success' ? 'success' : type === 'warning' ? 'warning' : '';
+            
+            logsDiv.innerHTML += `<div class="log-entry ${logClass}">[${timestamp}] ${message}</div>`;
+            logsDiv.scrollTop = logsDiv.scrollHeight;
+        }
+        
+        function clearLogs() {
+            document.getElementById('debug-logs').innerHTML = '<div class="log-entry">🚀 Logs limpos...</div>';
+        }
+        
+        function updateStatus(component, status) {
+            const element = document.getElementById(`status-${component}`);
+            if (element) {
+                element.className = `badge bg-${status === 'ok' ? 'success' : status === 'error' ? 'danger' : 'warning'}`;
+                element.textContent = status === 'ok' ? 'OK' : status === 'error' ? 'Erro' : 'Aviso';
+            }
+        }
+        
+        function testarDeteccaoSofa() {
+            log('🧪 Testando detecção de sofás...');
+            
+            const produtoId = 'produto_7';
+            const isSofa = produtoId.startsWith('produto_');
+            
+            log(`📝 Produto ID: ${produtoId}`);
+            log(`🔍 startsWith('produto_'): ${isSofa}`);
+            
+            if (isSofa) {
+                log('✅ Produto detectado como sofá', 'success');
+                updateStatus('deteccao', 'ok');
+            } else {
+                log('❌ Produto NÃO detectado como sofá', 'error');
+                updateStatus('deteccao', 'error');
+            }
+        }
+        
+        function verificarFuncoesExistem() {
+            log('🔍 Verificando se as funções existem...');
+            
+            const funcoes = [
+                'carregarDetalhesProduto',
+                'carregarConfiguracaoSofa', 
+                'carregarSeletorModulos',
+                'atualizarResumoSofa',
+                'mostrarPreviewSofa'
+            ];
+            
+            let todasExistem = true;
+            
+            funcoes.forEach(funcao => {
+                if (typeof window[funcao] === 'function') {
+                    log(`✅ Função ${funcao}: OK`, 'success');
+                } else {
+                    log(`❌ Função ${funcao}: NÃO ENCONTRADA`, 'error');
+                    todasExistem = false;
+                }
+            });
+            
+            updateStatus('funcoes', todasExistem ? 'ok' : 'error');
+        }
+        
+        function simularSelecaoDropdown() {
+            log('📋 Simulando seleção via dropdown...');
+            
+            const produtoId = document.getElementById('produto-id-teste').value;
+            log(`🎯 Simulando seleção de: ${produtoId}`);
+            
+            // Simular o que acontece quando um produto é selecionado
+            if (typeof window.carregarDetalhesProduto === 'function') {
+                log('🔧 Chamando carregarDetalhesProduto...');
+                try {
+                    window.carregarDetalhesProduto(produtoId);
+                    log('✅ carregarDetalhesProduto executada', 'success');
+                } catch (error) {
+                    log(`❌ Erro em carregarDetalhesProduto: ${error.message}`, 'error');
+                }
+            } else {
+                log('❌ carregarDetalhesProduto não encontrada', 'error');
+            }
+        }
+        
+        function testarProdutoEspecifico() {
+            const produtoId = document.getElementById('produto-id-teste').value;
+            log(`🎯 Testando produto específico: ${produtoId}`);
+            
+            // Testar detecção
+            const isSofa = produtoId.startsWith('produto_');
+            log(`🔍 É sofá: ${isSofa}`);
+            
+            if (isSofa) {
+                log('🛋️ Testando fluxo de sofá...');
+                if (typeof window.carregarConfiguracaoSofa === 'function') {
+                    try {
+                        window.carregarConfiguracaoSofa(produtoId);
+                        log('✅ carregarConfiguracaoSofa chamada', 'success');
+                    } catch (error) {
+                        log(`❌ Erro: ${error.message}`, 'error');
+                    }
+                } else {
+                    log('❌ carregarConfiguracaoSofa não encontrada', 'error');
+                }
+            }
+        }
+        
+        function testarFluxoCompleto() {
+            log('⚡ Iniciando teste do fluxo completo...');
+            
+            // 1. Verificar elementos DOM
+            log('1️⃣ Verificando elementos DOM...');
+            const elementos = ['sofa-configuracao', 'modulos-lista', 'sofa-resumo'];
+            let elementosOk = true;
+            
+            elementos.forEach(id => {
+                const elemento = document.getElementById(id);
+                if (elemento) {
+                    log(`✅ Elemento #${id}: encontrado`, 'success');
+                } else {
+                    log(`❌ Elemento #${id}: NÃO encontrado`, 'error');
+                    elementosOk = false;
+                }
+            });
+            
+            updateStatus('dom', elementosOk ? 'ok' : 'error');
+            
+            // 2. Verificar funções
+            log('2️⃣ Verificando funções...');
+            verificarFuncoesExistem();
+            
+            // 3. Testar detecção
+            log('3️⃣ Testando detecção...');
+            testarDeteccaoSofa();
+            
+            // 4. Simular seleção
+            log('4️⃣ Simulando seleção...');
+            setTimeout(() => {
+                simularSelecaoDropdown();
+            }, 1000);
+        }
+        
+        // Inicializar testes automáticos
+        document.addEventListener('DOMContentLoaded', () => {
+            log('🎬 DOM carregado, iniciando verificações automáticas...');
+            setTimeout(testarFluxoCompleto, 500);
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <title>Debug Manual - Seleção de Sofás</title>
+    <style>
+        body { font-family: Arial, sans-serif; padding: 20px; }
+        .status { padding: 10px; margin: 10px 0; border-radius: 5px; }
+        .success { background: #d4edda; border: 1px solid #c3e6cb; }
+        .error { background: #f8d7da; border: 1px solid #f5c6cb; }
+        .info { background: #d1ecf1; border: 1px solid #bee5eb; }
+        button { padding: 8px 16px; margin: 5px; background: #007bff; color: white; border: none; border-radius: 3px; cursor: pointer; }
+        select { padding: 8px; margin: 5px; min-width: 200px; }
+        #log { height: 400px; overflow-y: auto; background: #f8f9fa; padding: 10px; border: 1px solid #ddd; }
+    </style>
+</head>
+<body>
+    <h1>🔧 Debug Manual - Seleção de Sofás</h1>
+    
+    <div class="info">
+        <h3>Instruções:</h3>
+        <ol>
+            <li>Faça login em: <a href="/auth/login/" target="_blank">/auth/login/</a> (admin@test.com / admin123)</li>
+            <li>Abra o formulário de orçamentos: <a href="/orcamentos/novo/" target="_blank">/orcamentos/novo/</a></li>
+            <li>Abra o console do navegador (F12)</li>
+            <li>Execute os comandos de debug abaixo</li>
+        </ol>
+    </div>
+    
+    <div class="info">
+        <h3>🧪 Testes Manuais:</h3>
+        
+        <h4>1. Testar Endpoints:</h4>
+        <button onclick="testarEndpoint()">Testar Endpoint de Produtos</button>
+        <div id="endpoint-resultado"></div>
+        
+        <h4>2. Simular Seleção:</h4>
+        <select id="tipo-select">
+            <option value="">Selecione um tipo</option>
+            <option value="sofa">Sofá</option>
+            <option value="cadeira">Cadeira</option>
+        </select>
+        <select id="produto-select">
+            <option value="">Primeiro selecione um tipo</option>
+        </select>
+        <button onclick="carregarProdutos()">Carregar Produtos</button>
+        
+        <h4>3. Log de Debug:</h4>
+        <button onclick="limparLog()">Limpar Log</button>
+        <div id="log"></div>
+    </div>
+    
+    <div class="info">
+        <h3>📋 Comandos para Console do Navegador:</h3>
+        <pre>
+// 1. Verificar se elementos existem
+console.log('Tipo select:', !!document.getElementById('tipo-produto'));
+console.log('Produto select:', !!document.getElementById('produto'));
+console.log('Sofa configuracao:', !!document.getElementById('sofa-configuracao'));
+
+// 2. Verificar funções JavaScript
+console.log('carregarDetalhesProduto:', typeof carregarDetalhesProduto);
+console.log('debugSofaSelection:', typeof debugSofaSelection);
+
+// 3. Simular seleção manual
+document.getElementById('tipo-produto').value = 'sofa';
+document.getElementById('tipo-produto').dispatchEvent(new Event('change'));
+
+// 4. Verificar resposta do endpoint
+fetch('/orcamentos/produtos-por-tipo/?tipo=sofa')
+  .then(r => r.json())
+  .then(data => console.log('Produtos:', data))
+  .catch(e => console.error('Erro:', e));
+        </pre>
+    </div>
+
+    <script>
+        function log(message, type = 'info') {
+            const logDiv = document.getElementById('log');
+            const timestamp = new Date().toLocaleTimeString();
+            logDiv.innerHTML += `<div class="${type}">[${timestamp}] ${message}</div>`;
+            logDiv.scrollTop = logDiv.scrollHeight;
+        }
+        
+        function limparLog() {
+            document.getElementById('log').innerHTML = '';
+        }
+        
+        async function testarEndpoint() {
+            log('🔄 Testando endpoint de produtos...', 'info');
+            
+            try {
+                const response = await fetch('/orcamentos/produtos-por-tipo/?tipo=sofa');
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    log(`✅ Endpoint funcionando! ${data.produtos ? data.produtos.length : 0} produtos encontrados`, 'success');
+                    document.getElementById('endpoint-resultado').innerHTML = 
+                        `<div class="success">Produtos encontrados: <pre>${JSON.stringify(data, null, 2)}</pre></div>`;
+                } else {
+                    log(`❌ Erro HTTP: ${response.status}`, 'error');
+                    const text = await response.text();
+                    document.getElementById('endpoint-resultado').innerHTML = 
+                        `<div class="error">Erro ${response.status}: <br><pre>${text.substring(0, 500)}...</pre></div>`;
+                }
+            } catch (error) {
+                log(`❌ Erro na requisição: ${error.message}`, 'error');
+                document.getElementById('endpoint-resultado').innerHTML = 
+                    `<div class="error">Erro: ${error.message}</div>`;
+            }
+        }
+        
+        async function carregarProdutos() {
+            const tipo = document.getElementById('tipo-select').value;
+            const produtoSelect = document.getElementById('produto-select');
+            
+            if (!tipo) {
+                log('⚠️ Selecione um tipo primeiro', 'error');
+                return;
+            }
+            
+            log(`🔄 Carregando produtos do tipo: ${tipo}`, 'info');
+            
+            try {
+                const response = await fetch(`/orcamentos/produtos-por-tipo/?tipo=${tipo}`);
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    
+                    produtoSelect.innerHTML = '<option value="">Selecione um produto</option>';
+                    
+                    if (data.produtos && data.produtos.length > 0) {
+                        data.produtos.forEach(produto => {
+                            const option = document.createElement('option');
+                            option.value = produto.id;
+                            option.textContent = produto.nome_produto || produto.nome;
+                            produtoSelect.appendChild(option);
+                        });
+                        
+                        log(`✅ ${data.produtos.length} produtos carregados`, 'success');
+                    } else {
+                        log('⚠️ Nenhum produto encontrado', 'error');
+                    }
+                } else {
+                    log(`❌ Erro HTTP: ${response.status}`, 'error');
+                }
+            } catch (error) {
+                log(`❌ Erro: ${error.message}`, 'error');
+            }
+        }
+        
+        // Log inicial
+        document.addEventListener('DOMContentLoaded', () => {
+            log('📱 Página de debug carregada', 'info');
+            log('💡 Use os botões acima para testar ou abra o console para comandos avançados', 'info');
+        });
+    </script>
+</body>
+</html>

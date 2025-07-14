@@ -216,6 +216,7 @@ def adicionar_item(request, orcamento_pk):
             quantidade = int(data.get('quantidade', 1))
             preco_unitario = Decimal(data.get('preco_unitario', '0'))
             observacoes = data.get('observacoes', '')
+            dados_especificos = data.get('dados_especificos', {})
             
             # Criar item
             item = OrcamentoItem.objects.create(
@@ -223,7 +224,8 @@ def adicionar_item(request, orcamento_pk):
                 produto=produto,
                 quantidade=quantidade,
                 preco_unitario=preco_unitario,
-                observacoes=observacoes
+                observacoes=observacoes,
+                dados_produto=dados_especificos
             )
             
             return JsonResponse({
@@ -848,7 +850,7 @@ def obter_detalhes_produto(request):
             
             # Buscar módulos disponíveis para o sofá
             modulos = []
-            for modulo in produto.modulos.filter(ativo=True):
+            for modulo in produto.modulos.all():
                 # Buscar tamanhos detalhados do módulo
                 tamanhos = []
                 for tamanho in modulo.tamanhos_detalhados.all():
@@ -856,6 +858,9 @@ def obter_detalhes_produto(request):
                         'id': tamanho.id,
                         'largura_total': float(tamanho.largura_total) if tamanho.largura_total else 0,
                         'largura_assento': float(tamanho.largura_assento) if tamanho.largura_assento else 0,
+                        'tecido_metros': float(tamanho.tecido_metros) if tamanho.tecido_metros else 0,
+                        'volume_m3': float(tamanho.volume_m3) if tamanho.volume_m3 else 0,
+                        'peso_kg': float(tamanho.peso_kg) if tamanho.peso_kg else 0,
                         'preco': float(tamanho.preco) if tamanho.preco else 0.00,
                         'descricao': tamanho.descricao or ''
                     })
@@ -864,7 +869,22 @@ def obter_detalhes_produto(request):
                     'id': modulo.id,
                     'nome': modulo.nome,
                     'descricao': modulo.descricao or '',
+                    'imagem_principal': modulo.imagem_principal.url if modulo.imagem_principal else None,
                     'tamanhos': tamanhos
+                })
+            
+            # Buscar acessórios vinculados ao sofá
+            from produtos.models import Acessorio
+            acessorios_vinculados = []
+            acessorios = Acessorio.objects.filter(produtos_vinculados=produto, ativo=True)
+            for acessorio in acessorios:
+                acessorios_vinculados.append({
+                    'id': acessorio.id,
+                    'nome': acessorio.nome,
+                    'ref': acessorio.ref_acessorio,
+                    'preco': float(acessorio.preco) if acessorio.preco else 0.00,
+                    'descricao': acessorio.descricao or '',
+                    'imagem_principal': acessorio.imagem_principal.url if acessorio.imagem_principal else None
                 })
             
             return JsonResponse({
@@ -873,9 +893,11 @@ def obter_detalhes_produto(request):
                     'nome': produto.nome_produto,
                     'ref': produto.ref_produto,
                     'tipo': 'Sofá',
+                    'imagem_principal': produto.imagem_principal.url if produto.imagem_principal else None,
                     'preco_base': 0.00,
                     'tem_modulos': True,
                     'modulos': modulos,
+                    'acessorios_vinculados': acessorios_vinculados,
                     'descricao': 'Selecione os módulos para calcular o preço total'
                 }
             })
@@ -987,10 +1009,14 @@ def obter_informacoes_produto(request):
             return JsonResponse({'erro': 'ID do produto não fornecido'}, status=400)
         
         # Determinar tipo e buscar produto
-        if produto_id.startswith('sofa_'):
-            # Sofá
+        if produto_id.startswith('produto_') or produto_id.startswith('sofa_'):
+            # Sofá (novo formato: produto_X ou formato antigo: sofa_X)
             from produtos.models import Produto
-            sofa_id = produto_id.replace('sofa_', '')
+            if produto_id.startswith('produto_'):
+                sofa_id = produto_id.replace('produto_', '')
+            else:
+                sofa_id = produto_id.replace('sofa_', '')
+            
             sofa = Produto.objects.get(id=sofa_id)
             
             # Para sofás, não temos dimensões fixas pois dependem dos módulos

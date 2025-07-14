@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Teste - Endpoints de Sofás</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css" rel="stylesheet">
+</head>
+<body>
+    <div class="container mt-4">
+        <div class="row">
+            <div class="col-12">
+                <div class="alert alert-info">
+                    <h4>🔧 Teste de Endpoints - Correção Aplicada</h4>
+                    <p><strong>Correção:</strong> Adicionado suporte para <code>produto_X</code> na função <code>obter_informacoes_produto</code></p>
+                </div>
+            </div>
+        </div>
+        
+        <div class="row">
+            <div class="col-md-6">
+                <div class="card">
+                    <div class="card-header">
+                        <h5>📡 Teste de Endpoints</h5>
+                    </div>
+                    <div class="card-body">
+                        <button class="btn btn-primary mb-2" onclick="testarEndpoints()">Testar Endpoints</button>
+                        <div id="resultado-testes"></div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-md-6">
+                <div class="card">
+                    <div class="card-header">
+                        <h5>🛋️ Instruções de Teste Manual</h5>
+                    </div>
+                    <div class="card-body">
+                        <ol>
+                            <li>Abra o <a href="http://localhost:8000/orcamentos/novo/" target="_blank">Orçamento Novo</a></li>
+                            <li>Clique em <strong>"Adicionar Item"</strong></li>
+                            <li>Selecione <strong>"Sofá"</strong> como tipo</li>
+                            <li>Escolha um sofá na lista dropdown</li>
+                            <li>Abra o Console do navegador (F12)</li>
+                            <li>Verifique os logs:</li>
+                        </ol>
+                        
+                        <div class="alert alert-success">
+                            <h6>✅ Logs Esperados:</h6>
+                            <ul class="small">
+                                <li><code>🔸 carregarDetalhesProduto chamada para: produto_X</code></li>
+                                <li><code>🛋️ Produto de sofá detectado...</code></li>
+                                <li><code>🚀 carregarConfiguracaoSofa iniciada...</code></li>
+                                <li><code>🔧 carregarSeletorModulos iniciada</code></li>
+                                <li><code>✅ Módulos carregados com sucesso</code></li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="row mt-4">
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-header">
+                        <h5>📊 Status dos Endpoints</h5>
+                    </div>
+                    <div class="card-body">
+                        <div id="status-endpoints">
+                            <p>Clique em "Testar Endpoints" para verificar o status...</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        async function testarEndpoints() {
+            const resultadoDiv = document.getElementById('resultado-testes');
+            const statusDiv = document.getElementById('status-endpoints');
+            
+            resultadoDiv.innerHTML = '<div class="spinner-border" role="status"></div> Testando...';
+            statusDiv.innerHTML = '';
+            
+            const testes = [
+                {
+                    nome: 'Produtos por Tipo (Sofás)',
+                    url: '/orcamentos/produtos-por-tipo/?tipo=sofa',
+                    esperado: 'Lista de sofás'
+                },
+                {
+                    nome: 'Informações do Produto (produto_7)',
+                    url: '/orcamentos/informacoes-produto/?produto_id=produto_7',
+                    esperado: 'Preview do sofá'
+                },
+                {
+                    nome: 'Detalhes do Produto (produto_7)',
+                    url: '/orcamentos/detalhes-produto/?produto_id=produto_7',
+                    esperado: 'Módulos e acessórios'
+                }
+            ];
+            
+            let resultados = '';
+            let statusHtml = '<div class="row">';
+            
+            for (const teste of testes) {
+                try {
+                    console.log(`🧪 Testando: ${teste.nome}`);
+                    const response = await fetch(teste.url);
+                    const data = await response.json();
+                    
+                    if (response.ok) {
+                        resultados += `<div class="alert alert-success">✅ ${teste.nome}: OK (${response.status})</div>`;
+                        statusHtml += `
+                            <div class="col-md-4 mb-3">
+                                <div class="card border-success">
+                                    <div class="card-body">
+                                        <h6 class="text-success">✅ ${teste.nome}</h6>
+                                        <small>Status: ${response.status}</small><br>
+                                        <small>Dados: ${JSON.stringify(data).substring(0, 100)}...</small>
+                                    </div>
+                                </div>
+                            </div>
+                        `;
+                    } else {
+                        resultados += `<div class="alert alert-danger">❌ ${teste.nome}: Erro ${response.status}</div>`;
+                        statusHtml += `
+                            <div class="col-md-4 mb-3">
+                                <div class="card border-danger">
+                                    <div class="card-body">
+                                        <h6 class="text-danger">❌ ${teste.nome}</h6>
+                                        <small>Erro: ${response.status}</small><br>
+                                        <small>Resposta: ${JSON.stringify(data)}</small>
+                                    </div>
+                                </div>
+                            </div>
+                        `;
+                    }
+                } catch (error) {
+                    resultados += `<div class="alert alert-danger">❌ ${teste.nome}: ${error.message}</div>`;
+                    statusHtml += `
+                        <div class="col-md-4 mb-3">
+                            <div class="card border-danger">
+                                <div class="card-body">
+                                    <h6 class="text-danger">❌ ${teste.nome}</h6>
+                                    <small>Erro: ${error.message}</small>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                }
+            }
+            
+            statusHtml += '</div>';
+            
+            resultadoDiv.innerHTML = resultados;
+            statusDiv.innerHTML = statusHtml;
+        }
+        
+        // Testar automaticamente ao carregar
+        document.addEventListener('DOMContentLoaded', () => {
+            setTimeout(testarEndpoints, 1000);
+        });
+    </script>
+</body>
+</html>

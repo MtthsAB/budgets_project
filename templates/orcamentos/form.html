@@ -298,6 +298,206 @@
             max-width: 33.333333% !important;
         }
     }
+    
+    /* ====== ESTILOS ESPECÍFICOS PARA SOFÁS ====== */
+    
+    /* Configuração do sofá */
+    #sofa-configuracao .card-header {
+        background-color: rgba(13, 110, 253, 0.1) !important;
+        border-bottom: 1px solid rgba(13, 110, 253, 0.2);
+    }
+    
+    /* Módulos do sofá */
+    .modulo-item .card {
+        transition: all 0.2s ease;
+        border: 1px solid #dee2e6;
+    }
+    
+    .modulo-item .card:hover {
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        border-color: #0d6efd;
+    }
+    
+    .modulo-item .card-header {
+        background-color: #f8f9fa;
+        border-bottom: 1px solid #dee2e6;
+    }
+    
+    .modulo-item .form-check-input:checked ~ .form-check-label {
+        font-weight: 600;
+        color: #0d6efd;
+    }
+    
+    .modulo-detalhes {
+        background-color: #fdfdfe;
+        border-top: 1px solid #e9ecef;
+    }
+    
+    /* Acessórios do sofá */
+    .acessorio-item .card {
+        transition: all 0.2s ease;
+        border: 1px solid #dee2e6;
+    }
+    
+    .acessorio-item .card:hover {
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        border-color: #198754;
+    }
+    
+    .acessorio-item .form-check-input:checked ~ .form-check-label {
+        font-weight: 600;
+        color: #198754;
+    }
+    
+    .quantidade-acessorio {
+        max-width: 80px;
+    }
+    
+    /* Resumo da seleção */
+    #sofa-resumo {
+        background-color: #f8f9fa;
+        border-radius: 0.375rem;
+        padding: 1rem;
+        margin-top: 1rem;
+    }
+    
+    #preco-total-sofa {
+        font-weight: 700;
+        font-size: 1.5rem;
+    }
+    
+    /* Animações */
+    .modulo-detalhes,
+    .quantidade-acessorio {
+        animation: fadeIn 0.3s ease-in-out;
+    }
+    
+    @keyframes fadeIn {
+        from {
+            opacity: 0;
+            transform: translateY(-10px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+    
+    /* Responsividade para sofás */
+    @media (max-width: 768px) {
+        #sofa-configuracao .row {
+            margin: 0;
+        }
+        
+        #sofa-configuracao .col-md-6 {
+            padding: 0.5rem;
+        }
+        
+        .modulo-item img,
+        .acessorio-item img {
+            max-height: 60px;
+        }
+    }
+    
+    /* ====== NOVOS ESTILOS PARA PREVIEW E MÓDULOS DINÂMICOS ====== */
+    
+    /* Preview do sofá */
+    .sofa-imagem-container {
+        position: relative;
+        overflow: hidden;
+    }
+    
+    #sofa-imagem-preview {
+        transition: opacity 0.3s ease-in-out;
+    }
+    
+    /* Seletor de módulo */
+    #seletor-modulo {
+        animation: slideDown 0.3s ease-in-out;
+    }
+    
+    @keyframes slideDown {
+        from {
+            opacity: 0;
+            transform: translateY(-20px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+    
+    /* Preview do módulo no seletor */
+    .preview-modulo-container {
+        transition: all 0.3s ease;
+    }
+    
+    #preview-modulo-imagem {
+        transition: opacity 0.3s ease-in-out;
+    }
+    
+    /* Módulos adicionados */
+    .modulo-adicionado {
+        animation: slideInLeft 0.4s ease-out;
+    }
+    
+    @keyframes slideInLeft {
+        from {
+            opacity: 0;
+            transform: translateX(-30px);
+        }
+        to {
+            opacity: 1;
+            transform: translateX(0);
+        }
+    }
+    
+    .modulo-adicionado .card {
+        transition: all 0.2s ease;
+    }
+    
+    .modulo-adicionado .card:hover {
+        box-shadow: 0 4px 12px rgba(40, 167, 69, 0.15);
+        transform: translateY(-2px);
+    }
+    
+    /* Estado vazio */
+    #modulos-vazio {
+        transition: opacity 0.3s ease;
+    }
+    
+    /* Botão adicionar módulo */
+    #btn-adicionar-modulo {
+        transition: all 0.2s ease;
+    }
+    
+    #btn-adicionar-modulo:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 4px 8px rgba(13, 110, 253, 0.2);
+    }
+    
+    /* Responsividade melhorada */
+    @media (max-width: 768px) {
+        .sofa-imagem-container {
+            min-height: 150px;
+        }
+        
+        #sofa-imagem-preview {
+            max-height: 130px;
+        }
+        
+        .preview-modulo-container {
+            min-height: 60px;
+        }
+        
+        #preview-modulo-imagem {
+            max-height: 50px;
+        }
+        
+        .modulo-adicionado img {
+            max-height: 80px;
+        }
+    }
 </style>
 {% endblock %}
 
@@ -755,6 +955,89 @@
                         </div>
                     </div>
                     
+                    <!-- Seção específica para Sofás -->
+                    <div class="mb-3" id="sofa-configuracao" style="display: none;">
+                        <div class="card">
+                            <div class="card-header bg-primary bg-opacity-10">
+                                <h6 class="mb-0 text-primary">
+                                    <i class="bi bi-grid-3x3"></i> Configuração do Sofá
+                                </h6>
+                            </div>
+                            <div class="card-body">
+                                <!-- Preview da imagem do sofá -->
+                                <div id="sofa-preview" class="mb-4">
+                                    <div class="text-center mb-3">
+                                        <h5 id="sofa-nome-preview" class="text-primary mb-2"></h5>
+                                        <div id="sofa-info-preview" class="text-muted small mb-3"></div>
+                                        
+                                        <!-- Imagem do sofá centralizada -->
+                                        <div class="sofa-imagem-container d-inline-block" style="background-color: #f8f9fa; border: 2px dashed #dee2e6; border-radius: 0.5rem; padding: 15px; max-width: 300px;">
+                                            <img id="sofa-imagem-preview" 
+                                                 src="" 
+                                                 alt="Preview do sofá" 
+                                                 class="img-fluid rounded shadow-sm"
+                                                 style="max-height: 200px; max-width: 100%; object-fit: cover; display: none;">
+                                            <div id="sofa-sem-imagem" class="text-muted">
+                                                <i class="bi bi-image" style="font-size: 2rem;"></i>
+                                                <div class="mt-2 small">Imagem do sofá aparecerá aqui</div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <!-- Módulos do Sofá -->
+                                <div id="sofa-modulos" class="mb-4">
+                                    <label for="modulo-select" class="form-label">
+                                        <i class="bi bi-cube"></i> Módulos disponíveis:
+                                    </label>
+                                    
+                                    <!-- Lista de módulos com checkboxes -->
+                                    <div id="modulos-lista" class="row">
+                                        <!-- Módulos serão carregados dinamicamente aqui -->
+                                    </div>
+                                </div>
+                                
+                                <!-- Acessórios do Sofá -->
+                                <div id="sofa-acessorios" style="display: none;">
+                                    <hr>
+                                    <h6 class="fw-bold mb-3">
+                                        <i class="bi bi-plus-circle"></i> Acessórios Disponíveis
+                                        <small class="text-muted">(Opcional)</small>
+                                    </h6>
+                                    <div id="acessorios-lista">
+                                        <!-- Lista de acessórios será carregada dinamicamente -->
+                                    </div>
+                                </div>
+                                
+                                <!-- Resumo da Seleção -->
+                                <div id="sofa-resumo" style="display: none;">
+                                    <hr>
+                                    <div class="row">
+                                        <div class="col-md-6">
+                                            <h6 class="fw-bold text-success">
+                                                <i class="bi bi-check-circle"></i> Resumo da Seleção
+                                            </h6>
+                                            <div id="resumo-modulos">
+                                                <!-- Módulos selecionados -->
+                                            </div>
+                                            <div id="resumo-acessorios">
+                                                <!-- Acessórios selecionados -->
+                                            </div>
+                                        </div>
+                                        <div class="col-md-6 text-end">
+                                            <div class="card bg-light">
+                                                <div class="card-body">
+                                                    <h6 class="card-title">Preço Total</h6>
+                                                    <h4 class="text-success mb-0" id="preco-total-sofa">R$ 0,00</h4>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
                     <!-- Quantidade - Campo Compacto (25% largura) -->
                     <div class="row">
                         <div class="col-md-2 col-sm-3 col-4">
@@ -793,6 +1076,13 @@
 
 {% block extra_js %}
 <script>
+// Variável global para indicar se estamos editando um orçamento existente
+{% if orcamento %}
+window.orcamentoPk = {{ orcamento.pk }};
+{% else %}
+window.orcamentoPk = null;
+{% endif %}
+
 document.addEventListener('DOMContentLoaded', function() {
     console.log('DOM carregado - Inicializando modal Adicionar Item');
     
@@ -1005,7 +1295,12 @@ document.addEventListener('DOMContentLoaded', function() {
             const produtoId = this.value;
             if (produtoId) {
                 carregarDetalhesProduto(produtoId);
-                carregarPreviewProduto(produtoId);
+                
+                // Para sofás, o preview é feito pela carregarConfiguracaoSofa
+                // Para outros produtos, usar carregarPreviewProduto
+                if (!produtoId.startsWith('produto_')) {
+                    carregarPreviewProduto(produtoId);
+                }
             } else {
                 if (produtoDependencias) produtoDependencias.style.display = 'none';
                 ocultarPreviewProduto();
@@ -1072,86 +1367,41 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // Função para carregar detalhes do produto
     function carregarDetalhesProduto(produtoId) {
-        fetch(`/orcamentos/detalhes-produto/?produto_id=${produtoId}`)
-            .then(response => response.json())
-            .then(data => {
-                if (data.erro) {
+        console.log('🔸 carregarDetalhesProduto chamada para:', produtoId);
+        
+        // Verificar se é um sofá para mostrar configuração específica
+        if (produtoId.startsWith('produto_')) {
+            console.log('🛋️ Produto de sofá detectado no carregarDetalhesProduto:', produtoId);
+            carregarConfiguracaoSofa(produtoId);
+        } else {
+            console.log('📦 Produto padrão detectado no carregarDetalhesProduto:', produtoId);
+            // Para outros produtos, manter comportamento original
+            fetch(`/orcamentos/detalhes-produto/?produto_id=${produtoId}`)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.erro) {
+                        alert('Erro ao carregar detalhes do produto');
+                        return;
+                    }
+                    
+                    const produto = data.produto;
+                    
+                    // Mostrar dependências se necessário para produtos não-sofás
+                    if (produto.tem_modulos && produto.modulos) {
+                        mostrarModulosSofa(produto.modulos);
+                    } else {
+                        if (produtoDependencias) produtoDependencias.style.display = 'none';
+                    }
+                })
+                .catch(error => {
+                    console.error('Erro ao carregar detalhes do produto:', error);
                     alert('Erro ao carregar detalhes do produto');
-                    return;
-                }
-                
-                const produto = data.produto;
-                
-                // Mostrar dependências se necessário
-                if (produto.tem_modulos && produto.modulos) {
-                    mostrarModulosSofa(produto.modulos);
-                } else {
-                    if (produtoDependencias) produtoDependencias.style.display = 'none';
-                }
-            })
-            .catch(error => {
-                console.error('Erro ao carregar detalhes do produto:', error);
-                alert('Erro ao carregar detalhes do produto');
-            });
-    }
-    
-    // Função para mostrar módulos de sofá
-    function mostrarModulosSofa(modulos) {
-        if (!dependenciasConteudo) return;
-        
-        let html = '<h6>Módulos disponíveis:</h6>';
-        
-        modulos.forEach(modulo => {
-            html += `
-                <div class="mb-3">
-                    <div class="form-check">
-                        <input class="form-check-input modulo-check" type="checkbox" 
-                               id="modulo_${modulo.id}" data-modulo-id="${modulo.id}">
-                        <label class="form-check-label" for="modulo_${modulo.id}">
-                            ${modulo.nome}
-                        </label>
-                    </div>
-                    <div class="ms-4">
-                        <small class="text-muted">${modulo.descricao}</small>
-                        <select class="form-select form-select-sm mt-1 tamanho-modulo" 
-                                data-modulo-id="${modulo.id}" style="display: none;">
-                            <option value="">Selecione o tamanho...</option>
-            `;
-            
-            if (modulo.tamanhos && modulo.tamanhos.length > 0) {
-                modulo.tamanhos.forEach(tamanho => {
-                    html += `<option value="${tamanho.id}" data-preco="${tamanho.preco}">
-                        ${tamanho.largura_total}cm - R$ ${tamanho.preco.toFixed(2)}
-                    </option>`;
                 });
-            }
             
-            html += '</select></div></div>';
-        });
-        
-        dependenciasConteudo.innerHTML = html;
-        if (produtoDependencias) produtoDependencias.style.display = 'block';
-        
-        // Event listeners para módulos
-        document.querySelectorAll('.modulo-check').forEach(checkbox => {
-            checkbox.addEventListener('change', function() {
-                const moduloId = this.dataset.moduloId;
-                const tamanhoSelect = document.querySelector(`[data-modulo-id="${moduloId}"].tamanho-modulo`);
-                
-                if (this.checked) {
-                    tamanhoSelect.style.display = 'block';
-                } else {
-                    tamanhoSelect.style.display = 'none';
-                    tamanhoSelect.value = '';
-                }
-            });
-        });
-        
-        document.querySelectorAll('.tamanho-modulo').forEach(select => {
-            select.addEventListener('change', function() {
-                // Preço será calculado no backend quando necessário
-            });
-        });
+            // Ocultar configuração de sofá para produtos não-sofás
+            const sofaConfiguracao = document.getElementById('sofa-configuracao');
+            if (sofaConfiguracao) sofaConfiguracao.style.display = 'none';
+        }
     }
     
     // Adicionar item ao pedido
@@ -1162,48 +1412,73 @@ document.addEventListener('DOMContentLoaded', function() {
             const produtoTexto = produtoSelect && produtoSelect.selectedOptions[0] ? 
                                 produtoSelect.selectedOptions[0].textContent : '';
             const quantidade = quantidadeInput ? parseInt(quantidadeInput.value) : 1;
-            const preco = 0; // Preço será calculado no backend
             const observacoes = document.getElementById('observacoes') ? 
                                document.getElementById('observacoes').value : '';
             
-            // Validações
+            // Validações básicas
             if (!tipoProduto || !produtoId || !quantidade) {
                 alert('Por favor, preencha todos os campos obrigatórios (marcados com *).');
                 return;
             }
             
-            // Coletar dados específicos do produto
-            const dadosEspecificos = coletarDadosEspecificos(tipoProduto);
-            
-            // Criar objeto do item
-            const item = {
-                id: ++contadorItens,
-                produto_id: produtoId,
-                produto_nome: produtoTexto.split(' - ')[0],
-                produto_ref: produtoTexto.split(' - ')[1] || '',
-                tipo_produto: tipoProduto,
-                quantidade: quantidade,
-                preco_unitario: preco,
-                preco_total: quantidade * preco,
-                observacoes: observacoes,
-                dados_especificos: dadosEspecificos
-            };
-            
-            // Adicionar à lista
-            itensPedido.push(item);
-            
-            // Atualizar interface
-            atualizarTabelaItens();
-            calcularTotaisGerais();
-            
-            // Limpar e fechar modal
-            limparFormulario();
-            const modal = document.getElementById('modalAdicionarItem');
-            if (modal) {
-                const bootstrapModal = bootstrap.Modal.getInstance(modal);
-                if (bootstrapModal) {
-                    bootstrapModal.hide();
+            try {
+                let precoUnitario = 0;
+                let dadosEspecificos = {};
+                
+                // Tratar sofás de forma especial
+                if (tipoProduto === 'sofa' && produtoId.startsWith('produto_')) {
+                    const dadosSofa = obterDadosSofaConfigurado();
+                    if (!dadosSofa) {
+                        return; // obterDadosSofaConfigurado() já mostra o alert de erro
+                    }
+                    precoUnitario = dadosSofa.preco_unitario;
+                    dadosEspecificos = dadosSofa.dados_especificos;
+                } else {
+                    // Para outros tipos de produto, coletar dados normalmente
+                    dadosEspecificos = coletarDadosEspecificos(tipoProduto);
                 }
+                
+                // Criar objeto do item
+                const item = {
+                    id: ++contadorItens,
+                    produto_id: produtoId,
+                    produto_nome: produtoTexto.split(' - ')[0],
+                    produto_ref: produtoTexto.split(' - ')[1] || '',
+                    tipo_produto: tipoProduto,
+                    quantidade: quantidade,
+                    preco_unitario: precoUnitario,
+                    preco_total: quantidade * precoUnitario,
+                    observacoes: observacoes,
+                    dados_especificos: dadosEspecificos
+                };
+                
+                // Adicionar à lista
+                itensPedido.push(item);
+                
+                // Se estamos editando um orçamento, enviar item via AJAX
+                if (window.orcamentoPk) {
+                    enviarItemViaAjax(item);
+                }
+                
+                // Atualizar interface
+                atualizarTabelaItens();
+                calcularTotaisGerais();
+                
+                // Limpar e fechar modal
+                limparFormulario();
+                const modal = document.getElementById('modalAdicionarItem');
+                if (modal) {
+                    const bootstrapModal = bootstrap.Modal.getInstance(modal);
+                    if (bootstrapModal) {
+                        bootstrapModal.hide();
+                    }
+                }
+                
+                console.log('Item adicionado com sucesso:', item);
+                
+            } catch (error) {
+                console.error('Erro ao adicionar item:', error);
+                alert('Erro ao adicionar item: ' + error.message);
             }
         });
     }
@@ -1214,25 +1489,12 @@ document.addEventListener('DOMContentLoaded', function() {
         
         switch(tipo) {
             case 'sofa':
-                // Coletar módulos selecionados
-                const modulosSelecionados = [];
-                const modulosChecked = document.querySelectorAll('.modulo-check:checked');
-                
-                modulosChecked.forEach(checkbox => {
-                    const moduloId = checkbox.dataset.moduloId;
-                    const tamanhoSelect = document.querySelector(`[data-modulo-id="${moduloId}"].tamanho-modulo`);
-                    
-                    if (tamanhoSelect && tamanhoSelect.value) {
-                        modulosSelecionados.push({
-                            modulo_id: moduloId,
-                            tamanho_id: tamanhoSelect.value,
-                            preco: parseFloat(tamanhoSelect.selectedOptions[0].dataset.preco || 0)
-                        });
-                    }
-                });
-                
-                dados.modulos = modulosSelecionados;
-                break;
+                // Para sofás, usar o novo sistema de configuração
+                const dadosSofa = obterDadosSofaConfigurado();
+                if (!dadosSofa) {
+                    throw new Error('Configuração do sofá incompleta');
+                }
+                return dadosSofa.dados_especificos;
                 
             default:
                 // Para outros tipos, não há dados específicos adicionais
@@ -1319,10 +1581,10 @@ document.addEventListener('DOMContentLoaded', function() {
         
         console.log('Subtotal calculado:', subtotal);
         
-        // Trigger calcular totais se função existir
-        if (typeof calcularTotais === 'function') {
-            calcularTotais();
-        }
+        // Removido chamada para calcularTotais() para evitar loop infinito
+        // if (typeof calcularTotais === 'function') {
+        //     calcularTotais();
+        // }
     }
     
     // Função para limpar formulário
@@ -1342,13 +1604,22 @@ document.addEventListener('DOMContentLoaded', function() {
         const produtoResultados = document.querySelector('.produto-resultados');
         if (produtoResultados) produtoResultados.style.display = 'none';
         
+        // Limpar configuração de sofá
+        const sofaConfiguracao = document.getElementById('sofa-configuracao');
+        if (sofaConfiguracao) sofaConfiguracao.style.display = 'none';
+        
+        // Resetar configuração do sofá usando a função específica
+        resetarConfiguracaoSofa();
+        
         // Ocultar preview do produto
         ocultarPreviewProduto();
     }
     
     // Função para calcular totais (compatibilidade)
     function calcularTotais() {
-        calcularTotaisGerais();
+        // Função removida para evitar loop infinito com calcularTotaisGerais
+        // Esta função estava chamando calcularTotaisGerais() que por sua vez chamava calcularTotais()
+        console.log('calcularTotais() chamada - função desabilitada para evitar loop infinito');
     }
     
     // Inicializar totais se existirem itens
@@ -1422,6 +1693,61 @@ document.addEventListener('DOMContentLoaded', function() {
             vendedorCol.style.maxWidth = '33.333333%';
         }
     }, 500);
+    
+    // Event listeners para os novos botões de módulos
+    const btnAdicionarModulo = document.getElementById('btn-adicionar-modulo');
+    const btnConfirmarModulo = document.getElementById('btn-confirmar-modulo');
+    const btnCancelarModulo = document.getElementById('btn-cancelar-modulo');
+    
+    if (btnAdicionarModulo) {
+        btnAdicionarModulo.addEventListener('click', mostrarSeletorModulo);
+    }
+    
+    if (btnConfirmarModulo) {
+        btnConfirmarModulo.addEventListener('click', adicionarModuloAoSofa);
+    }
+    
+    if (btnCancelarModulo) {
+        btnCancelarModulo.addEventListener('click', ocultarSeletorModulo);
+    }
+    
+    // Função para enviar item via AJAX quando editando orçamento
+    function enviarItemViaAjax(item) {
+        console.log('📤 Enviando item via AJAX:', item);
+        
+        const url = `/orcamentos/${window.orcamentoPk}/item/adicionar/`;
+        const data = {
+            produto_id: item.produto_id,
+            quantidade: item.quantidade,
+            preco_unitario: item.preco_unitario,
+            observacoes: item.observacoes,
+            dados_especificos: item.dados_especificos
+        };
+        
+        fetch(url, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+            },
+            body: JSON.stringify(data)
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                console.log('✅ Item adicionado com sucesso via AJAX:', data);
+                // Recarregar a página para atualizar a lista de itens
+                window.location.reload();
+            } else {
+                console.error('❌ Erro ao adicionar item via AJAX:', data.message);
+                alert('Erro ao adicionar item: ' + data.message);
+            }
+        })
+        .catch(error => {
+            console.error('❌ Erro na requisição AJAX:', error);
+            alert('Erro ao conectar com o servidor');
+        });
+    }
 });
 
 // Forçar atualização do cache - versão 4.0 - Busca dinâmica de clientes
@@ -1640,7 +1966,7 @@ document.addEventListener('DOMContentLoaded', function() {
             color: white !important;
         }
         .produto-item.active .detalhes {
-            color: rgba(255,255,255,0.8) !important;
+            color: rgba(255,255,255,
         }
     `;
     document.head.appendChild(style);
@@ -1649,6 +1975,8 @@ document.addEventListener('DOMContentLoaded', function() {
 // === FUNCIONALIDADE DE BUSCA DE PRODUTOS ===
     
     // Event listeners para busca de produtos
+   
+      
     const produtoBusca = document.getElementById('produto-busca');
     const produtoResultados = document.querySelector('.produto-resultados');
     let timeoutBuscaProduto;
@@ -1814,6 +2142,8 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // Função para selecionar produto
     function selecionarProduto(produto) {
+        console.log('🔸 selecionarProduto chamada para:', produto);
+        
         const produtoBusca = document.getElementById('produto-busca');
         const produtoSelect = document.getElementById('produto');
         const produtoResultados = document.querySelector('.produto-resultados');
@@ -1832,13 +2162,22 @@ document.addEventListener('DOMContentLoaded', function() {
             produtoResultados.style.display = 'none';
         }
         
+        console.log('🔸 Carregando preview do produto...');
         // Carregar informações de preview do produto
         carregarPreviewProduto(produto.id);
         
-        // Ocultar dependências para produtos padronizados
-        const produtoDependencias = document.getElementById('produto-dependencias');
-        if (produtoDependencias) {
-            produtoDependencias.style.display = 'none';
+        console.log('🔸 Verificando se é sofá. ID:', produto.id, 'StartsWith produto_:', produto.id.startsWith('produto_'));
+        // Verificar se é um sofá para mostrar configuração específica
+        if (produto.id.startsWith('produto_')) {
+            console.log('🛋️ Produto de sofá detectado:', produto.id);
+            carregarConfiguracaoSofa(produto.id);
+        } else {
+            console.log('📦 Produto padrão detectado:', produto.id);
+            // Ocultar configuração de sofá e dependências para produtos padronizados
+            const sofaConfiguracao = document.getElementById('sofa-configuracao');
+            const produtoDependencias = document.getElementById('produto-dependencias');
+            if (sofaConfiguracao) sofaConfiguracao.style.display = 'none';
+            if (produtoDependencias) produtoDependencias.style.display = 'none';
         }
     }
     
@@ -1901,6 +2240,699 @@ document.addEventListener('DOMContentLoaded', function() {
         const preview = document.getElementById('produto-preview');
         if (preview) {
             preview.style.display = 'none';
+        }
+    }
+    
+    // ====== FUNÇÕES ESPECÍFICAS PARA SOFÁS ======
+    
+    // Variáveis globais para controle do sofá
+    let sofaData = null;
+    let modulosSelecionados = [];
+    let acessoriosSelecionados = [];
+    
+    // Função para mostrar módulos de sofá
+    function mostrarModulosSofa(modulos) {
+        const modulosContainer = document.getElementById('modulos-lista');
+        if (!modulosContainer) return;
+        
+        let html = '';
+        
+        modulos.forEach(modulo => {
+            html += `
+                <div class="col-md-6 mb-3">
+                    <div class="card h-100">
+                        <div class="card-body">
+                            <div class="form-check">
+                                <input class="form-check-input modulo-check" type="checkbox" 
+                                       id="modulo_${modulo.id}" data-modulo-id="${modulo.id}">
+                                <label class="form-check-label fw-bold" for="modulo_${modulo.id}">
+                                    ${modulo.nome}
+                                </label>
+                            </div>
+                            
+                            <!-- Imagem do módulo abaixo do nome -->
+                            <div class="mt-2 text-center">
+                                ${modulo.imagem_principal ? 
+                                    `<img src="${modulo.imagem_principal}" alt="${modulo.nome}" 
+                                          class="img-fluid rounded" style="max-height: 120px; object-fit: cover;">` : 
+                                    `<div class="bg-light rounded d-flex align-items-center justify-content-center" 
+                                          style="height: 120px;">
+                                        <i class="bi bi-image text-muted" style="font-size: 2rem;"></i>
+                                     </div>`
+                                }
+                            </div>
+                            
+                            <div class="mt-2">
+                                <small class="text-muted">${modulo.descricao}</small>
+                                
+                                <!-- Container para tamanhos com quantidade -->
+                                <div class="tamanhos-container mt-2" data-modulo-id="${modulo.id}" style="display: none;">
+                `;
+                
+                if (modulo.tamanhos && modulo.tamanhos.length > 0) {
+                    modulo.tamanhos.forEach(tamanho => {
+                        html += `
+                            <div class="border rounded p-2 mb-2 tamanho-item" data-tamanho-id="${tamanho.id}">
+                                <div class="form-check">
+                                    <input class="form-check-input tamanho-check" type="checkbox" 
+                                           id="tamanho_${modulo.id}_${tamanho.id}" 
+                                           data-modulo-id="${modulo.id}" 
+                                           data-tamanho-id="${tamanho.id}"
+                                           data-preco="${tamanho.preco}">
+                                    <label class="form-check-label" for="tamanho_${modulo.id}_${tamanho.id}">
+                                        <strong>${tamanho.largura_total}cm</strong> - R$ ${tamanho.preco.toFixed(2)}
+                                    </label>
+                                </div>
+                                <div class="row mt-2 quantidade-row" style="display: none;">
+                                    <div class="col-6">
+                                        <label class="form-label small">Quantidade:</label>
+                                        <input type="number" class="form-control form-control-sm quantidade-tamanho" 
+                                               min="1" value="1" 
+                                               data-modulo-id="${modulo.id}" 
+                                               data-tamanho-id="${tamanho.id}">
+                                    </div>
+                                    <div class="col-6 d-flex align-items-end">
+                                        <small class="text-muted subtotal-tamanho">
+                                            Subtotal: R$ ${tamanho.preco.toFixed(2)}
+                                        </small>
+                                    </div>
+                                </div>
+                            </div>
+                        `;
+                    });
+                }
+                
+                html += `
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+        });
+        
+        modulosContainer.innerHTML = html;
+        document.getElementById('sofa-modulos').style.display = 'block';
+        
+        // Event listeners para módulos
+        document.querySelectorAll('.modulo-check').forEach(checkbox => {
+            checkbox.addEventListener('change', function() {
+                const moduloId = this.dataset.moduloId;
+                const tamanhosContainer = document.querySelector(`[data-modulo-id="${moduloId}"].tamanhos-container`);
+                
+                if (this.checked) {
+                    tamanhosContainer.style.display = 'block';
+                } else {
+                    tamanhosContainer.style.display = 'none';
+                    
+                    // Desmarcar todos os tamanhos e ocultar quantidades
+                    const tamanhoChecks = tamanhosContainer.querySelectorAll('.tamanho-check');
+                    tamanhoChecks.forEach(tamanhoCheck => {
+                        tamanhoCheck.checked = false;
+                        const quantidadeRow = tamanhoCheck.closest('.tamanho-item').querySelector('.quantidade-row');
+                        quantidadeRow.style.display = 'none';
+                    });
+                    
+                    // Remover da lista de módulos selecionados
+                    if (typeof modulosSelecionados !== 'undefined') {
+                        modulosSelecionados = modulosSelecionados.filter(m => m.moduloId != moduloId);
+                        if (typeof atualizarListaModulosAdicionados === 'function') {
+                            atualizarListaModulosAdicionados();
+                        }
+                    }
+                }
+            });
+        });
+        
+        // Event listeners para tamanhos
+        document.querySelectorAll('.tamanho-check').forEach(checkbox => {
+            checkbox.addEventListener('change', function() {
+                const moduloId = this.dataset.moduloId;
+                const tamanhoId = this.dataset.tamanhoId;
+                const preco = parseFloat(this.dataset.preco) || 0;
+                const quantidadeRow = this.closest('.tamanho-item').querySelector('.quantidade-row');
+                const quantidadeInput = quantidadeRow.querySelector('.quantidade-tamanho');
+                
+                if (this.checked) {
+                    quantidadeRow.style.display = 'block';
+                    // Atualizar subtotal inicial
+                    atualizarSubtotalTamanho(moduloId, tamanhoId);
+                } else {
+                    quantidadeRow.style.display = 'none';
+                    quantidadeInput.value = 1;
+                    
+                    // Remover este tamanho específico da lista de selecionados
+                    if (typeof modulosSelecionados !== 'undefined') {
+                        const moduloIndex = modulosSelecionados.findIndex(m => m.moduloId == moduloId);
+                        if (moduloIndex !== -1) {
+                            const modulo = modulosSelecionados[moduloIndex];
+                            if (modulo.tamanhos) {
+                                modulo.tamanhos = modulo.tamanhos.filter(t => t.tamanhoId != tamanhoId);
+                                if (modulo.tamanhos.length === 0) {
+                                    modulosSelecionados.splice(moduloIndex, 1);
+                                }
+                            }
+                        }
+                        if (typeof atualizarListaModulosAdicionados === 'function') {
+                            atualizarListaModulosAdicionados();
+                        }
+                    }
+                }
+                
+                // Atualizar dados do módulo selecionado
+                atualizarModuloSelecionado(moduloId, tamanhoId, this.checked);
+            });
+        });
+        
+        // Event listeners para campos de quantidade
+        document.querySelectorAll('.quantidade-tamanho').forEach(input => {
+            input.addEventListener('input', function() {
+                const moduloId = this.dataset.moduloId;
+                const tamanhoId = this.dataset.tamanhoId;
+                
+                // Atualizar subtotal
+                atualizarSubtotalTamanho(moduloId, tamanhoId);
+                
+                // Atualizar dados do módulo selecionado
+                atualizarModuloSelecionado(moduloId, tamanhoId, true);
+            });
+        });
+    }
+    
+    // Função para atualizar subtotal de um tamanho específico
+    function atualizarSubtotalTamanho(moduloId, tamanhoId) {
+        const quantidadeInput = document.querySelector(`input[data-modulo-id="${moduloId}"][data-tamanho-id="${tamanhoId}"].quantidade-tamanho`);
+        const tamanhoCheck = document.querySelector(`input[data-modulo-id="${moduloId}"][data-tamanho-id="${tamanhoId}"].tamanho-check`);
+        const subtotalElement = tamanhoCheck.closest('.tamanho-item').querySelector('.subtotal-tamanho');
+        
+        if (quantidadeInput && tamanhoCheck && subtotalElement) {
+            const quantidade = parseInt(quantidadeInput.value) || 1;
+            const preco = parseFloat(tamanhoCheck.dataset.preco) || 0;
+            const subtotal = quantidade * preco;
+            
+            subtotalElement.textContent = `Subtotal: R$ ${subtotal.toFixed(2)}`;
+        }
+    }
+    
+    // Função para atualizar dados do módulo selecionado
+    function atualizarModuloSelecionado(moduloId, tamanhoId, isSelected) {
+        if (typeof modulosSelecionados === 'undefined') return;
+        
+        // Buscar dados do módulo
+        const moduloCheckbox = document.querySelector(`input[data-modulo-id="${moduloId}"].modulo-check`);
+        const tamanhoCheck = document.querySelector(`input[data-modulo-id="${moduloId}"][data-tamanho-id="${tamanhoId}"].tamanho-check`);
+        const quantidadeInput = document.querySelector(`input[data-modulo-id="${moduloId}"][data-tamanho-id="${tamanhoId}"].quantidade-tamanho`);
+        
+        if (!moduloCheckbox || !tamanhoCheck) return;
+        
+        const moduloNome = moduloCheckbox.nextElementSibling.textContent.trim();
+        const preco = parseFloat(tamanhoCheck.dataset.preco) || 0;
+        const quantidade = parseInt(quantidadeInput?.value || 1);
+        const tamanhoLabel = tamanhoCheck.nextElementSibling.textContent.trim();
+        
+        // Encontrar ou criar módulo na lista
+        let moduloIndex = modulosSelecionados.findIndex(m => m.moduloId == moduloId);
+        
+        if (isSelected && tamanhoCheck.checked) {
+            if (moduloIndex === -1) {
+                // Criar novo módulo
+                modulosSelecionados.push({
+                    moduloId: moduloId,
+                    nome: moduloNome,
+                    tamanhos: []
+                });
+                moduloIndex = modulosSelecionados.length - 1;
+            }
+            
+            const modulo = modulosSelecionados[moduloIndex];
+            
+            // Remover tamanho existente (se houver) e adicionar atualizado
+            modulo.tamanhos = modulo.tamanhos.filter(t => t.tamanhoId != tamanhoId);
+            modulo.tamanhos.push({
+                tamanhoId: tamanhoId,
+                nome: tamanhoLabel,
+                preco: preco,
+                quantidade: quantidade,
+                subtotal: preco * quantidade
+            });
+            
+        } else {
+            // Remover tamanho
+            if (moduloIndex !== -1) {
+                const modulo = modulosSelecionados[moduloIndex];
+                modulo.tamanhos = modulo.tamanhos.filter(t => t.tamanhoId != tamanhoId);
+                
+                // Se não há mais tamanhos, remover o módulo
+                if (modulo.tamanhos.length === 0) {
+                    modulosSelecionados.splice(moduloIndex, 1);
+                }
+            }
+        }
+        
+        // Atualizar lista visual
+        if (typeof atualizarListaModulosAdicionados === 'function') {
+            atualizarListaModulosAdicionados();
+        }
+    }
+    
+    // Função para carregar seletor de módulos do sofá
+    function carregarSeletorModulos(sofaData) {
+        console.log('🚀 carregarSeletorModulos iniciada para:', sofaData);
+        
+        if (!sofaData || !sofaData.modulos) {
+            console.log('⚠️ Nenhum módulo disponível para este sofá');
+            return;
+        }
+        
+        // Usar a função existente mostrarModulosSofa
+        mostrarModulosSofa(sofaData.modulos);
+        console.log('✅ Módulos carregados com sucesso');
+    }
+    
+    // Função para atualizar lista de módulos adicionados
+    function atualizarListaModulosAdicionados() {
+        console.log('🚀 atualizarListaModulosAdicionados iniciada');
+        
+        const resumoModulos = document.getElementById('resumo-modulos');
+        if (!resumoModulos) {
+            console.log('⚠️ Container resumo-modulos não encontrado');
+            return;
+        }
+        
+        if (modulosSelecionados.length === 0) {
+            resumoModulos.innerHTML = '<p class="text-muted">Nenhum módulo selecionado</p>';
+            return;
+        }
+        
+        let html = '';
+        modulosSelecionados.forEach(modulo => {
+            html += `
+                <div class="mb-3 p-2 bg-light rounded">
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                        <strong>${modulo.nome}</strong>
+                        <button type="button" class="btn btn-sm btn-outline-danger" 
+                                onclick="removerModuloCompleto('${modulo.moduloId}')">
+                            <i class="bi bi-trash"></i>
+                        </button>
+                    </div>
+            `;
+            
+            if (modulo.tamanhos && modulo.tamanhos.length > 0) {
+                modulo.tamanhos.forEach(tamanho => {
+                    html += `
+                        <div class="d-flex justify-content-between align-items-center ms-3 mb-1">
+                            <div>
+                                <small class="text-muted">${tamanho.nome}</small>
+                                <br>
+                                <small class="text-info">Qtd: ${tamanho.quantidade}</small>
+                            </div>
+                            <div>
+                                <span class="badge bg-primary">R$ ${tamanho.subtotal.toFixed(2)}</span>
+                                <button type="button" class="btn btn-sm btn-outline-warning ms-1" 
+                                        onclick="removerTamanhoModulo('${modulo.moduloId}', '${tamanho.tamanhoId}')">
+                                    <i class="bi bi-x"></i>
+                                </button>
+                            </div>
+                        </div>
+                    `;
+                });
+            }
+            
+            html += '</div>';
+        });
+        
+        resumoModulos.innerHTML = html;
+        console.log('✅ Lista de módulos atualizada');
+        
+        // Atualizar resumo geral
+        atualizarResumoSofa();
+    }
+    
+    // Função para atualizar resumo do sofá
+    function atualizarResumoSofa() {
+        console.log('📊 Atualizando resumo do sofá');
+        
+        const resumoContainer = document.getElementById('sofa-resumo');
+        const resumoModulos = document.getElementById('resumo-modulos');
+        const resumoAcessorios = document.getElementById('resumo-acessorios');
+        const precoTotal = document.getElementById('preco-total-sofa');
+        
+        if (!resumoContainer || !resumoModulos || !resumoAcessorios || !precoTotal) {
+            console.error('Elementos de resumo não encontrados');
+            return;
+        }
+        
+        let total = 0;
+        let temSelecao = false;
+        
+        // Atualizar resumo dos módulos
+        const modulosValidosSelecionados = modulosSelecionados.filter(m => m.tamanhoSelecionada);
+        if (modulosValidosSelecionados.length > 0) {
+            temSelecao = true;
+            
+            let modulosHtml = '<div class="mb-2"><strong>Módulos:</strong></div>';
+            modulosValidosSelecionados.forEach(m => {
+                const subtotal = m.tamanhoSelecionada.preco * m.quantidade;
+                total += subtotal;
+                
+                modulosHtml += `
+                    <div class="d-flex justify-content-between small mb-1">
+                        <span>${m.nome} (${m.tamanhoSelecionada.largura_total}cm) x${m.quantidade}</span>
+                        <span>R$ ${subtotal.toFixed(2)}</span>
+                    </div>
+                `;
+            });
+            
+            resumoModulos.innerHTML = modulosHtml;
+        } else {
+            resumoModulos.innerHTML = '';
+        }
+        
+        // Atualizar resumo dos acessórios
+        if (acessoriosSelecionados.length > 0) {
+            temSelecao = true;
+            
+            let acessoriosHtml = '<div class="mb-2"><strong>Acessórios:</strong></div>';
+            acessoriosSelecionados.forEach(a => {
+                const subtotal = a.preco * a.quantidade;
+                total += subtotal;
+                
+                acessoriosHtml += `
+                    <div class="d-flex justify-content-between small mb-1">
+                        <span>${a.nome} x${a.quantidade}</span>
+                        <span>R$ ${subtotal.toFixed(2)}</span>
+                    </div>
+                `;
+            });
+            
+            resumoAcessorios.innerHTML = acessoriosHtml;
+        } else {
+            resumoAcessorios.innerHTML = '';
+        }
+        
+        // Atualizar preço total
+        precoTotal.textContent = `R$ ${total.toFixed(2)}`;
+        
+        // Mostrar/ocultar resumo
+        resumoContainer.style.display = temSelecao ? 'block' : 'none';
+        
+        console.log('✅ Resumo atualizado. Total:', total, 'Tem seleção:', temSelecao);
+    }
+    
+    // Função para renderizar acessórios do sofá
+    function renderizarAcessoriosSofa(sofaData) {
+        console.log('🚀 renderizarAcessoriosSofa iniciada para:', sofaData);
+        
+        const acessoriosContainer = document.getElementById('acessorios-lista');
+        if (!acessoriosContainer) {
+            console.log('⚠️ Container de acessórios não encontrado');
+            return;
+        }
+        
+        if (!sofaData || !sofaData.acessorios || sofaData.acessorios.length === 0) {
+            console.log('⚠️ Nenhum acessório disponível para este sofá');
+            document.getElementById('sofa-acessorios').style.display = 'none';
+            return;
+        }
+        
+        let html = '';
+        sofaData.acessorios.forEach(acessorio => {
+            html += `
+                <div class="form-check mb-2">
+                    <input class="form-check-input acessorio-check" type="checkbox" 
+                           id="acessorio_${acessorio.id}" data-acessorio-id="${acessorio.id}" 
+                           data-preco="${acessorio.preco || 0}">
+                    <label class="form-check-label" for="acessorio_${acessorio.id}">
+                        <strong>${acessorio.nome}</strong>
+                        ${acessorio.preco ? ` - R$ ${parseFloat(acessorio.preco).toFixed(2)}` : ''}
+                        ${acessorio.descricao ? `<br><small class="text-muted">${acessorio.descricao}</small>` : ''}
+                    </label>
+                </div>
+            `;
+        });
+        
+        acessoriosContainer.innerHTML = html;
+        document.getElementById('sofa-acessorios').style.display = 'block';
+        
+        // Event listeners para acessórios
+        document.querySelectorAll('.acessorio-check').forEach(checkbox => {
+            checkbox.addEventListener('change', function() {
+                const acessorioId = this.dataset.acessorioId;
+                const preco = parseFloat(this.dataset.preco) || 0;
+                
+                if (this.checked) {
+                    // Adicionar acessório
+                    const acessorioData = sofaData.acessorios.find(a => a.id == acessorioId);
+                    if (acessorioData && !acessoriosSelecionados.find(a => a.id == acessorioId)) {
+                        acessoriosSelecionados.push({
+                            id: acessorioId,
+                            nome: acessorioData.nome,
+                            preco: preco
+                        });
+                    }
+                } else {
+                    // Remover acessório
+                    acessoriosSelecionados = acessoriosSelecionados.filter(a => a.id != acessorioId);
+                }
+                
+                // Atualizar resumo
+                atualizarResumoSofa();
+            });
+        });
+        
+        console.log('✅ Acessórios renderizados com sucesso');
+    }
+    
+    // Função para obter dados do sofá configurado para envio
+    function obterDadosSofaConfigurado() {
+        if (!sofaData) return null;
+        
+        if (modulosSelecionados.length === 0) {
+            alert('Por favor, adicione pelo menos um módulo com tamanho selecionado para o sofá.');
+            return null;
+        }
+        
+        let precoTotal = 0;
+        let modulosParaEnvio = [];
+        
+        // Calcular preço dos módulos dinâmicos e preparar dados para envio
+        modulosSelecionados.forEach(modulo => {
+            if (modulo.tamanhos && modulo.tamanhos.length > 0) {
+                modulo.tamanhos.forEach(tamanho => {
+                    precoTotal += tamanho.subtotal;
+                    
+                    modulosParaEnvio.push({
+                        modulo_id: modulo.moduloId,
+                        tamanho_id: tamanho.tamanhoId,
+                        quantidade: tamanho.quantidade,
+                        preco: tamanho.preco,
+                        nome: modulo.nome
+                    });
+                });
+            }
+        });
+        
+        // Calcular preço dos acessórios
+        acessoriosSelecionados.forEach(a => {
+            precoTotal += a.preco * a.quantidade;
+        });
+        
+        return {
+            produto_id: sofaData.id,
+            tipo: 'sofa',
+            preco_unitario: precoTotal,
+            dados_especificos: {
+                modulos: modulosParaEnvio,
+                acessorios: acessoriosSelecionados
+            }
+        };
+    }
+    
+    // Função para carregar configuração do sofá
+    function carregarConfiguracaoSofa(produtoId) {
+        console.log('🚀 carregarConfiguracaoSofa iniciada para:', produtoId);
+        
+        const sofaConfiguracao = document.getElementById('sofa-configuracao');
+        const produtoDependencias = document.getElementById('produto-dependencias');
+        
+        console.log('📍 Elementos encontrados:', {
+            sofaConfiguracao: !!sofaConfiguracao,
+            produtoDependencias: !!produtoDependencias
+        });
+        
+        // Ocultar dependências normais e mostrar configuração de sofá
+        if (produtoDependencias) produtoDependencias.style.display = 'none';
+        
+        fetch(`/orcamentos/detalhes-produto/?produto_id=${produtoId}`)
+            .then(response => {
+                console.log('📡 Resposta do servidor:', response.status);
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                return response.json();
+            })
+            .then(data => {
+                console.log('📦 Dados recebidos:', data);
+                
+                if (data.erro) {
+                    console.error('Erro ao carregar detalhes do sofá:', data.erro);
+                    return;
+                }
+                
+                sofaData = data.produto;
+                console.log('💾 sofaData definido:', sofaData);
+                
+                // Mostrar preview instantâneo da imagem do sofá
+                mostrarPreviewSofa(sofaData);
+                
+                // Carregar seletor de módulos
+                carregarSeletorModulos(sofaData);
+                renderizarAcessoriosSofa(sofaData);
+                
+                // Resetar lista de módulos adicionados
+                modulosSelecionados = [];
+                atualizarListaModulosAdicionados();
+                
+                if (sofaConfiguracao) {
+                    console.log('✅ Exibindo sofa-configuracao');
+                    sofaConfiguracao.style.display = 'block';
+                } else {
+                    console.log('❌ Elemento sofa-configuracao não encontrado!');
+                }
+            })
+            .catch(error => {
+                console.error('Erro ao carregar configuração do sofá:', error);
+            });
+    }
+    
+    // Função para mostrar preview do sofá selecionado
+    function mostrarPreviewSofa(sofaData) {
+        const sofaImagemPreview = document.getElementById('sofa-imagem-preview');
+        const sofaSemImagem = document.getElementById('sofa-sem-imagem');
+        const sofaNomePreview = document.getElementById('sofa-nome-preview');
+        const sofaInfoPreview = document.getElementById('sofa-info-preview');
+        
+        // Verificar se os elementos existem
+        if (!sofaImagemPreview || !sofaSemImagem) {
+            console.error('Elementos de imagem não encontrados no DOM');
+            return;
+        }
+        
+        // Atualizar nome
+        if (sofaNomePreview) {
+            sofaNomePreview.textContent = sofaData.nome || 'Sofá Selecionado';
+        }
+        
+        // Atualizar informações
+        if (sofaInfoPreview) {
+            let info = [];
+            if (sofaData.ref) info.push(`Ref: ${sofaData.ref}`);
+            if (sofaData.modulos && sofaData.modulos.length > 0) {
+                info.push(`${sofaData.modulos.length} módulos disponíveis`);
+            }
+            sofaInfoPreview.innerHTML = info.join(' • ');
+        }
+        
+        // Verificar e mostrar imagem do sofá
+        if (sofaData.imagem_principal) {
+            // Criar uma nova imagem para verificar se carrega
+            const tempImg = new Image();
+            
+            tempImg.onload = function() {
+                // Imagem carregou com sucesso
+                sofaImagemPreview.src = sofaData.imagem_principal;
+                sofaImagemPreview.style.display = 'block';
+                sofaSemImagem.style.display = 'none';
+                
+                // Adicionar efeito de fade-in
+                sofaImagemPreview.style.opacity = '0';
+                setTimeout(() => {
+                    sofaImagemPreview.style.transition = 'opacity 0.3s ease-in-out';
+                    sofaImagemPreview.style.opacity = '1';
+                }, 50);
+            };
+            
+            tempImg.onerror = function() {
+                // Erro ao carregar imagem
+                console.error('Erro ao carregar imagem:', sofaData.imagem_principal);
+                sofaImagemPreview.style.display = 'none';
+                sofaSemImagem.style.display = 'block';
+            };
+            
+            // Iniciar carregamento da imagem
+            tempImg.src = sofaData.imagem_principal;
+        } else {
+            // Sem imagem disponível
+            sofaImagemPreview.style.display = 'none';
+            sofaSemImagem.style.display = 'block';
+        }
+    }
+    
+    // Função para resetar configuração do sofá
+    function resetarConfiguracaoSofa() {
+        sofaData = null;
+        modulosSelecionados = [];
+        acessoriosSelecionados = [];
+        contadorModulos = 0;
+        
+        // Limpar preview do sofá
+        const sofaImagemPreview = document.getElementById('sofa-imagem-preview');
+        const sofaSemImagem = document.getElementById('sofa-sem-imagem');
+        const sofaNomePreview = document.getElementById('sofa-nome-preview');
+        const sofaInfoPreview = document.getElementById('sofa-info-preview');
+        
+        if (sofaImagemPreview) sofaImagemPreview.style.display = 'none';
+        if (sofaSemImagem) sofaSemImagem.style.display = 'block';
+        if (sofaNomePreview) sofaNomePreview.textContent = '';
+        if (sofaInfoPreview) sofaInfoPreview.innerHTML = '';
+        
+        // Limpar seletor de módulo
+        const selectModulo = document.getElementById('select-modulo-adicionar');
+        if (selectModulo) selectModulo.value = '';
+        
+        // Limpar lista de módulos adicionados
+        atualizarListaModulosAdicionados();
+        
+        // Limpar resumo
+        atualizarResumoSofa();
+    }
+    
+    // Função para remover módulo
+    function removerModulo(moduloId) {
+        modulosSelecionados = modulosSelecionados.filter(m => m.id != moduloId);
+        
+        // Desmarcar checkbox correspondente
+        const checkbox = document.querySelector(`input[data-modulo-id="${moduloId}"]`);
+        if (checkbox) {
+            checkbox.checked = false;
+            // Ocultar seletor de tamanho
+            const tamanhoSelect = document.querySelector(`.tamanho-modulo[data-modulo-id="${moduloId}"]`);
+            if (tamanhoSelect) {
+                tamanhoSelect.style.display = 'none';
+                tamanhoSelect.value = '';
+            }
+        }
+        
+        atualizarListaModulosAdicionados();
+    }
+    
+    // Função para remover módulo completo
+    function removerModuloCompleto(moduloId) {
+        // Desmarcar checkbox do módulo
+        const moduloCheckbox = document.querySelector(`input[data-modulo-id="${moduloId}"].modulo-check`);
+        if (moduloCheckbox) {
+            moduloCheckbox.checked = false;
+            moduloCheckbox.dispatchEvent(new Event('change'));
+        }
+    }
+    
+    // Função para remover um tamanho específico de um módulo
+    function removerTamanhoModulo(moduloId, tamanhoId) {
+        // Desmarcar checkbox do tamanho
+        const tamanhoCheckbox = document.querySelector(`input[data-modulo-id="${moduloId}"][data-tamanho-id="${tamanhoId}"].tamanho-check`);
+        if (tamanhoCheckbox) {
+            tamanhoCheckbox.checked = false;
+            tamanhoCheckbox.dispatchEvent(new Event('change'));
         }
     }
 </script>

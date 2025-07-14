@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Teste - Correção Seleção de Sofás</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css" rel="stylesheet">
+</head>
+<body>
+    <div class="container mt-4">
+        <div class="row">
+            <div class="col-12">
+                <div class="alert alert-info">
+                    <h4>🔧 Teste de Correção - Seleção de Sofás no Orçamento</h4>
+                    <p><strong>Problema identificado:</strong> A função `carregarDetalhesProduto` não estava detectando sofás corretamente quando selecionados via dropdown.</p>
+                    <p><strong>Correção aplicada:</strong> Adicionada lógica de detecção de sofás (produto.id.startsWith('produto_')) na função `carregarDetalhesProduto`.</p>
+                </div>
+            </div>
+        </div>
+        
+        <div class="row">
+            <div class="col-md-6">
+                <div class="card">
+                    <div class="card-header">
+                        <h5>📋 Passos para Testar</h5>
+                    </div>
+                    <div class="card-body">
+                        <ol>
+                            <li>Fazer login em: <a href="http://localhost:8000/auth/login/" target="_blank">http://localhost:8000/auth/login/</a></li>
+                            <li><strong>Credenciais:</strong>
+                                <ul>
+                                    <li><strong>Email:</strong> admin@essere.com</li>
+                                    <li><strong>Senha:</strong> admin123</li>
+                                </ul>
+                            </li>
+                            <li>Acessar: <a href="http://localhost:8000/orcamentos/novo/" target="_blank">http://localhost:8000/orcamentos/novo/</a></li>
+                            <li>Clicar em <strong>"Adicionar Item"</strong></li>
+                            <li>Selecionar <strong>"Sofá"</strong> como tipo de produto</li>
+                            <li>Escolher um sofá na lista dropdown (NÃO na busca)</li>
+                            <li><strong>Verificar se aparece:</strong>
+                                <ul>
+                                    <li>✅ Seção "Configuração do Sofá"</li>
+                                    <li>✅ Preview da imagem do sofá</li>
+                                    <li>✅ Lista de módulos disponíveis</li>
+                                    <li>✅ Opções de acessórios</li>
+                                </ul>
+                            </li>
+                        </ol>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-md-6">
+                <div class="card">
+                    <div class="card-header">
+                        <h5>🔍 Funcionalidades Esperadas</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="alert alert-success">
+                            <h6>✅ ANTES da Correção (NÃO funcionava)</h6>
+                            <ul>
+                                <li>❌ Seção de configuração não aparecia</li>
+                                <li>❌ Só mostrava preview básico</li>
+                                <li>❌ Módulos não eram carregados</li>
+                            </ul>
+                        </div>
+                        
+                        <div class="alert alert-warning">
+                            <h6>✅ DEPOIS da Correção (DEVE funcionar)</h6>
+                            <ul>
+                                <li>✅ Seção "Configuração do Sofá" aparece</li>
+                                <li>✅ Preview instantâneo da imagem</li>
+                                <li>✅ Lista de módulos com checkboxes</li>
+                                <li>✅ Seleção de tamanhos e quantidades</li>
+                                <li>✅ Lista de acessórios compatíveis</li>
+                                <li>✅ Cálculo automático de preços</li>
+                                <li>✅ Resumo dinâmico das seleções</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="row mt-4">
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-header">
+                        <h5>🐛 Diagnóstico Técnico</h5>
+                    </div>
+                    <div class="card-body">
+                        <h6>Causa do Problema:</h6>
+                        <p>A função <code>carregarDetalhesProduto()</code> era chamada quando o usuário selecionava um produto via dropdown (select), mas <strong>não verificava se era um sofá</strong> para chamar a função <code>carregarConfiguracaoSofa()</code>.</p>
+                        
+                        <h6>Solução Implementada:</h6>
+                        <p>Adicionada a mesma lógica de detecção de sofás que já existia na função <code>selecionarProduto()</code> (usada para busca por texto) também na função <code>carregarDetalhesProduto()</code> (usada para seleção via dropdown).</p>
+                        
+                        <h6>Código Corrigido:</h6>
+                        <pre class="bg-light p-2"><code>// Verificar se é um sofá para mostrar configuração específica
+if (produtoId.startsWith('produto_')) {
+    console.log('🛋️ Produto de sofá detectado no carregarDetalhesProduto:', produtoId);
+    carregarConfiguracaoSofa(produtoId);
+}</code></pre>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="row mt-4">
+            <div class="col-12">
+                <div class="alert alert-info">
+                    <h6>📊 Console do Navegador</h6>
+                    <p>Abra o console do navegador (F12) para verificar os logs:</p>
+                    <ul>
+                        <li><code>🔸 carregarDetalhesProduto chamada para: produto_X</code></li>
+                        <li><code>🛋️ Produto de sofá detectado no carregarDetalhesProduto: produto_X</code></li>
+                        <li><code>🚀 carregarConfiguracaoSofa iniciada para: produto_X</code></li>
+                        <li><code>✅ Exibindo sofa-configuracao</code></li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Verificar status do servidor
+        fetch('http://localhost:8000/orcamentos/produtos-por-tipo/?tipo=sofa')
+            .then(response => {
+                if (response.ok) {
+                    document.body.insertAdjacentHTML('beforeend', `
+                        <div class="position-fixed bottom-0 end-0 p-3">
+                            <div class="toast show" role="alert">
+                                <div class="toast-header bg-success text-white">
+                                    <strong class="me-auto">✅ Servidor Online</strong>
+                                </div>
+                                <div class="toast-body">
+                                    Django está rodando corretamente!
+                                </div>
+                            </div>
+                        </div>
+                    `);
+                } else {
+                    throw new Error('Servidor não respondeu');
+                }
+            })
+            .catch(error => {
+                document.body.insertAdjacentHTML('beforeend', `
+                    <div class="position-fixed bottom-0 end-0 p-3">
+                        <div class="toast show" role="alert">
+                            <div class="toast-header bg-danger text-white">
+                                <strong class="me-auto">❌ Servidor Offline</strong>
+                            </div>
+                            <div class="toast-body">
+                                Execute: python manage.py runserver
+                            </div>
+                        </div>
+                    </div>
+                `);
+            });
+    </script>
+</body>
+</html>

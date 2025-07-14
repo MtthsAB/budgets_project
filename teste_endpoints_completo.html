@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Teste Completo - Endpoints de Sofás</title>
+    <style>
+        body { font-family: Arial, sans-serif; padding: 20px; }
+        .test-section { margin: 20px 0; padding: 15px; border: 1px solid #ddd; border-radius: 5px; }
+        .success { background-color: #d4edda; }
+        .error { background-color: #f8d7da; }
+        button { padding: 8px 16px; margin: 5px; background: #007bff; color: white; border: none; border-radius: 3px; cursor: pointer; }
+        pre { background: #f8f9fa; padding: 10px; border-radius: 3px; overflow-x: auto; }
+        .log { margin: 10px 0; padding: 8px; background: #e9ecef; border-radius: 3px; }
+    </style>
+</head>
+<body>
+    <h1>🧪 Teste Completo - Endpoints de Sofás</h1>
+    
+    <div class="test-section">
+        <h3>📋 Log de Testes</h3>
+        <div id="log-container"></div>
+        <button onclick="clearLog()">Limpar Log</button>
+    </div>
+    
+    <div class="test-section">
+        <h3>🔗 Teste 1: Listar Produtos por Tipo (Sofás)</h3>
+        <button onclick="testarProdutosPorTipo()">Testar Produtos por Tipo</button>
+        <div id="produtos-resultado"></div>
+    </div>
+    
+    <div class="test-section">
+        <h3>🛋️ Teste 2: Detalhes de Produto Específico</h3>
+        <input type="text" id="produto-id" placeholder="ID do produto (ex: sofa_123)" value="sofa_">
+        <button onclick="testarDetalhesProduto()">Testar Detalhes</button>
+        <div id="detalhes-resultado"></div>
+    </div>
+    
+    <div class="test-section">
+        <h3>ℹ️ Teste 3: Informações de Produto</h3>
+        <input type="text" id="info-produto-id" placeholder="ID do produto" value="sofa_">
+        <button onclick="testarInformacoesProduto()">Testar Informações</button>
+        <div id="info-resultado"></div>
+    </div>
+    
+    <div class="test-section">
+        <h3>🧮 Teste 4: Simulação Completa de Seleção</h3>
+        <button onclick="simularSelecaoCompleta()">Simular Seleção Completa</button>
+        <div id="simulacao-resultado"></div>
+    </div>
+
+    <script>
+        function log(message, type = 'info') {
+            const logContainer = document.getElementById('log-container');
+            const logEntry = document.createElement('div');
+            logEntry.className = 'log';
+            logEntry.innerHTML = `<strong>[${new Date().toLocaleTimeString()}]</strong> ${message}`;
+            
+            if (type === 'error') {
+                logEntry.style.backgroundColor = '#f8d7da';
+            } else if (type === 'success') {
+                logEntry.style.backgroundColor = '#d4edda';
+            }
+            
+            logContainer.appendChild(logEntry);
+            logContainer.scrollTop = logContainer.scrollHeight;
+        }
+        
+        function clearLog() {
+            document.getElementById('log-container').innerHTML = '';
+        }
+        
+        async function testarProdutosPorTipo() {
+            log('🔄 Testando endpoint de produtos por tipo...');
+            
+            try {
+                const response = await fetch('/orcamentos/produtos-por-tipo/?tipo=sofa');
+                const data = await response.json();
+                
+                log(`✅ Resposta recebida: ${data.length} produtos encontrados`, 'success');
+                
+                let html = '<h4>Produtos encontrados:</h4><ul>';
+                data.forEach(produto => {
+                    html += `<li><strong>${produto.nome}</strong> (ID: ${produto.id})</li>`;
+                });
+                html += '</ul>';
+                
+                document.getElementById('produtos-resultado').innerHTML = html;
+                
+                // Atualizar campo de teste com primeiro ID encontrado
+                if (data.length > 0) {
+                    document.getElementById('produto-id').value = `sofa_${data[0].id}`;
+                    document.getElementById('info-produto-id').value = `sofa_${data[0].id}`;
+                    log(`📌 ID do primeiro produto: sofa_${data[0].id}`);
+                }
+                
+            } catch (error) {
+                log(`❌ Erro ao testar produtos por tipo: ${error.message}`, 'error');
+                document.getElementById('produtos-resultado').innerHTML = `<div class="error">Erro: ${error.message}</div>`;
+            }
+        }
+        
+        async function testarDetalhesProduto() {
+            const produtoId = document.getElementById('produto-id').value;
+            if (!produtoId) {
+                log('⚠️ ID do produto não informado', 'error');
+                return;
+            }
+            
+            log(`🔄 Testando detalhes do produto: ${produtoId}`);
+            
+            try {
+                const response = await fetch(`/orcamentos/detalhes-produto/${produtoId}/`);
+                const data = await response.json();
+                
+                log(`✅ Detalhes recebidos para produto ${produtoId}`, 'success');
+                
+                const html = `
+                    <h4>Detalhes do Produto:</h4>
+                    <pre>${JSON.stringify(data, null, 2)}</pre>
+                `;
+                
+                document.getElementById('detalhes-resultado').innerHTML = html;
+                
+            } catch (error) {
+                log(`❌ Erro ao buscar detalhes do produto: ${error.message}`, 'error');
+                document.getElementById('detalhes-resultado').innerHTML = `<div class="error">Erro: ${error.message}</div>`;
+            }
+        }
+        
+        async function testarInformacoesProduto() {
+            const produtoId = document.getElementById('info-produto-id').value;
+            if (!produtoId) {
+                log('⚠️ ID do produto não informado', 'error');
+                return;
+            }
+            
+            log(`🔄 Testando informações do produto: ${produtoId}`);
+            
+            try {
+                const response = await fetch(`/orcamentos/informacoes-produto/${produtoId}/`);
+                const data = await response.json();
+                
+                log(`✅ Informações recebidas para produto ${produtoId}`, 'success');
+                
+                const html = `
+                    <h4>Informações do Produto:</h4>
+                    <pre>${JSON.stringify(data, null, 2)}</pre>
+                `;
+                
+                document.getElementById('info-resultado').innerHTML = html;
+                
+            } catch (error) {
+                log(`❌ Erro ao buscar informações do produto: ${error.message}`, 'error');
+                document.getElementById('info-resultado').innerHTML = `<div class="error">Erro: ${error.message}</div>`;
+            }
+        }
+        
+        async function simularSelecaoCompleta() {
+            log('🚀 Iniciando simulação completa de seleção de sofás...');
+            
+            try {
+                // Passo 1: Listar produtos
+                log('📋 Passo 1: Buscando produtos do tipo sofá...');
+                const produtosResponse = await fetch('/orcamentos/produtos-por-tipo/?tipo=sofa');
+                const produtos = await produtosResponse.json();
+                
+                if (produtos.length === 0) {
+                    log('❌ Nenhum produto do tipo sofá encontrado!', 'error');
+                    return;
+                }
+                
+                log(`✅ ${produtos.length} produtos encontrados`, 'success');
+                
+                // Passo 2: Selecionar primeiro produto
+                const primeiroProduto = produtos[0];
+                const produtoId = `sofa_${primeiroProduto.id}`;
+                log(`🎯 Passo 2: Selecionando produto: ${primeiroProduto.nome} (${produtoId})`);
+                
+                // Passo 3: Buscar detalhes
+                log('🔍 Passo 3: Buscando detalhes do produto...');
+                const detalhesResponse = await fetch(`/orcamentos/detalhes-produto/${produtoId}/`);
+                const detalhes = await detalhesResponse.json();
+                
+                log('✅ Detalhes do produto recebidos', 'success');
+                
+                // Passo 4: Buscar informações
+                log('ℹ️ Passo 4: Buscando informações do produto...');
+                const infoResponse = await fetch(`/orcamentos/informacoes-produto/${produtoId}/`);
+                const info = await infoResponse.json();
+                
+                log('✅ Informações do produto recebidas', 'success');
+                
+                // Passo 5: Exibir resultados
+                const html = `
+                    <div class="success">
+                        <h4>✅ Simulação Completa - SUCESSO!</h4>
+                        <p><strong>Produto Selecionado:</strong> ${primeiroProduto.nome}</p>
+                        <p><strong>ID:</strong> ${produtoId}</p>
+                        
+                        <h5>Detalhes:</h5>
+                        <pre>${JSON.stringify(detalhes, null, 2)}</pre>
+                        
+                        <h5>Informações:</h5>
+                        <pre>${JSON.stringify(info, null, 2)}</pre>
+                    </div>
+                `;
+                
+                document.getElementById('simulacao-resultado').innerHTML = html;
+                log('🎉 Simulação completa finalizada com sucesso!', 'success');
+                
+            } catch (error) {
+                log(`❌ Erro na simulação completa: ${error.message}`, 'error');
+                document.getElementById('simulacao-resultado').innerHTML = `<div class="error">Erro: ${error.message}</div>`;
+            }
+        }
+        
+        // Executar teste inicial
+        document.addEventListener('DOMContentLoaded', () => {
+            log('📱 Página carregada. Pronto para testes!');
+            log('💡 Dica: Execute primeiro o "Teste 1" para listar os produtos disponíveis');
+        });
+    </script>
+</body>
+</html>
