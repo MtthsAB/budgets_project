@@ -65,6 +65,67 @@ def novo_orcamento(request):
             orcamento = form.save(commit=False)
             orcamento.vendedor = request.user
             orcamento.save()
+            # Processar itens do pedido
+            itens_json = request.POST.get('itens_pedido_json', '')
+            if itens_json:
+                try:
+                    itens = json.loads(itens_json)
+                    from produtos.models import Produto, Cadeira, Banqueta, Poltrona, Pufe, Almofada, TipoItem
+                    for item in itens:
+                        produto_id = item.get('produto_id', '')
+                        quantidade = int(item.get('quantidade', 1))
+                        preco_unitario = Decimal(str(item.get('preco_unitario', '0')))
+                        observacoes = item.get('observacoes', '')
+                        dados_especificos = item.get('dados_especificos', {})
+                        produto = None
+                        if produto_id.startswith('produto_'):
+                            produto_pk = produto_id.replace('produto_', '')
+                            produto = Produto.objects.get(pk=produto_pk)
+                        else:
+                            produto_especifico = None
+                            tipo_produto = None
+                            if produto_id.startswith('cadeira_'):
+                                pk = produto_id.replace('cadeira_', '')
+                                produto_especifico = Cadeira.objects.get(pk=pk)
+                                tipo_produto = TipoItem.objects.filter(nome__icontains='Cadeira').first()
+                            elif produto_id.startswith('banqueta_'):
+                                pk = produto_id.replace('banqueta_', '')
+                                produto_especifico = Banqueta.objects.get(pk=pk)
+                                tipo_produto = TipoItem.objects.filter(nome__icontains='Banqueta').first()
+                            elif produto_id.startswith('poltrona_'):
+                                pk = produto_id.replace('poltrona_', '')
+                                produto_especifico = Poltrona.objects.get(pk=pk)
+                                tipo_produto = TipoItem.objects.filter(nome__icontains='Poltrona').first()
+                            elif produto_id.startswith('pufe_'):
+                                pk = produto_id.replace('pufe_', '')
+                                produto_especifico = Pufe.objects.get(pk=pk)
+                                tipo_produto = TipoItem.objects.filter(nome__icontains='Pufe').first()
+                            elif produto_id.startswith('almofada_'):
+                                pk = produto_id.replace('almofada_', '')
+                                produto_especifico = Almofada.objects.get(pk=pk)
+                                tipo_produto = TipoItem.objects.filter(nome__icontains='Almofada').first()
+                            if produto_especifico and tipo_produto:
+                                produto, _ = Produto.objects.get_or_create(
+                                    ref_produto=getattr(produto_especifico, f'ref_{produto_id.split('_')[0]}'),
+                                    defaults={
+                                        'nome_produto': produto_especifico.nome,
+                                        'id_tipo_produto': tipo_produto,
+                                        'ativo': True
+                                    }
+                                )
+                                if preco_unitario == 0:
+                                    preco_unitario = produto_especifico.preco
+                        if produto:
+                            OrcamentoItem.objects.create(
+                                orcamento=orcamento,
+                                produto=produto,
+                                quantidade=quantidade,
+                                preco_unitario=preco_unitario,
+                                observacoes=observacoes,
+                                dados_produto=dados_especificos
+                            )
+                except Exception as e:
+                    print(f'Erro ao salvar itens do pedido: {e}')
             messages.success(request, 'Orçamento criado com sucesso!')
             return redirect('orcamentos:editar', pk=orcamento.pk)
     else:
@@ -212,11 +273,64 @@ def adicionar_item(request, orcamento_pk):
         data = json.loads(request.body)
         
         try:
-            produto = Produto.objects.get(pk=data['produto_id'])
+            produto_id = data['produto_id']
             quantidade = int(data.get('quantidade', 1))
             preco_unitario = Decimal(data.get('preco_unitario', '0'))
             observacoes = data.get('observacoes', '')
             dados_especificos = data.get('dados_especificos', {})
+            
+            # Determinar se é produto da tabela genérica ou específica
+            produto = None
+            
+            if produto_id.startswith('produto_'):
+                # Produto da tabela genérica (sofás)
+                produto_pk = produto_id.replace('produto_', '')
+                produto = Produto.objects.get(pk=produto_pk)
+            else:
+                # Produto de tabela específica - criar registro na tabela Produto se necessário
+                from produtos.models import Cadeira, Banqueta, Poltrona, Pufe, Almofada, TipoItem
+                
+                produto_especifico = None
+                tipo_produto = None
+                
+                if produto_id.startswith('cadeira_'):
+                    pk = produto_id.replace('cadeira_', '')
+                    produto_especifico = Cadeira.objects.get(pk=pk)
+                    tipo_produto = TipoItem.objects.filter(nome__icontains='Cadeira').first()
+                elif produto_id.startswith('banqueta_'):
+                    pk = produto_id.replace('banqueta_', '')
+                    produto_especifico = Banqueta.objects.get(pk=pk)
+                    tipo_produto = TipoItem.objects.filter(nome__icontains='Banqueta').first()
+                elif produto_id.startswith('poltrona_'):
+                    pk = produto_id.replace('poltrona_', '')
+                    produto_especifico = Poltrona.objects.get(pk=pk)
+                    tipo_produto = TipoItem.objects.filter(nome__icontains='Poltrona').first()
+                elif produto_id.startswith('pufe_'):
+                    pk = produto_id.replace('pufe_', '')
+                    produto_especifico = Pufe.objects.get(pk=pk)
+                    tipo_produto = TipoItem.objects.filter(nome__icontains='Pufe').first()
+                elif produto_id.startswith('almofada_'):
+                    pk = produto_id.replace('almofada_', '')
+                    produto_especifico = Almofada.objects.get(pk=pk)
+                    tipo_produto = TipoItem.objects.filter(nome__icontains='Almofada').first()
+                
+                if produto_especifico and tipo_produto:
+                    # Buscar ou criar produto na tabela genérica
+                    produto, created = Produto.objects.get_or_create(
+                        ref_produto=getattr(produto_especifico, f'ref_{produto_id.split("_")[0]}'),
+                        defaults={
+                            'nome_produto': produto_especifico.nome,
+                            'id_tipo_produto': tipo_produto,
+                            'ativo': True
+                        }
+                    )
+                    
+                    # Se o preço não foi informado, usar o preço do produto específico
+                    if preco_unitario == 0:
+                        preco_unitario = produto_especifico.preco
+            
+            if not produto:
+                raise ValueError("Produto não encontrado")
             
             # Criar item
             item = OrcamentoItem.objects.create(
@@ -821,9 +935,9 @@ def buscar_produtos_por_tipo(request):
                     'display_name': f"{almofada.nome} - {almofada.ref_almofada}"
                 })
         
-        # Deixar sofás e acessórios de lado conforme solicitado
+        # Deixar sofás e acessórios de lado - acessórios são apenas para sofás
         elif tipo in ['sofa', 'acessorio']:
-            # Retornar lista vazia para tipos não implementados nesta melhoria
+            # Retornar lista vazia para tipos não implementados nesta funcionalidade
             produtos_com_preco = []
         
         return JsonResponse({'produtos': produtos_com_preco})

@@ -1,5 +1,6 @@
 {% extends 'base.html' %}
 {% load static %}
+{% load math_filters %}
 
 {% block title %}{{ titulo }} - Sistema de Produtos{% endblock %}
 
@@ -540,6 +541,7 @@
                         <div class="card-body">
                             <form method="post" id="orcamento-form">
                                 {% csrf_token %}
+                                <input type="hidden" name="itens_pedido_json" id="itens-pedido-json" value="">
                                 
                                 {% if form.non_field_errors %}
                                     <div class="alert alert-danger">
@@ -719,6 +721,82 @@
                             </button>
                         </div>
                         <div class="card-body">
+                            <!-- Itens Existentes (apenas na edição) -->
+                            {% if orcamento and itens %}
+                            <div id="itens-existentes" class="mb-4">
+                                <h6 class="text-muted mb-3">
+                                    <i class="bi bi-list-check"></i> Itens Já Adicionados ({{ itens.count }})
+                                </h6>
+                                <div class="table-responsive">
+                                    <table class="table table-striped">
+                                        <thead>
+                                            <tr>
+                                                <th>Produto</th>
+                                                <th>Referência</th>
+                                                <th>Quantidade</th>
+                                                <th>Preço Unit.</th>
+                                                <th>Total</th>
+                                                <th width="100">Ações</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            {% for item in itens %}
+                                            <tr id="item-existente-{{ item.id }}">
+                                                <td>
+                                                    <div class="fw-bold">{{ item.produto.nome_produto }}</div>
+                                                    <small class="text-muted">{{ item.produto.id_tipo_produto.nome }}</small>
+                                                    {% if item.produto.eh_sofa and item.dados_produto %}
+                                                        <div class="mt-2 p-2 bg-light rounded border-start border-primary border-3" style="font-size: 0.85rem;">
+                                                            {% if item.dados_produto.modulos %}
+                                                                <div class="mb-2">
+                                                                    <strong class="text-primary"><i class="bi bi-cube"></i> Módulos:</strong>
+                                                                    <div class="ms-3">
+                                                                        {% for modulo in item.dados_produto.modulos %}
+                                                                            <div class="text-secondary">• <strong>{{ modulo.nome|default:"Módulo" }}</strong>
+                                                                                <br>&nbsp;&nbsp;&nbsp;→ {{ modulo.largura_total|default:"N/A" }}cm × {{ modulo.quantidade|default:1 }} unid. (R$ {{ modulo.preco|floatformat:2 }} cada)
+                                                                            </div>
+                                                                        {% endfor %}
+                                                                    </div>
+                                                                </div>
+                                                            {% endif %}
+                                                            {% if item.dados_produto.acessorios %}
+                                                                <div class="mb-1">
+                                                                    <strong class="text-success"><i class="bi bi-plus-circle"></i> Acessórios:</strong>
+                                                                    <div class="ms-3">
+                                                                        {% for acessorio in item.dados_produto.acessorios %}
+                                                                            <div class="text-secondary">• <strong>{{ acessorio.nome }}{% if acessorio.ref %} ({{ acessorio.ref }}){% endif %}</strong>
+                                                                                → {{ acessorio.quantidade|default:1 }} unid. × R$ {{ acessorio.preco|floatformat:2 }} = R$ {{ acessorio.preco|multiply:acessorio.quantidade|default:1|floatformat:2 }}
+                                                                            </div>
+                                                                        {% endfor %}
+                                                                    </div>
+                                                                </div>
+                                                            {% endif %}
+                                                        </div>
+                                                    {% endif %}
+                                                    {% if item.observacoes %}
+                                                        <br><small class="text-info">
+                                                            <i class="bi bi-chat-left-text"></i> {{ item.observacoes }}
+                                                        </small>
+                                                    {% endif %}
+                                                </td>
+                                                <td><small class="text-muted">{{ item.produto.ref_produto }}</small></td>
+                                                <td>{{ item.quantidade }}</td>
+                                                <td>R$ {{ item.preco_unitario|floatformat:2 }}</td>
+                                                <td><strong>R$ {{ item.get_total|floatformat:2 }}</strong></td>
+                                                <td>
+                                                    <button class="btn btn-sm btn-outline-danger" onclick="removerItemExistente({{ item.id }})">
+                                                        <i class="bi bi-trash"></i>
+                                                    </button>
+                                                </td>
+                                            </tr>
+                                            {% endfor %}
+                                        </tbody>
+                                    </table>
+                                </div>
+                                <hr>
+                            </div>
+                            {% endif %}
+                            
                             <div id="itens-pedido">
                                 <div class="text-muted text-center py-4" id="sem-itens">
                                     <i class="bi bi-cart-x fs-1"></i>
@@ -790,7 +868,6 @@
 
                 <!-- Sidebar com Totais -->
                 <div class="col-lg-4">
-                    {% if orcamento %}
                     <div class="card totais-orcamento">
                         <div class="card-header">
                             <i class="bi bi-calculator"></i> Totais do Orçamento
@@ -801,21 +878,33 @@
                                     <small class="text-muted">Subtotal:</small>
                                 </div>
                                 <div class="col-6 text-end">
-                                    <strong id="subtotal">R$ {{ orcamento.get_subtotal|floatformat:2 }}</strong>
+                                    {% if orcamento %}
+                                        <strong id="subtotal-sidebar">R$ {{ orcamento.get_subtotal|floatformat:2 }}</strong>
+                                    {% else %}
+                                        <strong id="subtotal-sidebar">R$ 0,00</strong>
+                                    {% endif %}
                                 </div>
                                 
                                 <div class="col-6">
                                     <small class="text-muted">Desconto:</small>
                                 </div>
                                 <div class="col-6 text-end">
-                                    <span id="desconto" class="text-danger">- R$ {{ orcamento.get_total_desconto|floatformat:2 }}</span>
+                                    {% if orcamento %}
+                                        <span id="desconto-sidebar" class="text-danger">- R$ {{ orcamento.get_total_desconto|floatformat:2 }}</span>
+                                    {% else %}
+                                        <span id="desconto-sidebar" class="text-danger">- R$ 0,00</span>
+                                    {% endif %}
                                 </div>
                                 
                                 <div class="col-6">
                                     <small class="text-muted">Acréscimo:</small>
                                 </div>
                                 <div class="col-6 text-end">
-                                    <span id="acrescimo" class="text-success">+ R$ {{ orcamento.get_total_acrescimo|floatformat:2 }}</span>
+                                    {% if orcamento %}
+                                        <span id="acrescimo-sidebar" class="text-success">+ R$ {{ orcamento.get_total_acrescimo|floatformat:2 }}</span>
+                                    {% else %}
+                                        <span id="acrescimo-sidebar" class="text-success">+ R$ 0,00</span>
+                                    {% endif %}
                                 </div>
                                 
                                 <div class="col-12">
@@ -826,7 +915,11 @@
                                     <strong>Total Final:</strong>
                                 </div>
                                 <div class="col-6 text-end">
-                                    <strong id="total-final" class="text-primary fs-5">R$ {{ orcamento.get_total_final|floatformat:2 }}</strong>
+                                    {% if orcamento %}
+                                        <strong id="total-final-sidebar" class="text-primary fs-5">R$ {{ orcamento.get_total_final|floatformat:2 }}</strong>
+                                    {% else %}
+                                        <strong id="total-final-sidebar" class="text-primary fs-5">R$ 0,00</strong>
+                                    {% endif %}
                                 </div>
                                 
                                 <div class="col-12">
@@ -837,19 +930,26 @@
                                     <small class="text-muted">Peso Total:</small>
                                 </div>
                                 <div class="col-6 text-end">
-                                    <small id="peso-total">{{ orcamento.get_peso_total|floatformat:2 }} kg</small>
+                                    {% if orcamento %}
+                                        <small id="peso-total-sidebar">{{ orcamento.get_peso_total|floatformat:2 }} kg</small>
+                                    {% else %}
+                                        <small id="peso-total-sidebar">0,00 kg</small>
+                                    {% endif %}
                                 </div>
                                 
                                 <div class="col-6">
                                     <small class="text-muted">Cubagem Total:</small>
                                 </div>
                                 <div class="col-6 text-end">
-                                    <small id="cubagem-total">{{ orcamento.get_cubagem_total|floatformat:3 }} m³</small>
+                                    {% if orcamento %}
+                                        <small id="cubagem-total-sidebar">{{ orcamento.get_cubagem_total|floatformat:3 }} m³</small>
+                                    {% else %}
+                                        <small id="cubagem-total-sidebar">0,000 m³</small>
+                                    {% endif %}
                                 </div>
                             </div>
                         </div>
                     </div>
-                    {% endif %}
                 </div>
             </div>
         </div>
@@ -997,15 +1097,19 @@
                                     </div>
                                 </div>
                                 
-                                <!-- Acessórios do Sofá -->
-                                <div id="sofa-acessorios" style="display: none;">
+                                <!-- Acessórios Vinculados ao Sofá -->
+                                <div id="sofa-acessorios-vinculados" style="display: none;">
                                     <hr>
                                     <h6 class="fw-bold mb-3">
-                                        <i class="bi bi-plus-circle"></i> Acessórios Disponíveis
-                                        <small class="text-muted">(Opcional)</small>
+                                        <i class="bi bi-plus-circle text-success"></i> Acessórios Vinculados
+                                        <small class="text-muted">(Opcionais)</small>
                                     </h6>
-                                    <div id="acessorios-lista">
-                                        <!-- Lista de acessórios será carregada dinamicamente -->
+                                    <div class="alert alert-info mb-3">
+                                        <i class="bi bi-info-circle"></i>
+                                        <small>Selecione os acessórios específicos para este modelo de sofá. Você pode selecionar múltiplos acessórios.</small>
+                                    </div>
+                                    <div id="acessorios-vinculados-lista">
+                                        <!-- Lista de acessórios vinculados será carregada dinamicamente -->
                                     </div>
                                 </div>
                                 
@@ -1043,7 +1147,7 @@
                         <div class="col-md-2 col-sm-3 col-4">
                             <div class="mb-3">
                                 <label for="quantidade" class="form-label">
-                                    <i class="bi bi-123"></i> Qtd. *
+                                    <i class="bi bi-123"></i> Quantidade. *
                                 </label>
                                 <input type="number" class="form-control form-control-sm" id="quantidade" value="1" min="1" required>
                             </div>
@@ -1083,15 +1187,16 @@ window.orcamentoPk = {{ orcamento.pk }};
 window.orcamentoPk = null;
 {% endif %}
 
+// Variáveis globais para o modal e itens do pedido
+let itensPedido = [];
+let contadorItens = 0;
+let produtoSelecionado = null;
+
 document.addEventListener('DOMContentLoaded', function() {
     console.log('DOM carregado - Inicializando modal Adicionar Item');
     
     // Inicializar campos unificados de desconto e acréscimo
     inicializarCamposUnificados();
-    
-    // Variáveis globais para o modal
-    let itensPedido = [];
-    let contadorItens = 0;
     
     // Elementos do DOM
     const tipoSelect = document.getElementById('tipo-produto');
@@ -1184,6 +1289,11 @@ document.addEventListener('DOMContentLoaded', function() {
                         descontoValorOrig.value = '';
                     }
                 }
+                
+                // Atualizar totais da sidebar
+                if (typeof atualizarTotaisSidebar === 'function') {
+                    atualizarTotaisSidebar();
+                }
             });
         }
         
@@ -1206,6 +1316,11 @@ document.addEventListener('DOMContentLoaded', function() {
                         acrescimoValorOrig.value = '';
                     }
                 }
+                
+                // Atualizar totais da sidebar
+                if (typeof atualizarTotaisSidebar === 'function') {
+                    atualizarTotaisSidebar();
+                }
             });
         }
         
@@ -1221,6 +1336,11 @@ document.addEventListener('DOMContentLoaded', function() {
                 descontoPercOrig.value = valor;
                 descontoValorOrig.value = '';
             }
+            
+            // Atualizar totais da sidebar
+            if (typeof atualizarTotaisSidebar === 'function') {
+                atualizarTotaisSidebar();
+            }
         });
         
         acrescimoValorUnif.addEventListener('input', function() {
@@ -1233,6 +1353,11 @@ document.addEventListener('DOMContentLoaded', function() {
             } else {
                 acrescimoPercOrig.value = valor;
                 acrescimoValorOrig.value = '';
+            }
+            
+            // Atualizar totais da sidebar
+            if (typeof atualizarTotaisSidebar === 'function') {
+                atualizarTotaisSidebar();
             }
         });
         
@@ -1270,6 +1395,12 @@ document.addEventListener('DOMContentLoaded', function() {
                     // Definir como vazio para ser tratado como None no backend
                     acrescimoValorOrig.value = '';
                     acrescimoPercOrig.value = '';
+                }
+                
+                // Serializar itens do pedido
+                const itensPedidoInput = document.getElementById('itens-pedido-json');
+                if (itensPedidoInput) {
+                    itensPedidoInput.value = JSON.stringify(itensPedido);
                 }
             });
         }
@@ -1311,6 +1442,9 @@ document.addEventListener('DOMContentLoaded', function() {
     // Função para carregar produtos por tipo
     function carregarProdutosPorTipo(tipo) {
         if (!produtoSelect) return;
+        
+        // Limpar produto selecionado ao trocar tipo
+        produtoSelecionado = null;
         
         // Ocultar preview ao trocar tipo de produto
         ocultarPreviewProduto();
@@ -1434,7 +1568,13 @@ document.addEventListener('DOMContentLoaded', function() {
                     precoUnitario = dadosSofa.preco_unitario;
                     dadosEspecificos = dadosSofa.dados_especificos;
                 } else {
-                    // Para outros tipos de produto, coletar dados normalmente
+                    // Para outros tipos de produto, usar preço do produto selecionado
+                    if (produtoSelecionado && produtoSelecionado.preco) {
+                        precoUnitario = produtoSelecionado.preco;
+                    } else {
+                        alert('Erro: Preço do produto não encontrado. Tente selecionar o produto novamente.');
+                        return;
+                    }
                     dadosEspecificos = coletarDadosEspecificos(tipoProduto);
                 }
                 
@@ -1504,6 +1644,72 @@ document.addEventListener('DOMContentLoaded', function() {
         return dados;
     }
     
+    // Função para gerar detalhamento visual dos sofás na tabela de itens
+    function gerarDetalhamentoSofa(dadosEspecificos) {
+        if (!dadosEspecificos) return '';
+        
+        let detalhamento = '<div class="mt-2 p-2 bg-light rounded border-start border-primary border-3" style="font-size: 0.85rem;">';
+        
+        // Detalhamento dos módulos
+        if (dadosEspecificos.modulos && dadosEspecificos.modulos.length > 0) {
+            detalhamento += '<div class="mb-2">';
+            detalhamento += '<strong class="text-primary"><i class="bi bi-cube"></i> Módulos:</strong>';
+            detalhamento += '<div class="ms-3">';
+            
+            // Agrupar módulos por nome para melhor visualização
+            const modulosAgrupados = {};
+            dadosEspecificos.modulos.forEach(modulo => {
+                const chave = modulo.nome || `Módulo ${modulo.modulo_id}`;
+                if (!modulosAgrupados[chave]) {
+                    modulosAgrupados[chave] = [];
+                }
+                modulosAgrupados[chave].push(modulo);
+            });
+            
+            Object.keys(modulosAgrupados).forEach(nomeModulo => {
+                const modulos = modulosAgrupados[nomeModulo];
+                detalhamento += `<div class="text-secondary">• <strong>${nomeModulo}</strong>`;
+                
+                // Mostrar tamanhos e quantidades para cada módulo
+                modulos.forEach(modulo => {
+                    const largura = modulo.largura_total || 'N/A';
+                    const quantidade = modulo.quantidade || 1;
+                    const preco = modulo.preco || 0;
+                    
+                    detalhamento += `<br>&nbsp;&nbsp;&nbsp;→ ${largura}cm × ${quantidade} unid. (R$ ${preco.toFixed(2)} cada)`;
+                });
+                
+                detalhamento += '</div>';
+            });
+            
+            detalhamento += '</div></div>';
+        }
+        
+        // Detalhamento dos acessórios
+        if (dadosEspecificos.acessorios && dadosEspecificos.acessorios.length > 0) {
+            detalhamento += '<div class="mb-1">';
+            detalhamento += '<strong class="text-success"><i class="bi bi-plus-circle"></i> Acessórios:</strong>';
+            detalhamento += '<div class="ms-3">';
+            
+            dadosEspecificos.acessorios.forEach(acessorio => {
+                const nome = acessorio.nome || 'Acessório';
+                const ref = acessorio.ref ? ` (${acessorio.ref})` : '';
+                const quantidade = acessorio.quantidade || 1;
+                const preco = acessorio.preco || 0;
+                
+                detalhamento += `<div class="text-secondary">• <strong>${nome}${ref}</strong>`;
+                detalhamento += ` → ${quantidade} unid. × R$ ${preco.toFixed(2)} = R$ ${(quantidade * preco).toFixed(2)}`;
+                detalhamento += '</div>';
+            });
+            
+            detalhamento += '</div></div>';
+        }
+        
+        detalhamento += '</div>';
+        
+        return detalhamento;
+    }
+    
     // Função para atualizar tabela de itens
     function atualizarTabelaItens() {
         const tabelaItens = document.getElementById('tabela-itens');
@@ -1535,12 +1741,19 @@ document.addEventListener('DOMContentLoaded', function() {
         `;
         
         itensPedido.forEach(item => {
+            // Gerar detalhamento específico para sofás
+            let detalhamentoSofa = '';
+            if (item.tipo_produto === 'sofa' && item.dados_especificos) {
+                detalhamentoSofa = gerarDetalhamentoSofa(item.dados_especificos);
+            }
+            
             html += `
                 <tr>
                     <td>
                         <div class="fw-bold">${item.produto_nome}</div>
                         <small class="text-muted">Ref: ${item.produto_ref}</small>
-                        ${item.observacoes ? `<br><small class="text-info">${item.observacoes}</small>` : ''}
+                        ${detalhamentoSofa}
+                        ${item.observacoes ? `<br><small class="text-info"><i class="bi bi-chat-left-text"></i> ${item.observacoes}</small>` : ''}
                     </td>
                     <td>${item.quantidade}</td>
                     <td>R$ ${item.preco_unitario.toFixed(2)}</td>
@@ -1569,6 +1782,56 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     };
     
+    // Função para remover item existente (salvos no banco)
+    window.removerItemExistente = function(itemId) {
+        if (!window.orcamentoPk) {
+            alert('Erro: Orçamento não identificado');
+            return;
+        }
+        
+        if (!confirm('Tem certeza que deseja remover este item?')) {
+            return;
+        }
+        
+        // Fazer requisição AJAX para remover item
+        fetch(`/orcamentos/${window.orcamentoPk}/item/${itemId}/remover/`, {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value,
+                'Content-Type': 'application/json',
+            },
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                // Remover linha da tabela
+                const row = document.getElementById(`item-existente-${itemId}`);
+                if (row) {
+                    row.remove();
+                }
+                
+                // Atualizar totais da sidebar
+                if (typeof atualizarTotaisSidebar === 'function') {
+                    atualizarTotaisSidebar();
+                }
+                
+                // Verificar se ainda há itens
+                const tabelaItens = document.querySelector('#itens-existentes tbody');
+                if (tabelaItens && tabelaItens.children.length === 0) {
+                    document.getElementById('itens-existentes').style.display = 'none';
+                }
+                
+                console.log('Item removido com sucesso');
+            } else {
+                alert('Erro ao remover item: ' + (data.message || 'Erro desconhecido'));
+            }
+        })
+        .catch(error => {
+            console.error('Erro:', error);
+            alert('Erro ao remover item');
+        });
+    };
+    
     // Função para calcular totais gerais
     function calcularTotaisGerais() {
         const subtotal = itensPedido.reduce((total, item) => total + item.preco_total, 0);
@@ -1581,10 +1844,8 @@ document.addEventListener('DOMContentLoaded', function() {
         
         console.log('Subtotal calculado:', subtotal);
         
-        // Removido chamada para calcularTotais() para evitar loop infinito
-        // if (typeof calcularTotais === 'function') {
-        //     calcularTotais();
-        // }
+        // Atualizar sidebar com totais em tempo real
+        atualizarTotaisSidebar();
     }
     
     // Função para limpar formulário
@@ -1621,6 +1882,41 @@ document.addEventListener('DOMContentLoaded', function() {
         // Esta função estava chamando calcularTotaisGerais() que por sua vez chamava calcularTotais()
         console.log('calcularTotais() chamada - função desabilitada para evitar loop infinito');
     }
+    
+    // Função para carregar itens existentes no array JavaScript (apenas em edição)
+    function carregarItensExistentes() {
+        {% if orcamento and itens %}
+        console.log('Carregando itens existentes do orçamento...');
+        
+        // Limpar array de itens
+        itensPedido = [];
+        
+        // Adicionar itens existentes ao array JavaScript
+        {% for item in itens %}
+        const item{{ item.id }} = {
+            id: {{ item.id }},
+            produto_id: {{ item.produto.id }},
+            nome_produto: '{{ item.produto.nome_produto|escapejs }}',
+            ref_produto: '{{ item.produto.ref_produto|escapejs }}',
+            tipo_produto: '{{ item.produto.id_tipo_produto.nome|escapejs }}',
+            quantidade: {{ item.quantidade }},
+            preco_unitario: {{ item.preco_unitario }},
+            preco_total: {{ item.get_total }},
+            observacoes: '{{ item.observacoes|escapejs }}',
+            dados_especificos: {{ item.dados_produto|safe }},
+            existente: true // Flag para identificar itens já salvos
+        };
+        itensPedido.push(item{{ item.id }});
+        {% endfor %}
+        
+        console.log('Itens carregados:', itensPedido.length);
+        {% else %}
+        console.log('Nenhum item existente para carregar (novo orçamento)');
+        {% endif %}
+    }
+    
+    // Carregar itens existentes se for edição
+    carregarItensExistentes();
     
     // Inicializar totais se existirem itens
     calcularTotaisGerais();
@@ -1966,7 +2262,7 @@ document.addEventListener('DOMContentLoaded', function() {
             color: white !important;
         }
         .produto-item.active .detalhes {
-            color: rgba(255,255,255,
+            color: rgba(255,255,255,0.8) !important;
         }
     `;
     document.head.appendChild(style);
@@ -1980,7 +2276,6 @@ document.addEventListener('DOMContentLoaded', function() {
     const produtoBusca = document.getElementById('produto-busca');
     const produtoResultados = document.querySelector('.produto-resultados');
     let timeoutBuscaProduto;
-    let produtoSelecionado = null;
     let tipoAtual = '';
     
     if (produtoBusca) {
@@ -2143,6 +2438,9 @@ document.addEventListener('DOMContentLoaded', function() {
     // Função para selecionar produto
     function selecionarProduto(produto) {
         console.log('🔸 selecionarProduto chamada para:', produto);
+        
+        // Armazenar produto selecionado globalmente
+        produtoSelecionado = produto;
         
         const produtoBusca = document.getElementById('produto-busca');
         const produtoSelect = document.getElementById('produto');
@@ -2643,55 +2941,106 @@ document.addEventListener('DOMContentLoaded', function() {
     function renderizarAcessoriosSofa(sofaData) {
         console.log('🚀 renderizarAcessoriosSofa iniciada para:', sofaData);
         
-        const acessoriosContainer = document.getElementById('acessorios-lista');
+        const acessoriosContainer = document.getElementById('acessorios-vinculados-lista');
         if (!acessoriosContainer) {
-            console.log('⚠️ Container de acessórios não encontrado');
+            console.log('⚠️ Container de acessórios vinculados não encontrado');
             return;
         }
         
-        if (!sofaData || !sofaData.acessorios || sofaData.acessorios.length === 0) {
-            console.log('⚠️ Nenhum acessório disponível para este sofá');
-            document.getElementById('sofa-acessorios').style.display = 'none';
+        // Verificar se há acessórios vinculados especificamente a este sofá
+        const acessoriosVinculados = sofaData && sofaData.acessorios_vinculados ? sofaData.acessorios_vinculados : [];
+        
+        if (!acessoriosVinculados || acessoriosVinculados.length === 0) {
+            console.log('⚠️ Nenhum acessório vinculado a este sofá');
+            document.getElementById('sofa-acessorios-vinculados').style.display = 'none';
             return;
         }
         
-        let html = '';
-        sofaData.acessorios.forEach(acessorio => {
+        console.log(`📋 Renderizando ${acessoriosVinculados.length} acessórios vinculados ao sofá`);
+        
+        let html = '<div class="row">';
+        acessoriosVinculados.forEach(acessorio => {
+            const precoFormatado = acessorio.preco ? parseFloat(acessorio.preco).toFixed(2) : '0.00';
             html += `
-                <div class="form-check mb-2">
-                    <input class="form-check-input acessorio-check" type="checkbox" 
-                           id="acessorio_${acessorio.id}" data-acessorio-id="${acessorio.id}" 
-                           data-preco="${acessorio.preco || 0}">
-                    <label class="form-check-label" for="acessorio_${acessorio.id}">
-                        <strong>${acessorio.nome}</strong>
-                        ${acessorio.preco ? ` - R$ ${parseFloat(acessorio.preco).toFixed(2)}` : ''}
-                        ${acessorio.descricao ? `<br><small class="text-muted">${acessorio.descricao}</small>` : ''}
-                    </label>
+                <div class="col-md-6 mb-3">
+                    <div class="card h-100 border-0 shadow-sm">
+                        <div class="card-body">
+                            <div class="form-check">
+                                <input class="form-check-input acessorio-vinculado-check" type="checkbox" 
+                                       id="acessorio_vinculado_${acessorio.id}" 
+                                       data-acessorio-id="${acessorio.id}" 
+                                       data-preco="${acessorio.preco || 0}"
+                                       data-nome="${acessorio.nome}"
+                                       data-ref="${acessorio.ref || ''}">
+                                <label class="form-check-label w-100" for="acessorio_vinculado_${acessorio.id}">
+                                    <div class="d-flex justify-content-between align-items-start">
+                                        <div class="flex-grow-1">
+                                            <strong class="text-primary">${acessorio.nome}</strong>
+                                            ${acessorio.ref ? `<br><small class="text-muted">${acessorio.ref}</small>` : ''}
+                                            ${acessorio.descricao ? `<br><small class="text-secondary">${acessorio.descricao}</small>` : ''}
+                                        </div>
+                                        <div class="text-end">
+                                            <span class="badge bg-success fs-6">R$ ${precoFormatado}</span>
+                                        </div>
+                                    </div>
+                                    ${acessorio.imagem_principal ? `
+                                        <div class="mt-2">
+                                            <img src="${acessorio.imagem_principal}" 
+                                                 alt="${acessorio.nome}" 
+                                                 class="img-thumbnail" 
+                                                 style="max-height: 60px; max-width: 80px; object-fit: cover;">
+                                        </div>
+                                    ` : ''}
+                                </label>
+                            </div>
+                            <div class="mt-2" id="quantidade-acessorio-${acessorio.id}" style="display: none;">
+                                <label class="form-label small">Quantidade:</label>
+                                <input type="number" class="form-control form-control-sm quantidade-acessorio" 
+                                       data-acessorio-id="${acessorio.id}"
+                                       value="1" min="1" max="10" style="width: 80px;">
+                            </div>
+                        </div>
+                    </div>
                 </div>
             `;
         });
+        html += '</div>';
         
         acessoriosContainer.innerHTML = html;
-        document.getElementById('sofa-acessorios').style.display = 'block';
+        document.getElementById('sofa-acessorios-vinculados').style.display = 'block';
         
-        // Event listeners para acessórios
-        document.querySelectorAll('.acessorio-check').forEach(checkbox => {
+        // Event listeners para acessórios vinculados
+        document.querySelectorAll('.acessorio-vinculado-check').forEach(checkbox => {
             checkbox.addEventListener('change', function() {
                 const acessorioId = this.dataset.acessorioId;
                 const preco = parseFloat(this.dataset.preco) || 0;
+                const nome = this.dataset.nome;
+                const ref = this.dataset.ref;
+                const quantidadeContainer = document.getElementById(`quantidade-acessorio-${acessorioId}`);
                 
                 if (this.checked) {
-                    // Adicionar acessório
-                    const acessorioData = sofaData.acessorios.find(a => a.id == acessorioId);
-                    if (acessorioData && !acessoriosSelecionados.find(a => a.id == acessorioId)) {
+                    // Mostrar campo de quantidade
+                    if (quantidadeContainer) {
+                        quantidadeContainer.style.display = 'block';
+                    }
+                    
+                    // Adicionar acessório à lista de selecionados
+                    if (!acessoriosSelecionados.find(a => a.id == acessorioId)) {
                         acessoriosSelecionados.push({
                             id: acessorioId,
-                            nome: acessorioData.nome,
-                            preco: preco
+                            nome: nome,
+                            ref: ref,
+                            preco: preco,
+                            quantidade: 1
                         });
                     }
                 } else {
-                    // Remover acessório
+                    // Ocultar campo de quantidade
+                    if (quantidadeContainer) {
+                        quantidadeContainer.style.display = 'none';
+                    }
+                    
+                    // Remover acessório da lista de selecionados
                     acessoriosSelecionados = acessoriosSelecionados.filter(a => a.id != acessorioId);
                 }
                 
@@ -2700,7 +3049,22 @@ document.addEventListener('DOMContentLoaded', function() {
             });
         });
         
-        console.log('✅ Acessórios renderizados com sucesso');
+        // Event listeners para campos de quantidade
+        document.querySelectorAll('.quantidade-acessorio').forEach(input => {
+            input.addEventListener('change', function() {
+                const acessorioId = this.dataset.acessorioId;
+                const novaQuantidade = parseInt(this.value) || 1;
+                
+                // Atualizar quantidade no array de selecionados
+                const acessorio = acessoriosSelecionados.find(a => a.id == acessorioId);
+                if (acessorio) {
+                    acessorio.quantidade = novaQuantidade;
+                    atualizarResumoSofa();
+                }
+            });
+        });
+        
+        console.log('✅ Acessórios vinculados renderizados com sucesso');
     }
     
     // Função para obter dados do sofá configurado para envio
@@ -2935,5 +3299,108 @@ document.addEventListener('DOMContentLoaded', function() {
             tamanhoCheckbox.dispatchEvent(new Event('change'));
         }
     }
+
+    // Função para atualizar totais em tempo real na sidebar
+    function atualizarTotaisSidebar() {
+        // Calcular subtotal dos itens
+        const subtotal = itensPedido.reduce((total, item) => total + item.preco_total, 0);
+        
+        // Obter valores de desconto e acréscimo
+        const descontoValor = parseFloat(document.getElementById('id_desconto_valor')?.value || 0);
+        const descontoPercentual = parseFloat(document.getElementById('id_desconto_percentual')?.value || 0);
+        const acrescimoValor = parseFloat(document.getElementById('id_acrescimo_valor')?.value || 0);
+        const acrescimoPercentual = parseFloat(document.getElementById('id_acrescimo_percentual')?.value || 0);
+        
+        // Calcular desconto total
+        const descontoTotal = descontoValor + (subtotal * descontoPercentual / 100);
+        
+        // Calcular acréscimo total
+        const acrescimoTotal = acrescimoValor + (subtotal * acrescimoPercentual / 100);
+        
+        // Calcular total final
+        const totalFinal = subtotal - descontoTotal + acrescimoTotal;
+        
+        // Atualizar elementos da sidebar
+        const subtotalEl = document.getElementById('subtotal-sidebar');
+        const descontoEl = document.getElementById('desconto-sidebar');
+        const acrescimoEl = document.getElementById('acrescimo-sidebar');
+        const totalFinalEl = document.getElementById('total-final-sidebar');
+        
+        if (subtotalEl) {
+            subtotalEl.textContent = `R$ ${subtotal.toFixed(2).replace('.', ',')}`;
+        }
+        
+        if (descontoEl) {
+            descontoEl.textContent = `- R$ ${descontoTotal.toFixed(2).replace('.', ',')}`;
+        }
+        
+        if (acrescimoEl) {
+            acrescimoEl.textContent = `+ R$ ${acrescimoTotal.toFixed(2).replace('.', ',')}`;
+        }
+        
+        if (totalFinalEl) {
+            totalFinalEl.textContent = `R$ ${totalFinal.toFixed(2).replace('.', ',')}`;
+        }
+        
+        console.log('Totais atualizados - Subtotal:', subtotal, 'Desconto:', descontoTotal, 'Acréscimo:', acrescimoTotal, 'Total:', totalFinal);
+    }
+
+    // Modificar a função calcularTotaisGerais para incluir a atualização da sidebar
+    function calcularTotaisGeraisOriginal() {
+        const subtotal = itensPedido.reduce((total, item) => total + item.preco_total, 0);
+        
+        // Atualizar campo subtotal se existir
+        const subtotalElement = document.getElementById('subtotal-itens');
+        if (subtotalElement) {
+            subtotalElement.textContent = `R$ ${subtotal.toFixed(2)}`;
+        }
+        
+        console.log('Subtotal calculado:', subtotal);
+        
+        // Atualizar sidebar com totais em tempo real
+        atualizarTotaisSidebar();
+    }
+
+    // Substituir a função original
+    calcularTotaisGerais = calcularTotaisGeraisOriginal;
+
+    // Adicionar listeners para campos de desconto e acréscimo
+    function adicionarListenersDesconto() {
+        const campos = [
+            'desconto_valor_unificado',
+            'acrescimo_valor_unificado',
+            'id_desconto_valor',
+            'id_desconto_percentual', 
+            'id_acrescimo_valor',
+            'id_acrescimo_percentual'
+        ];
+        
+        campos.forEach(campoId => {
+            const campo = document.getElementById(campoId);
+            if (campo) {
+                campo.addEventListener('input', atualizarTotaisSidebar);
+                campo.addEventListener('change', atualizarTotaisSidebar);
+            }
+        });
+        
+        // Adicionar listener para faixa de preço que afeta os preços
+        const faixaPreco = document.getElementById('id_faixa_preco');
+        if (faixaPreco) {
+            faixaPreco.addEventListener('change', function() {
+                // Recalcular preços dos itens com nova faixa
+                setTimeout(atualizarTotaisSidebar, 100);
+            });
+        }
+    }
+
+    // Inicializar listeners quando o DOM estiver pronto
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', adicionarListenersDesconto);
+    } else {
+        adicionarListenersDesconto();
+    }
+
+    // Atualizar totais inicialmente
+    setTimeout(atualizarTotaisSidebar, 500);
 </script>
 {% endblock %}

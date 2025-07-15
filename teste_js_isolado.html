@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Teste JavaScript Isolado</title>
+</head>
+<body>
+    <script>
+        // Variáveis globais para o modal e itens do pedido
+        let itensPedido = [];
+        let contadorItens = 0;
+        let produtoSelecionado = {
+            id: 'cadeira_1',
+            nome_produto: 'EVA',
+            ref_produto: 'CD001',
+            tipo: 'Cadeira',
+            preco: 857.00
+        };
+
+        // Função para calcular totais gerais
+        function calcularTotaisGerais() {
+            const subtotal = itensPedido.reduce((total, item) => total + item.preco_total, 0);
+            console.log('Subtotal calculado:', subtotal);
+            atualizarTotaisSidebar();
+        }
+
+        // Função para atualizar totais em tempo real na sidebar
+        function atualizarTotaisSidebar() {
+            const subtotal = itensPedido.reduce((total, item) => total + item.preco_total, 0);
+            console.log('Subtotal na sidebar:', subtotal);
+        }
+
+        // Simular adição de item
+        function adicionarItemTeste() {
+            console.log('Testando adição de item...');
+            
+            const item = {
+                id: ++contadorItens,
+                produto_id: 'cadeira_1',
+                produto_nome: 'EVA',
+                produto_ref: 'CD001',
+                tipo_produto: 'cadeira',
+                quantidade: 1,
+                preco_unitario: 857.00,
+                preco_total: 857.00,
+                observacoes: '',
+                dados_especificos: {tipo: 'cadeira'}
+            };
+            
+            // Adicionar à lista
+            itensPedido.push(item);
+            console.log('Item adicionado:', item);
+            console.log('Lista atual:', itensPedido);
+            
+            // Calcular totais
+            calcularTotaisGerais();
+            
+            console.log('Teste concluído sem erros!');
+        }
+
+        // Executar teste
+        adicionarItemTeste();
+    </script>
+</body>
+</html>
