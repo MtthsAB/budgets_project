@@ -80,7 +80,7 @@ class Produto(BaseModel):
     
     def eh_sofa(self):
         """Verifica se o produto é um sofá"""
-        return self.id_tipo_produto.nome.lower() in ['sofá', 'sofas', 'sofa']
+        return self.id_tipo_produto.nome.lower() in ['sofá', 'sofas', 'sofa', 'sofás']
     
     def clean(self):
         """Validações customizadas do modelo"""

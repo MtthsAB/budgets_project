@@ -139,6 +139,7 @@
                                         <thead>
                                             <tr>
                                                 <th>Produto</th>
+                                                <th>Referência</th>
                                                 <th>Tipo</th>
                                                 <th>Qtd</th>
                                                 <th>Preço Unit.</th>
@@ -150,36 +151,24 @@
                                             <tr>
                                                 <td>
                                                     <div class="fw-bold">{{ item.produto.nome_produto }}</div>
-                                                    <small class="text-muted">Ref: {{ item.produto.ref_produto }}</small>
-                                                    {% if item.observacoes %}
-                                                        <br>
-                                                        <small class="text-info">
-                                                            <i class="bi bi-chat-left-text"></i> {{ item.observacoes }}
-                                                        </small>
-                                                    {% endif %}
-                                                    
-                                                    <!-- Detalhamento para Sofás -->
-                                                    {% if item.produto.id_tipo_produto.nome == "SOFA" and item.dados_produto %}
-                                                        <div class="breakdown-sofa mt-2" style="font-size: 0.85em; line-height: 1.4;">
+                                                    <small class="text-muted">{{ item.produto.id_tipo_produto.nome }}</small>
+                                                    {% if item.produto.eh_sofa and item.dados_produto %}
+                                                        <div class="mt-2 p-2 bg-light rounded border-start border-primary border-3" style="font-size: 0.85rem;">
                                                             {% if item.dados_produto.modulos %}
                                                                 <div class="mb-2">
-                                                                    <strong class="text-primary">📦 Módulos Selecionados:</strong>
+                                                                    <strong class="text-primary"><i class="bi bi-cube"></i> Módulos:</strong>
                                                                     <div class="ms-3">
                                                                         {% for modulo in item.dados_produto.modulos %}
-                                                                            <div class="text-secondary">• <strong>{{ modulo.nome }}</strong></div>
-                                                                            {% for tamanho in modulo.tamanhos %}
-                                                                                <div class="ms-4 text-secondary">
-                                                                                    → {{ tamanho.dimensao }}: {{ tamanho.quantidade }} unid. × R$ {{ tamanho.preco|floatformat:2 }} = R$ {{ tamanho.preco|multiply:tamanho.quantidade|floatformat:2 }}
-                                                                                </div>
-                                                                            {% endfor %}
+                                                                            <div class="text-secondary">• <strong>{{ modulo.nome|default:"Módulo" }}</strong>
+                                                                                <br>&nbsp;&nbsp;&nbsp;→ {{ modulo.quantidade|default:1 }} unid. (R$ {{ modulo.preco|floatformat:2 }} cada)
+                                                                            </div>
                                                                         {% endfor %}
                                                                     </div>
                                                                 </div>
                                                             {% endif %}
-                                                            
                                                             {% if item.dados_produto.acessorios %}
-                                                                <div>
-                                                                    <strong class="text-success">🎯 Acessórios Inclusos:</strong>
+                                                                <div class="mb-1">
+                                                                    <strong class="text-success"><i class="bi bi-plus-circle"></i> Acessórios:</strong>
                                                                     <div class="ms-3">
                                                                         {% for acessorio in item.dados_produto.acessorios %}
                                                                             <div class="text-secondary">• <strong>{{ acessorio.nome }}{% if acessorio.ref %} ({{ acessorio.ref }}){% endif %}</strong>
@@ -191,7 +180,13 @@
                                                             {% endif %}
                                                         </div>
                                                     {% endif %}
+                                                    {% if item.observacoes %}
+                                                        <br><small class="text-info">
+                                                            <i class="bi bi-chat-left-text"></i> {{ item.observacoes }}
+                                                        </small>
+                                                    {% endif %}
                                                 </td>
+                                                <td><small class="text-muted">{{ item.produto.ref_produto }}</small></td>
                                                 <td>
                                                     <span class="badge bg-info">{{ item.produto.id_tipo_produto.nome }}</span>
                                                 </td>

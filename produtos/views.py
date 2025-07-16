@@ -170,11 +170,11 @@ def produtos_list_view(request):
         },
         'tipo': {
             'Produto': 'id_tipo_produto__nome',
-            'Banqueta': 'created_at',  # Banquetas sempre terão tipo fixo
-            'Cadeira': 'created_at',   # Cadeiras sempre terão tipo fixo
-            'Poltrona': 'created_at',  # Poltronas sempre terão tipo fixo
-            'Pufe': 'created_at',      # Pufes sempre terão tipo fixo
-            'Almofada': 'created_at'   # Almofadas sempre terão tipo fixo
+            'Banqueta': 'ref_banqueta',  # Para tipos específicos, ordenar por referência como fallback
+            'Cadeira': 'ref_cadeira',    # Para tipos específicos, ordenar por referência como fallback
+            'Poltrona': 'ref_poltrona',  # Para tipos específicos, ordenar por referência como fallback
+            'Pufe': 'ref_pufe',          # Para tipos específicos, ordenar por referência como fallback
+            'Almofada': 'ref_almofada'   # Para tipos específicos, ordenar por referência como fallback
         },
         'status': {
             'Produto': 'ativo',
@@ -183,22 +183,6 @@ def produtos_list_view(request):
             'Poltrona': 'ativo', 
             'Pufe': 'ativo',
             'Almofada': 'ativo'
-        },
-        'created_at': {
-            'Produto': 'created_at',
-            'Banqueta': 'created_at',
-            'Cadeira': 'created_at',
-            'Poltrona': 'created_at',
-            'Pufe': 'created_at', 
-            'Almofada': 'created_at'
-        },
-        'created_by': {
-            'Produto': 'created_by__email',
-            'Banqueta': 'created_by__email',
-            'Cadeira': 'created_by__email',
-            'Poltrona': 'created_by__email',
-            'Pufe': 'created_by__email',
-            'Almofada': 'created_by__email'
         }
     }
     

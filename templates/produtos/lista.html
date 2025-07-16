@@ -233,7 +233,6 @@
                                         </button>
                                     </div>
                                 </th>
-                                <th width="120">Módulos</th>
                                 <th width="80" class="sortable-header" data-field="status">
                                     <div class="header-content">
                                         <span class="header-text">Status</span>
@@ -242,36 +241,6 @@
                                             {% if ordenacao.campo == 'status' and ordenacao.direcao == 'desc' %}
                                                 ↓
                                             {% elif ordenacao.campo == 'status' %}
-                                                ↑
-                                            {% else %}
-                                                ↕
-                                            {% endif %}
-                                        </button>
-                                    </div>
-                                </th>
-                                <th width="120" class="sortable-header" data-field="created_at">
-                                    <div class="header-content">
-                                        <span class="header-text">Criado em</span>
-                                        <button type="button" class="sort-btn {% if ordenacao.campo == 'created_at' %}active {% if ordenacao.direcao == 'desc' %}desc{% endif %}{% endif %}" 
-                                                onclick="sortTable('created_at')">
-                                            {% if ordenacao.campo == 'created_at' and ordenacao.direcao == 'desc' %}
-                                                ↓
-                                            {% elif ordenacao.campo == 'created_at' %}
-                                                ↑
-                                            {% else %}
-                                                ↕
-                                            {% endif %}
-                                        </button>
-                                    </div>
-                                </th>
-                                <th width="120" class="sortable-header" data-field="created_by">
-                                    <div class="header-content">
-                                        <span class="header-text">Criado por</span>
-                                        <button type="button" class="sort-btn {% if ordenacao.campo == 'created_by' %}active {% if ordenacao.direcao == 'desc' %}desc{% endif %}{% endif %}" 
-                                                onclick="sortTable('created_by')">
-                                            {% if ordenacao.campo == 'created_by' and ordenacao.direcao == 'desc' %}
-                                                ↓
-                                            {% elif ordenacao.campo == 'created_by' %}
                                                 ↑
                                             {% else %}
                                                 ↕
@@ -309,27 +278,10 @@
                                     {% endwith %}
                                 </td>
                                 <td>
-                                    {% if produto.modulos.count > 0 %}
-                                        <span class="badge bg-info">{{ produto.modulos.count }} módulo{{ produto.modulos.count|pluralize }}</span>
-                                    {% else %}
-                                        <span class="text-muted">Sem módulos</span>
-                                    {% endif %}
-                                </td>
-                                <td>
                                     {% if produto.ativo %}
                                         <span class="badge bg-success">Ativo</span>
                                     {% else %}
                                         <span class="badge bg-danger">Inativo</span>
-                                    {% endif %}
-                                </td>
-                                <td>{{ produto.created_at|date:"d/m/Y H:i" }}</td>
-                                <td>
-                                    {% if produto.created_by %}
-                                        <small class="text-muted small-user" title="{{ produto.created_by.email }}">
-                                            {{ produto.created_by.get_full_name|default:produto.created_by.email }}
-                                        </small>
-                                    {% else %}
-                                        <small class="text-muted">Sistema</small>
                                     {% endif %}
                                 </td>
                                 <td>
@@ -413,23 +365,10 @@
                                     <span class="badge tipo-banquetas">Banquetas</span>
                                 </td>
                                 <td>
-                                    <span class="text-muted">Sem módulos</span>
-                                </td>
-                                <td>
                                     {% if banqueta.ativo %}
                                         <span class="badge bg-success">Ativo</span>
                                     {% else %}
                                         <span class="badge bg-danger">Inativo</span>
-                                    {% endif %}
-                                </td>
-                                <td>{{ banqueta.created_at|date:"d/m/Y H:i" }}</td>
-                                <td>
-                                    {% if banqueta.created_by %}
-                                        <small class="text-muted small-user" title="{{ banqueta.created_by.email }}">
-                                            {{ banqueta.created_by.get_full_name|default:banqueta.created_by.email }}
-                                        </small>
-                                    {% else %}
-                                        <small class="text-muted">Sistema</small>
                                     {% endif %}
                                 </td>
                                 <td>
@@ -488,23 +427,10 @@
                                     <span class="badge tipo-cadeiras">Cadeiras</span>
                                 </td>
                                 <td>
-                                    <span class="text-muted">Sem módulos</span>
-                                </td>
-                                <td>
                                     {% if cadeira.ativo %}
                                         <span class="badge bg-success">Ativo</span>
                                     {% else %}
                                         <span class="badge bg-danger">Inativo</span>
-                                    {% endif %}
-                                </td>
-                                <td>{{ cadeira.created_at|date:"d/m/Y H:i" }}</td>
-                                <td>
-                                    {% if cadeira.created_by %}
-                                        <small class="text-muted small-user" title="{{ cadeira.created_by.email }}">
-                                            {{ cadeira.created_by.get_full_name|default:cadeira.created_by.email }}
-                                        </small>
-                                    {% else %}
-                                        <small class="text-muted">Sistema</small>
                                     {% endif %}
                                 </td>
                                 <td>
@@ -564,23 +490,10 @@
                                     <span class="badge tipo-poltronas">Poltronas</span>
                                 </td>
                                 <td>
-                                    <span class="text-muted">Sem módulos</span>
-                                </td>
-                                <td>
                                     {% if poltrona.ativo %}
                                         <span class="badge bg-success">Ativo</span>
                                     {% else %}
                                         <span class="badge bg-danger">Inativo</span>
-                                    {% endif %}
-                                </td>
-                                <td>{{ poltrona.created_at|date:"d/m/Y H:i" }}</td>
-                                <td>
-                                    {% if poltrona.created_by %}
-                                        <small class="text-muted small-user" title="{{ poltrona.created_by.email }}">
-                                            {{ poltrona.created_by.get_full_name|default:poltrona.created_by.email }}
-                                        </small>
-                                    {% else %}
-                                        <small class="text-muted">Sistema</small>
                                     {% endif %}
                                 </td>
                                 <td>
@@ -640,23 +553,10 @@
                                     <span class="badge tipo-pufes">Pufes</span>
                                 </td>
                                 <td>
-                                    <span class="text-muted">Sem módulos</span>
-                                </td>
-                                <td>
                                     {% if pufe.ativo %}
                                         <span class="badge bg-success">Ativo</span>
                                     {% else %}
                                         <span class="badge bg-danger">Inativo</span>
-                                    {% endif %}
-                                </td>
-                                <td>{{ pufe.created_at|date:"d/m/Y H:i" }}</td>
-                                <td>
-                                    {% if pufe.created_by %}
-                                        <small class="text-muted small-user" title="{{ pufe.created_by.email }}">
-                                            {{ pufe.created_by.get_full_name|default:pufe.created_by.email }}
-                                        </small>
-                                    {% else %}
-                                        <small class="text-muted">Sistema</small>
                                     {% endif %}
                                 </td>
                                 <td>
@@ -716,23 +616,10 @@
                                     <span class="badge tipo-almofadas">Almofadas</span>
                                 </td>
                                 <td>
-                                    <span class="text-muted">Sem módulos</span>
-                                </td>
-                                <td>
                                     {% if almofada.ativo %}
                                         <span class="badge bg-success">Ativo</span>
                                     {% else %}
                                         <span class="badge bg-danger">Inativo</span>
-                                    {% endif %}
-                                </td>
-                                <td>{{ almofada.created_at|date:"d/m/Y H:i" }}</td>
-                                <td>
-                                    {% if almofada.created_by %}
-                                        <small class="text-muted small-user" title="{{ almofada.created_by.email }}">
-                                            {{ almofada.created_by.get_full_name|default:almofada.created_by.email }}
-                                        </small>
-                                    {% else %}
-                                        <small class="text-muted">Sistema</small>
                                     {% endif %}
                                 </td>
                                 <td>

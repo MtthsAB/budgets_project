@@ -753,7 +753,7 @@
                                                                     <div class="ms-3">
                                                                         {% for modulo in item.dados_produto.modulos %}
                                                                             <div class="text-secondary">• <strong>{{ modulo.nome|default:"Módulo" }}</strong>
-                                                                                <br>&nbsp;&nbsp;&nbsp;→ {{ modulo.largura_total|default:"N/A" }}cm × {{ modulo.quantidade|default:1 }} unid. (R$ {{ modulo.preco|floatformat:2 }} cada)
+                                                                                <br>&nbsp;&nbsp;&nbsp;→ {{ modulo.quantidade|default:1 }} unid. (R$ {{ modulo.preco|floatformat:2 }} cada)
                                                                             </div>
                                                                         {% endfor %}
                                                                     </div>
