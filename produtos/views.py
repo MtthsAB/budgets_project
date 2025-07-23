@@ -300,7 +300,7 @@ def produto_cadastro_view(request):
                     banqueta.save()
                     
                     messages.success(request, f'Banqueta "{banqueta.ref_banqueta} - {banqueta.nome}" cadastrada com sucesso!')
-                    return redirect('banquetas_lista')
+                    return redirect('produtos_lista')
                     
                 elif eh_cadeira:
                     # Processar como cadeira usando o modelo específico
@@ -340,7 +340,7 @@ def produto_cadastro_view(request):
                     cadeira.save()
                     
                     messages.success(request, f'Cadeira "{cadeira.ref_cadeira} - {cadeira.nome}" cadastrada com sucesso!')
-                    return redirect('cadeiras_lista')
+                    return redirect('produtos_lista')
                 
                 elif eh_poltrona:
                     # Processar como poltrona usando o modelo específico
@@ -537,7 +537,7 @@ def produto_cadastro_view(request):
                         logger.info(f"Criando módulo {i+1}: {nome_modulo}")
                         
                         modulo = Modulo(
-                            item=produto,
+                            produto=produto,
                             nome=nome_modulo,
                             profundidade=float(profundidade) if profundidade else None,
                             altura=float(altura) if altura else None,
@@ -551,12 +551,13 @@ def produto_cadastro_view(request):
                         
                         # Processar tamanhos deste módulo
                         modulo_id = i + 1
-                        tamanhos_nomes = request.POST.getlist(f'tamanho_nome_{modulo_id}')
+                        tamanhos_largura_total = request.POST.getlist(f'tamanho_largura_total_{modulo_id}')
                         
-                        logger.info(f"Tamanhos para módulo {modulo_id}: {tamanhos_nomes}")
+                        logger.info(f"=== DEBUG TAMANHOS MÓDULO {modulo_id} ===")
+                        logger.info(f"Larguras totais encontradas: {tamanhos_largura_total}")
+                        logger.info(f"POST data keys relacionados a tamanhos: {[k for k in request.POST.keys() if 'tamanho' in k and str(modulo_id) in k]}")
                         
-                        if tamanhos_nomes:
-                            tamanhos_largura_total = request.POST.getlist(f'tamanho_largura_total_{modulo_id}')
+                        if tamanhos_largura_total and any(largura.strip() for largura in tamanhos_largura_total):
                             tamanhos_largura_assento = request.POST.getlist(f'tamanho_largura_assento_{modulo_id}')
                             tamanhos_altura = request.POST.getlist(f'tamanho_altura_{modulo_id}')
                             tamanhos_profundidade = request.POST.getlist(f'tamanho_profundidade_{modulo_id}')
@@ -566,9 +567,14 @@ def produto_cadastro_view(request):
                             tamanhos_preco = request.POST.getlist(f'tamanho_preco_{modulo_id}')
                             tamanhos_descricao = request.POST.getlist(f'tamanho_descricao_{modulo_id}')
                             
-                            for j, nome_tamanho in enumerate(tamanhos_nomes):
-                                if nome_tamanho.strip():
+                            logger.info(f"Preços: {tamanhos_preco}")
+                            logger.info(f"Total de tamanhos a processar: {len(tamanhos_largura_total)}")
+                            
+                            for j, largura_total in enumerate(tamanhos_largura_total):
+                                if largura_total and largura_total.strip():
                                     from .models import TamanhosModulosDetalhado
+                                    
+                                    logger.info(f"Processando tamanho {j+1}: largura {largura_total}cm")
                                     
                                     # Função auxiliar para converter valores
                                     def safe_float(value):
@@ -590,6 +596,12 @@ def produto_cadastro_view(request):
                                     # Rastrear usuário
                                     track_user_changes(tamanho_detalhado, request.user)
                                     tamanho_detalhado.save()
+                                    logger.info(f"✅ Tamanho salvo: ID {tamanho_detalhado.id}, Largura: {tamanho_detalhado.largura_total}, Preço: {tamanho_detalhado.preco}")
+                                else:
+                                    logger.info(f"⚠️ Tamanho {j+1} ignorado (largura vazia): '{largura_total}'")
+                        else:
+                            logger.info(f"⚠️ Nenhum tamanho encontrado para módulo {modulo_id}")
+                            logger.info(f"Chaves POST disponíveis: {list(request.POST.keys())[:10]}...")  # Mostrar apenas primeiras 10
                 
                 messages.success(request, f'Produto "{produto.nome_produto}" cadastrado com sucesso!')
                 return redirect('produtos_lista')
@@ -815,7 +827,7 @@ def produto_editar_view(request, produto_id):
                         imagem_secundaria_modulo = request.FILES.get(f'modulo_imagem_secundaria_{modulo_counter}')
 
                         modulo = Modulo(
-                            item=produto,
+                            produto=produto,
                             nome=nome_modulo,
                             profundidade=safe_float(profundidade),
                             altura=safe_float(altura),
@@ -1039,7 +1051,7 @@ def acessorio_cadastro_view(request):
                         request, 
                         f'Acessório "{acessorio.ref_acessorio} - {acessorio.nome}" cadastrado com sucesso!'
                     )
-                    return redirect('acessorio_detalhes', acessorio_id=acessorio.id)
+                    return redirect('produtos_lista')
             except Exception as e:
                 logger.error(f"Erro ao cadastrar acessório: {str(e)}")
                 messages.error(request, f'Erro ao cadastrar acessório: {str(e)}')
@@ -1133,7 +1145,7 @@ def acessorio_editar_view(request, acessorio_id):
                         request, 
                         f'Acessório "{acessorio.ref_acessorio} - {acessorio.nome}" atualizado com sucesso!'
                     )
-                    return redirect('acessorio_detalhes', acessorio_id=acessorio.id)
+                    return redirect('produtos_lista')
             except Exception as e:
                 logger.error(f"Erro ao editar acessório: {str(e)}")
                 messages.error(request, f'Erro ao editar acessório: {str(e)}')
@@ -1192,11 +1204,11 @@ def acessorio_excluir_view(request, acessorio_id):
                 else:
                     messages.success(request, f'Acessório "{nome_acessorio}" excluído com sucesso!')
                 
-                return redirect('acessorios_lista')
+                return redirect('produtos_lista')
         except Exception as e:
             logger.error(f"Erro ao excluir acessório: {str(e)}")
             messages.error(request, f'Erro ao excluir acessório: {str(e)}')
-            return redirect('acessorio_detalhes', acessorio_id=acessorio.id)
+            return redirect('produtos_lista')
     
     context = {
         'acessorio': acessorio,
@@ -1248,7 +1260,7 @@ def banqueta_cadastro_view(request):
                     banqueta.save()
                     
                     messages.success(request, f'Banqueta "{banqueta.ref_banqueta} - {banqueta.nome}" cadastrada com sucesso!')
-                    return redirect('banquetas_lista')
+                    return redirect('produtos_lista')
             except Exception as e:
                 logger.error(f"Erro ao cadastrar banqueta: {str(e)}")
                 messages.error(request, f'Erro ao cadastrar banqueta: {str(e)}')
@@ -1322,7 +1334,7 @@ def banqueta_excluir_view(request, banqueta_id):
             nome_banqueta = f"{banqueta.ref_banqueta} - {banqueta.nome}"
             banqueta.delete()
             messages.success(request, f'Banqueta "{nome_banqueta}" excluída com sucesso!')
-            return redirect('banquetas_lista')
+            return redirect('produtos_lista')
         except Exception as e:
             logger.error(f"Erro ao excluir banqueta: {str(e)}")
             messages.error(request, f'Erro ao excluir banqueta: {str(e)}')
@@ -1382,7 +1394,7 @@ def cadeira_cadastro_view(request):
                     cadeira.save()
                     
                     messages.success(request, f'Cadeira "{cadeira.ref_cadeira} - {cadeira.nome}" cadastrada com sucesso!')
-                    return redirect('cadeira_detalhes', cadeira_id=cadeira.id)
+                    return redirect('produtos_lista')
             except Exception as e:
                 logger.error(f"Erro ao cadastrar cadeira: {str(e)}")
                 messages.error(request, f'Erro ao cadastrar cadeira: {str(e)}')
@@ -1453,7 +1465,7 @@ def cadeira_excluir_view(request, cadeira_id):
             nome_cadeira = f"{cadeira.ref_cadeira} - {cadeira.nome}"
             cadeira.delete()
             messages.success(request, f'Cadeira "{nome_cadeira}" excluída com sucesso!')
-            return redirect('cadeiras_lista')
+            return redirect('produtos_lista')
         except Exception as e:
             logger.error(f"Erro ao excluir cadeira: {str(e)}")
             messages.error(request, f'Erro ao excluir cadeira: {str(e)}')
@@ -1502,7 +1514,7 @@ def poltrona_cadastro_view(request):
             try:
                 poltrona = form.save()
                 messages.success(request, f'Poltrona "{poltrona.ref_poltrona} - {poltrona.nome}" cadastrada com sucesso!')
-                return redirect('poltrona_detalhes', poltrona_id=poltrona.id)
+                return redirect('produtos_lista')
             except Exception as e:
                 logger.error(f"Erro ao cadastrar poltrona: {str(e)}")
                 messages.error(request, f'Erro ao cadastrar poltrona: {str(e)}')
@@ -1570,7 +1582,7 @@ def poltrona_excluir_view(request, poltrona_id):
             nome_poltrona = f"{poltrona.ref_poltrona} - {poltrona.nome}"
             poltrona.delete()
             messages.success(request, f'Poltrona "{nome_poltrona}" excluída com sucesso!')
-            return redirect('poltronas_lista')
+            return redirect('produtos_lista')
         except Exception as e:
             logger.error(f"Erro ao excluir poltrona: {str(e)}")
             messages.error(request, f'Erro ao excluir poltrona: {str(e)}')
@@ -1606,7 +1618,7 @@ def pufe_cadastro_view(request):
                 pufe = form.save()
                 track_user_changes(pufe, request.user)
                 messages.success(request, f'Pufe "{pufe.ref_pufe} - {pufe.nome}" cadastrado com sucesso!')
-                return redirect('pufe_detalhes', pufe_id=pufe.id)
+                return redirect('produtos_lista')
             except Exception as e:
                 logger.error(f"Erro ao cadastrar pufe: {str(e)}")
                 messages.error(request, f'Erro ao cadastrar pufe: {str(e)}')
@@ -1666,7 +1678,7 @@ def pufe_excluir_view(request, pufe_id):
             nome_pufe = f"{pufe.ref_pufe} - {pufe.nome}"
             pufe.delete()
             messages.success(request, f'Pufe "{nome_pufe}" excluído com sucesso!')
-            return redirect('pufes_lista')
+            return redirect('produtos_lista')
         except Exception as e:
             logger.error(f"Erro ao excluir pufe: {str(e)}")
             messages.error(request, f'Erro ao excluir pufe: {str(e)}')
@@ -1708,7 +1720,7 @@ def almofada_cadastro_view(request):
                 almofada = form.save()
                 track_user_changes(almofada, request.user)
                 messages.success(request, f'Almofada "{almofada.ref_almofada} - {almofada.nome}" cadastrada com sucesso!')
-                return redirect('almofada_detalhes', almofada_id=almofada.id)
+                return redirect('produtos_lista')
             except Exception as e:
                 logger.error(f"Erro ao cadastrar almofada: {str(e)}")
                 messages.error(request, f'Erro ao cadastrar almofada: {str(e)}')
@@ -1768,7 +1780,7 @@ def almofada_excluir_view(request, almofada_id):
             nome_almofada = f"{almofada.ref_almofada} - {almofada.nome}"
             almofada.delete()
             messages.success(request, f'Almofada "{nome_almofada}" excluída com sucesso!')
-            return redirect('almofadas_lista')
+            return redirect('produtos_lista')
         except Exception as e:
             logger.error(f"Erro ao excluir almofada: {str(e)}")
             messages.error(request, f'Erro ao excluir almofada: {str(e)}')
@@ -1882,6 +1894,56 @@ def sofa_editar_view(request, sofa_id):
                             )
                             track_user_changes(modulo, request.user)
                             modulo.save()
+                            
+                            # Processar tamanhos deste módulo
+                            modulo_id = i + 1
+                            tamanhos_largura_total = request.POST.getlist(f'tamanho_largura_total_{modulo_id}')
+                            
+                            logger.info(f"=== DEBUG EDIÇÃO TAMANHOS MÓDULO {modulo_id} ===")
+                            logger.info(f"Larguras totais encontradas: {tamanhos_largura_total}")
+                            
+                            if tamanhos_largura_total and any(largura.strip() for largura in tamanhos_largura_total):
+                                tamanhos_largura_assento = request.POST.getlist(f'tamanho_largura_assento_{modulo_id}')
+                                tamanhos_altura = request.POST.getlist(f'tamanho_altura_{modulo_id}')
+                                tamanhos_profundidade = request.POST.getlist(f'tamanho_profundidade_{modulo_id}')
+                                tamanhos_tecido = request.POST.getlist(f'tamanho_tecido_{modulo_id}')
+                                tamanhos_volume = request.POST.getlist(f'tamanho_volume_{modulo_id}')
+                                tamanhos_peso = request.POST.getlist(f'tamanho_peso_{modulo_id}')
+                                tamanhos_preco = request.POST.getlist(f'tamanho_preco_{modulo_id}')
+                                tamanhos_descricao = request.POST.getlist(f'tamanho_descricao_{modulo_id}')
+                                
+                                logger.info(f"Preços: {tamanhos_preco}")
+                                
+                                from .models import TamanhosModulosDetalhado
+                                
+                                # Função auxiliar para converter valores
+                                def safe_float(value):
+                                    try:
+                                        return float(value) if value and value.strip() else None
+                                    except (ValueError, TypeError):
+                                        return None
+                                
+                                for j, largura_total in enumerate(tamanhos_largura_total):
+                                    if largura_total and largura_total.strip():
+                                        logger.info(f"Processando tamanho {j+1}: largura {largura_total}cm")
+                                        
+                                        tamanho_detalhado = TamanhosModulosDetalhado(
+                                            id_modulo=modulo,
+                                            largura_total=safe_float(largura_total),
+                                            largura_assento=safe_float(tamanhos_largura_assento[j] if j < len(tamanhos_largura_assento) else None),
+                                            tecido_metros=safe_float(tamanhos_tecido[j] if j < len(tamanhos_tecido) else None),
+                                            volume_m3=safe_float(tamanhos_volume[j] if j < len(tamanhos_volume) else None),
+                                            peso_kg=safe_float(tamanhos_peso[j] if j < len(tamanhos_peso) else None),
+                                            preco=safe_float(tamanhos_preco[j] if j < len(tamanhos_preco) else None),
+                                            descricao=tamanhos_descricao[j] if j < len(tamanhos_descricao) and tamanhos_descricao[j] else None
+                                        )
+                                        track_user_changes(tamanho_detalhado, request.user)
+                                        tamanho_detalhado.save()
+                                        logger.info(f"✅ Tamanho salvo na edição: ID {tamanho_detalhado.id}, Largura: {tamanho_detalhado.largura_total}")
+                                    else:
+                                        logger.info(f"⚠️ Tamanho {j+1} ignorado na edição (largura vazia): '{largura_total}'")
+                            else:
+                                logger.info(f"⚠️ Nenhum tamanho encontrado para módulo {modulo_id} na edição")
                 
                 messages.success(request, f'Sofá "{sofa.ref_produto} - {sofa.nome_produto}" atualizado com sucesso!')
                 return redirect('sofa_detalhes', sofa_id=sofa.id)
@@ -1910,7 +1972,7 @@ def sofa_excluir_view(request, sofa_id):
             nome_sofa = f"{sofa.ref_produto} - {sofa.nome_produto}"
             sofa.delete()
             messages.success(request, f'Sofá "{nome_sofa}" excluído com sucesso!')
-            return redirect('sofas_lista')
+            return redirect('produtos_lista')
         except Exception as e:
             logger.error(f"Erro ao excluir sofá: {str(e)}")
             messages.error(request, f'Erro ao excluir sofá: {str(e)}')
