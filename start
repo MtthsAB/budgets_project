@@ -16,14 +16,24 @@ fi
 
 # Verificar se o ambiente virtual está ativo
 if [ -z "$VIRTUAL_ENV" ]; then
-    echo "⚠️  Aviso: Nenhum ambiente virtual detectado."
-    echo "   Recomenda-se usar um ambiente virtual."
-    echo ""
+    echo "🔧 Ativando ambiente virtual..."
+    if [ -d ".venv" ]; then
+        source .venv/bin/activate
+        echo "✅ Ambiente virtual ativado!"
+    else
+        echo "⚠️  Aviso: Nenhum ambiente virtual encontrado."
+        echo "   Tentando criar ambiente virtual..."
+        python3 -m venv .venv
+        source .venv/bin/activate
+        echo "✅ Ambiente virtual criado e ativado!"
+    fi
+else
+    echo "✅ Ambiente virtual já está ativo!"
 fi
 
 # Executar migrações
 echo "📦 Aplicando migrações..."
-python manage.py migrate
+python3 manage.py migrate
 
 if [ $? -eq 0 ]; then
     echo "✅ Migrações aplicadas com sucesso!"
@@ -36,7 +46,7 @@ echo ""
 
 # Coletar arquivos estáticos (se necessário)
 echo "📁 Coletando arquivos estáticos..."
-python manage.py collectstatic --noinput --verbosity 0
+python3 manage.py collectstatic --noinput --verbosity 0
 
 echo ""
 
@@ -59,4 +69,4 @@ echo ""
 echo "=================================="
 
 # Iniciar o servidor Django
-python manage.py runserver 0.0.0.0:8000
+python3 manage.py runserver 0.0.0.0:8000

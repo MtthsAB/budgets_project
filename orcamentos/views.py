@@ -105,14 +105,20 @@ def novo_orcamento(request):
                                 produto_especifico = Almofada.objects.get(pk=pk)
                                 tipo_produto = TipoItem.objects.filter(nome__icontains='Almofada').first()
                             if produto_especifico and tipo_produto:
-                                produto, _ = Produto.objects.get_or_create(
-                                    ref_produto=getattr(produto_especifico, f'ref_{produto_id.split('_')[0]}'),
-                                    defaults={
-                                        'nome_produto': produto_especifico.nome,
-                                        'id_tipo_produto': tipo_produto,
-                                        'ativo': True
-                                    }
-                                )
+                                # CORREÇÃO DO BUG: Em vez de get_or_create (que duplica produtos),
+                                # apenas buscar produto existente ou usar o próprio produto específico
+                                ref_campo = f'ref_{produto_id.split("_")[0]}'
+                                ref_produto = getattr(produto_especifico, ref_campo)
+                                
+                                try:
+                                    # Tentar buscar produto existente na tabela produtos_produto
+                                    produto = Produto.objects.get(ref_produto=ref_produto)
+                                except Produto.DoesNotExist:
+                                    # Se não existir, não criar! Apenas usar os dados do produto específico
+                                    # para o orçamento sem duplicar na tabela produtos_produto
+                                    produto = None
+                                    print(f"AVISO: Produto {ref_produto} não encontrado na tabela produtos_produto")
+                                
                                 if preco_unitario == 0:
                                     preco_unitario = produto_especifico.preco
                         if produto:
@@ -124,6 +130,10 @@ def novo_orcamento(request):
                                 observacoes=observacoes,
                                 dados_produto=dados_especificos
                             )
+                        else:
+                            # Se produto específico não tem correspondente em produtos_produto,
+                            # pular este item ou retornar erro
+                            print(f"ERRO: Não foi possível criar item para produto {produto_id} - produto não encontrado na tabela principal")
                 except Exception as e:
                     print(f'Erro ao salvar itens do pedido: {e}')
             messages.success(request, 'Orçamento criado com sucesso!')
@@ -315,15 +325,21 @@ def adicionar_item(request, orcamento_pk):
                     tipo_produto = TipoItem.objects.filter(nome__icontains='Almofada').first()
                 
                 if produto_especifico and tipo_produto:
-                    # Buscar ou criar produto na tabela genérica
-                    produto, created = Produto.objects.get_or_create(
-                        ref_produto=getattr(produto_especifico, f'ref_{produto_id.split("_")[0]}'),
-                        defaults={
-                            'nome_produto': produto_especifico.nome,
-                            'id_tipo_produto': tipo_produto,
-                            'ativo': True
-                        }
-                    )
+                    # CORREÇÃO DO BUG: Em vez de get_or_create (que duplica produtos),
+                    # apenas buscar produto existente ou rejeitar se não existir
+                    ref_campo = f'ref_{produto_id.split("_")[0]}'
+                    ref_produto = getattr(produto_especifico, ref_campo)
+                    
+                    try:
+                        # Tentar buscar produto existente na tabela produtos_produto
+                        produto = Produto.objects.get(ref_produto=ref_produto)
+                    except Produto.DoesNotExist:
+                        # Se não existir, não criar! Retornar erro
+                        return JsonResponse({
+                            'success': False,
+                            'message': f'Produto {ref_produto} não encontrado na tabela principal de produtos. '
+                                     f'É necessário cadastrá-lo primeiro na gestão de produtos.'
+                        })
                     
                     # Se o preço não foi informado, usar o preço do produto específico
                     if preco_unitario == 0:
