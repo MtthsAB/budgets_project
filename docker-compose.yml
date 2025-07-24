@@ -1,0 +1,101 @@
+version: '3.8'
+
+services:
+  # PostgreSQL Database Service
+  db:
+    image: postgres:15-alpine
+    container_name: sistema_produtos_db
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: sistema_produtos
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres_secure_2024
+      POSTGRES_INITDB_ARGS: "--encoding=UTF8 --locale=C"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./docker/postgres/init.sql:/docker-entrypoint-initdb.d/init.sql:ro
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d sistema_produtos"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - app_network
+
+  # Python Django Application Service
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: sistema_produtos_app
+    restart: unless-stopped
+    environment:
+      # Database configuration
+      DB_NAME: sistema_produtos
+      DB_USER: postgres
+      DB_PASSWORD: postgres_secure_2024
+      DB_HOST: db
+      DB_PORT: 5432
+      
+      # Django configuration
+      DEBUG: "False"
+      SECRET_KEY: "your-super-secret-key-change-this-in-production"
+      ALLOWED_HOSTS: "meitans.shop,www.meitans.shop,localhost,127.0.0.1"
+      
+      # Security settings for production
+      SECURE_SSL_REDIRECT: "True"
+      SECURE_HSTS_SECONDS: "31536000"
+      SECURE_HSTS_INCLUDE_SUBDOMAINS: "True"
+      SECURE_HSTS_PRELOAD: "True"
+      SECURE_CONTENT_TYPE_NOSNIFF: "True"
+      SECURE_BROWSER_XSS_FILTER: "True"
+      SESSION_COOKIE_SECURE: "True"
+      CSRF_COOKIE_SECURE: "True"
+    volumes:
+      - ./media:/app/media
+      - ./staticfiles:/app/staticfiles
+    depends_on:
+      db:
+        condition: service_healthy
+    networks:
+      - app_network
+    command: >
+      sh -c "python manage.py migrate --noinput &&
+             python manage.py collectstatic --noinput --clear &&
+             gunicorn --bind 0.0.0.0:8000 --workers 3 --timeout 120 sistema_produtos.wsgi:application"
+
+  # Nginx Reverse Proxy Service
+  nginx:
+    image: nginx:1.25-alpine
+    container_name: sistema_produtos_nginx
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./docker/nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./docker/nginx/default.conf:/etc/nginx/conf.d/default.conf:ro
+      - ./staticfiles:/app/staticfiles:ro
+      - ./media:/app/media:ro
+      - ./docker/nginx/ssl:/etc/nginx/ssl:ro
+    depends_on:
+      - app
+    networks:
+      - app_network
+    healthcheck:
+      test: ["CMD-SHELL", "wget --quiet --tries=1 --spider http://localhost || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+# Named volumes for data persistence
+volumes:
+  postgres_data:
+    driver: local
+
+# Custom network for service communication
+networks:
+  app_network:
+    driver: bridge
