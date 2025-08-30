@@ -17,7 +17,7 @@
                         <label for="tipo-produto" class="form-label">
                             <i class="bi bi-tags"></i> Tipo de Produto *
                         </label>
-                        <select class="form-select" id="tipo-produto" data-testid="select-tipo-produto" required>
+                        <select class="form-select" id="tipo-produto" data-testid="tipo-produto-select" required>
                             <option value="">Selecione o tipo de produto...</option>
                             <option value="sofa">Sofás</option>
                             <option value="banqueta">Banquetas</option>
@@ -28,26 +28,12 @@
                         </select>
                     </div>
                     
-                    <!-- Seleção do Produto -->
-                    <div class="mb-3" id="selecao-produto" style="display: none;">
-                        <label for="produto" class="form-label">
-                            <i class="bi bi-box-seam"></i> Produto *
-                        </label>
-                        <div class="position-relative">
-                            <!-- Input de busca dinâmica -->
-                            <input type="text" 
-                                   class="form-control produto-busca" 
-                                   id="produto-busca" 
-                                   data-testid="input-produto-busca"
-                                   placeholder="Clique aqui para buscar produtos..." 
-                                   autocomplete="off">
-                            <!-- Select original (oculto) -->
-                            <select class="form-select d-none" id="produto" data-testid="select-produto" required>
-                                <option value="">Selecione o produto...</option>
-                            </select>
-                            <!-- Dropdown de resultados -->
-                            <div class="produto-resultados position-absolute w-100 bg-white border rounded-3 shadow-sm" 
-                                 data-testid="dropdown-produto-resultados"
+                    <!-- Container para seleção do produto (será populado dinamicamente) -->
+                    <div class="mb-3" id="produto-container" data-testid="produto-container">
+                        <!-- O campo/controle de seleção de produtos será injetado aqui -->
+                        <!-- Placeholder para teste: -->
+                        <select style="display: none;" data-testid="produto-select"></select>
+                    </div>
                                  style="top: 100%; z-index: 1000; max-height: 300px; overflow-y: auto; display: none;">
                             </div>
                         </div>

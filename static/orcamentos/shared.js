@@ -154,17 +154,37 @@ function atualizarTotaisSidebar() {
 function inicializarBuscaClientes() {
     console.log('🔍 Inicializando busca de clientes...');
     
-    const buscaInput = document.getElementById('cliente-busca');
-    const resultadosDiv = document.querySelector('.cliente-resultados');
-    const selectOriginal = document.getElementById('id_cliente');
+    const buscaInput = document.querySelector('[data-testid="cliente-input"]');
+    const buscaBtn = document.querySelector('[data-testid="cliente-buscar-btn"]');
+    const resultadosDiv = document.querySelector('[data-testid="cliente-results"]');
+    const clienteIdInput = document.querySelector('[data-testid="cliente-id"]');
     
-    if (!buscaInput || !resultadosDiv || !selectOriginal) {
+    if (!buscaInput || !buscaBtn || !resultadosDiv || !clienteIdInput) {
         console.warn('⚠️ Elementos de busca de cliente não encontrados');
         return;
     }
     
     let timeoutId;
     
+    // Event listener para o botão buscar
+    buscaBtn.addEventListener('click', function() {
+        const termo = buscaInput.value.trim();
+        if (termo.length >= 2) {
+            buscarClientes(termo, resultadosDiv, clienteIdInput, buscaInput);
+        } else {
+            alert('Digite pelo menos 2 caracteres para buscar');
+        }
+    });
+    
+    // Event listener para busca com Enter
+    buscaInput.addEventListener('keypress', function(e) {
+        if (e.key === 'Enter') {
+            e.preventDefault();
+            buscaBtn.click();
+        }
+    });
+    
+    // Event listener para busca com debounce no input
     buscaInput.addEventListener('input', function() {
         const termo = this.value.trim();
         
@@ -178,15 +198,15 @@ function inicializarBuscaClientes() {
             return;
         }
         
-        // Aguardar 300ms antes de buscar
+        // Aguardar 500ms antes de buscar automaticamente
         timeoutId = setTimeout(() => {
-            buscarClientes(termo, resultadosDiv, selectOriginal);
-        }, 300);
+            buscarClientes(termo, resultadosDiv, clienteIdInput, buscaInput);
+        }, 500);
     });
     
     // Ocultar resultados ao clicar fora
     document.addEventListener('click', function(e) {
-        if (!buscaInput.contains(e.target) && !resultadosDiv.contains(e.target)) {
+        if (!buscaInput.contains(e.target) && !resultadosDiv.contains(e.target) && !buscaBtn.contains(e.target)) {
             resultadosDiv.style.display = 'none';
         }
     });
@@ -197,30 +217,51 @@ function inicializarBuscaClientes() {
 /**
  * Realiza busca de clientes no backend
  */
-function buscarClientes(termo, resultadosDiv, selectOriginal) {
+function buscarClientes(termo, resultadosDiv, clienteIdInput, buscaInput) {
     console.log(`🔍 Buscando clientes para: "${termo}"`);
     
-    fetch(`/api/clientes/buscar/?q=${encodeURIComponent(termo)}`)
-        .then(response => response.json())
+    // Mostrar loading
+    resultadosDiv.innerHTML = '<div class="p-3 text-center"><i class="bi bi-hourglass-split"></i> Buscando...</div>';
+    resultadosDiv.style.display = 'block';
+    
+    fetch(`/orcamentos/buscar-cliente/?termo=${encodeURIComponent(termo)}`)
+        .then(response => {
+            if (!response.ok) {
+                throw new Error(`HTTP ${response.status}`);
+            }
+            return response.json();
+        })
         .then(data => {
             resultadosDiv.innerHTML = '';
             
             if (data.clientes && data.clientes.length > 0) {
                 data.clientes.forEach(cliente => {
                     const item = document.createElement('div');
-                    item.className = 'resultado-item';
+                    item.className = 'resultado-item p-3 border-bottom cursor-pointer';
+                    item.style.cursor = 'pointer';
                     item.innerHTML = `
                         <div class="fw-bold">${cliente.nome_empresa}</div>
                         <small class="text-muted">
-                            ${cliente.representante} | ${cliente.cnpj || 'CNPJ não informado'}
+                            ${cliente.representante || 'Sem representante'} | ${cliente.cnpj || 'CNPJ não informado'}
                         </small>
                     `;
                     
                     item.addEventListener('click', function() {
                         // Selecionar cliente
-                        selectOriginal.value = cliente.id;
-                        document.getElementById('cliente-busca').value = cliente.nome_empresa;
+                        clienteIdInput.value = cliente.id;
+                        buscaInput.value = cliente.nome_empresa;
                         resultadosDiv.style.display = 'none';
+                        
+                        // Emitir evento customizado
+                        const event = new CustomEvent('cliente:selected', {
+                            detail: { 
+                                id: cliente.id, 
+                                nome: cliente.nome_empresa,
+                                representante: cliente.representante,
+                                cnpj: cliente.cnpj
+                            }
+                        });
+                        document.dispatchEvent(event);
                         
                         console.log(`✅ Cliente selecionado: ${cliente.nome_empresa}`);
                     });
@@ -230,14 +271,33 @@ function buscarClientes(termo, resultadosDiv, selectOriginal) {
                 
                 resultadosDiv.style.display = 'block';
             } else {
-                resultadosDiv.innerHTML = '<div class="resultado-item text-muted">Nenhum cliente encontrado</div>';
+                resultadosDiv.innerHTML = '<div class="p-3 text-muted text-center">Nenhum cliente encontrado</div>';
                 resultadosDiv.style.display = 'block';
             }
         })
         .catch(error => {
             console.error('❌ Erro ao buscar clientes:', error);
-            resultadosDiv.style.display = 'none';
+            resultadosDiv.innerHTML = '<div class="p-3 text-danger text-center">Erro ao buscar clientes. Tente novamente.</div>';
+            resultadosDiv.style.display = 'block';
         });
+}
+
+/**
+ * Inicializa busca de clientes com valor inicial (para edição)
+ */
+function inicializarBuscaClienteComValor(valorInicial = null) {
+    inicializarBuscaClientes();
+    
+    if (valorInicial && valorInicial.id && valorInicial.nome) {
+        const buscaInput = document.querySelector('[data-testid="cliente-input"]');
+        const clienteIdInput = document.querySelector('[data-testid="cliente-id"]');
+        
+        if (buscaInput && clienteIdInput) {
+            buscaInput.value = valorInicial.nome;
+            clienteIdInput.value = valorInicial.id;
+            console.log(`💧 Cliente hidratado: ${valorInicial.nome} (ID: ${valorInicial.id})`);
+        }
+    }
 }
 
 /**
@@ -254,6 +314,9 @@ function inicializarModalItens() {
         return;
     }
     
+    // Configurar modal com event delegation
+    configurarModalProdutos(modal);
+    
     btnConfirmar.addEventListener('click', function() {
         console.log('🔄 Confirmando adição de item...');
         
@@ -268,6 +331,111 @@ function inicializarModalItens() {
     });
     
     console.log('✅ Modal de itens inicializado');
+}
+
+/**
+ * Configura funcionalidade de produtos no modal
+ */
+function configurarModalProdutos(modal) {
+    console.log('🛒 Configurando seleção de produtos no modal...');
+    
+    // Event delegation para mudança de tipo de produto
+    modal.addEventListener('change', function(e) {
+        if (e.target.matches('[data-testid="tipo-produto"]')) {
+            const tipoSelecionado = e.target.value;
+            const produtoContainer = modal.querySelector('[data-testid="produto-container"]');
+            
+            if (!produtoContainer) {
+                console.warn('⚠️ Container de produtos não encontrado');
+                return;
+            }
+            
+            if (!tipoSelecionado) {
+                produtoContainer.innerHTML = '';
+                return;
+            }
+            
+            console.log(`📦 Carregando produtos do tipo: ${tipoSelecionado}`);
+            carregarProdutosPorTipo(tipoSelecionado, produtoContainer);
+        }
+    });
+    
+    console.log('✅ Modal de produtos configurado');
+}
+
+/**
+ * Carrega produtos por tipo via AJAX
+ */
+function carregarProdutosPorTipo(tipo, container) {
+    console.log(`🔍 Buscando produtos do tipo: ${tipo}`);
+    
+    // Mostrar loading
+    container.innerHTML = `
+        <div class="text-center p-3">
+            <i class="bi bi-hourglass-split"></i> Carregando produtos...
+        </div>
+    `;
+    
+    fetch(`/orcamentos/produtos-por-tipo/?tipo=${encodeURIComponent(tipo)}`)
+        .then(response => {
+            if (!response.ok) {
+                throw new Error(`HTTP ${response.status}`);
+            }
+            return response.json();
+        })
+        .then(data => {
+            container.innerHTML = '';
+            
+            if (data.produtos && data.produtos.length > 0) {
+                // Criar label
+                const label = document.createElement('label');
+                label.className = 'form-label';
+                label.innerHTML = '<i class="bi bi-box-seam"></i> Produto *';
+                container.appendChild(label);
+                
+                // Criar select
+                const select = document.createElement('select');
+                select.className = 'form-select';
+                select.setAttribute('data-testid', 'produto-select');
+                select.required = true;
+                
+                // Opção padrão
+                const defaultOption = document.createElement('option');
+                defaultOption.value = '';
+                defaultOption.textContent = 'Selecione o produto...';
+                select.appendChild(defaultOption);
+                
+                // Adicionar produtos
+                data.produtos.forEach(produto => {
+                    const option = document.createElement('option');
+                    option.value = produto.id;
+                    option.textContent = `${produto.nome} - R$ ${parseFloat(produto.preco).toFixed(2)}`;
+                    option.setAttribute('data-preco', produto.preco);
+                    option.setAttribute('data-referencia', produto.referencia || '');
+                    select.appendChild(option);
+                });
+                
+                container.appendChild(select);
+                
+                console.log(`✅ ${data.produtos.length} produtos carregados`);
+            } else {
+                container.innerHTML = `
+                    <div class="alert alert-warning">
+                        <i class="bi bi-exclamation-triangle"></i>
+                        Nenhum produto encontrado para o tipo "${tipo}".
+                    </div>
+                `;
+            }
+        })
+        .catch(error => {
+            console.error(`❌ Erro ao carregar produtos do tipo ${tipo}:`, error);
+            container.innerHTML = `
+                <div class="alert alert-danger">
+                    <i class="bi bi-exclamation-circle"></i>
+                    Erro ao carregar produtos. Tente novamente.
+                </div>
+            `;
+        });
 }
 
 /**
