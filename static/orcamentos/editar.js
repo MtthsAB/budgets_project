@@ -17,13 +17,6 @@ function inicializarEdicaoOrcamento() {
     // Configurar funcionalidades específicas de edição
     configurarFuncionalidadesEdicao();
     
-    // Inicializar busca de cliente com valor hidratado
-    const valorCliente = window.orcamentoData ? {
-        id: window.orcamentoData.cliente_id,
-        nome: window.orcamentoData.cliente_nome
-    } : null;
-    inicializarBuscaClienteComValor(valorCliente);
-    
     console.log('✅ Edição de orçamento inicializada');
 }
 
