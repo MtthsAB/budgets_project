@@ -29,12 +29,6 @@ DEBUG = config('DEBUG', default=True, cast=bool)
 
 ALLOWED_HOSTS = config('ALLOWED_HOSTS', default='').split(',')
 
-CSRF_TRUSTED_ORIGINS = [
-    "https://meitans.shop",
-    "https://www.meitans.shop",
-    "http://meitans.shop",
-    "http://www.meitans.shop",
-]
 
 # Application definition
 
