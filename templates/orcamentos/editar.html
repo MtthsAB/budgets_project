@@ -217,6 +217,12 @@
                                         {% endif %}
                                     </div>
                                 </div>
+
+                                <div class="mt-3">
+                                    <button type="submit" class="btn btn-primary" data-testid="btn-salvar">
+                                        <i class="bi bi-save"></i> Salvar Alterações
+                                    </button>
+                                </div>
                             </form>
                         </div>
                     </div>
@@ -227,7 +233,7 @@
                             <h5 class="mb-0">
                                 <i class="bi bi-cart-plus"></i> Itens do Pedido
                             </h5>
-                            <button type="button" class="btn btn-success btn-sm" id="btnAdicionarItem" data-bs-toggle="modal" data-bs-target="#modalAdicionarItem" data-testid="btn-adicionar-item">
+                            <button type="button" class="btn btn-success btn-sm" id="btnAdicionarItemHeader" data-bs-toggle="modal" data-bs-target="#modalAdicionarItem" data-testid="btn-adicionar-item-header">
                                 <i class="bi bi-plus-circle"></i> Adicionar Item
                             </button>
                         </div>
@@ -336,8 +342,6 @@ console.log('Dados do orçamento carregados:', window.orcamentoData);
 
 <!-- Scripts compartilhados -->
 <script src="{% static 'orcamentos/shared.js' %}"></script>
-<!-- Script de autocomplete de cliente -->
-<script src="{% static 'orcamentos/cliente-autocomplete.js' %}"></script>
 <!-- Scripts específicos para edição -->
 <script src="{% static 'orcamentos/editar.js' %}"></script>
 {% endblock %}

@@ -1,10 +1,24 @@
-<!-- Busca de Cliente -->
+<!-- Bu            <!-- Input de texto visível para o usuário -->
+            <input type="text" 
+                   class="form-control cliente-busca" 
+                   id="cliente-busca" 
+                   data-testid="cliente-busca-input"
+                   placeholder="Digite o nome da empresa ou representante..." 
+                   autocomplete="off"
+                   value="{{ cliente_inicial|default:'' }}">
+            
+            <!-- Botão para disparar busca -->
+            <button type="button" 
+                    class="btn btn-outline-secondary mt-2" 
+                    id="cliente-buscar-btn"
+                    data-testid="cliente-busca-button" -->
 <div class="col-md-8 cliente-expandido">
     <div class="mb-3">
         <label for="cliente-busca" class="form-label">
             <i class="bi bi-person-check"></i> Cliente *
         </label>
         <div class="busca-cliente">
+            <!-- Input de texto visível para o usuário -->
             <input type="text" 
                    class="form-control cliente-busca" 
                    id="cliente-busca" 
@@ -13,8 +27,17 @@
                    autocomplete="off"
                    value="{{ cliente_inicial|default:'' }}">
             
+            <!-- Botão para disparar busca -->
+            <button type="button" 
+                    class="btn btn-outline-secondary mt-2" 
+                    id="cliente-buscar-btn"
+                    data-testid="cliente-busca-button">
+                <i class="bi bi-search"></i> Buscar Cliente
+            </button>
+            
+            <!-- Container para resultados da busca -->
             <div class="resultados-busca cliente-resultados" 
-                 data-testid="cliente-results" 
+                 data-testid="cliente-busca-results" 
                  style="display: none;">
                 <!-- Resultados da busca aparecerão aqui -->
             </div>
@@ -23,8 +46,8 @@
         <!-- Campo oculto para armazenar o ID do cliente selecionado -->
         <input type="hidden" 
                name="{{ form.cliente.name }}" 
-               id="id_cliente" 
-               data-testid="cliente-id"
+               id="{{ form.cliente.id_for_label }}" 
+               data-testid="cliente-id-field"
                value="{{ form.cliente.value|default:'' }}">
         
         {% if form.cliente.errors %}

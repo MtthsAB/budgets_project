@@ -323,7 +323,7 @@ def excluir_orcamento(request, pk):
 @orcamentos_access_required
 def buscar_cliente(request):
     """Busca clientes via AJAX"""
-    termo = request.GET.get('termo', '').strip()
+    termo = request.GET.get('termo', '')
     iniciais = request.GET.get('iniciais', '')
     
     # Se for solicitação de clientes iniciais
@@ -336,8 +336,8 @@ def buscar_cliente(request):
         except ValueError:
             return JsonResponse({'clientes': []})
     
-    # Busca normal por termo - começar a partir do 1º caractere
-    if len(termo) < 1:
+    # Busca normal por termo
+    if len(termo) < 2:
         return JsonResponse({'clientes': []})
     
     clientes = Cliente.objects.filter(

@@ -52,9 +52,9 @@
         
         <div class="card-footer bg-light">
             <div class="d-grid gap-2">
-                <!-- Botão para salvar orçamento - sempre visível -->
-                <button type="submit" form="orcamento-form" class="btn btn-primary" data-testid="btn-salvar-orcamento">
-                    <i class="bi bi-save"></i> Salvar Orçamento
+                <!-- Botão para adicionar item - sempre visível -->
+                <button type="button" class="btn btn-success" id="btnAdicionarItem" data-bs-toggle="modal" data-bs-target="#modalAdicionarItem" data-testid="btn-adicionar-item">
+                    <i class="bi bi-plus-circle"></i> Adicionar Item
                 </button>
                 
                 {% if orcamento %}
