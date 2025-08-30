@@ -1,0 +1,74 @@
+{# Sidebar com totais do orçamento #}
+<div class="col-lg-4">
+    <div class="card position-sticky" style="top: 20px;">
+        <div class="card-header bg-dark text-white">
+            <h6 class="mb-0">
+                <i class="bi bi-calculator"></i> Resumo do Orçamento
+            </h6>
+        </div>
+        <div class="card-body">
+            <!-- Quantidade de itens -->
+            <div class="mb-3">
+                <div class="d-flex justify-content-between">
+                    <span><i class="bi bi-cart3"></i> Itens:</span>
+                    <span class="fw-bold" id="total-itens" data-testid="total-itens">0</span>
+                </div>
+            </div>
+            
+            <!-- Subtotal dos itens -->
+            <div class="mb-3">
+                <div class="d-flex justify-content-between">
+                    <span><i class="bi bi-plus-square"></i> Subtotal:</span>
+                    <span class="fw-bold" id="subtotal-itens" data-testid="subtotal-itens">R$ 0,00</span>
+                </div>
+            </div>
+            
+            <!-- Desconto aplicado -->
+            <div class="mb-3 text-danger">
+                <div class="d-flex justify-content-between">
+                    <span><i class="bi bi-dash-circle"></i> Desconto:</span>
+                    <span class="fw-bold" id="desconto-aplicado" data-testid="desconto-aplicado">- R$ 0,00</span>
+                </div>
+            </div>
+            
+            <!-- Acréscimo aplicado -->
+            <div class="mb-3 text-success">
+                <div class="d-flex justify-content-between">
+                    <span><i class="bi bi-plus-circle"></i> Acréscimo:</span>
+                    <span class="fw-bold" id="acrescimo-aplicado" data-testid="acrescimo-aplicado">+ R$ 0,00</span>
+                </div>
+            </div>
+            
+            <hr>
+            
+            <!-- Total final -->
+            <div class="mb-0">
+                <div class="d-flex justify-content-between">
+                    <span class="h6"><i class="bi bi-currency-dollar"></i> <strong>Total Final:</strong></span>
+                    <span class="h5 text-primary fw-bold" id="total-final" data-testid="total-final">R$ 0,00</span>
+                </div>
+            </div>
+        </div>
+        
+        <div class="card-footer bg-light">
+            <div class="d-grid gap-2">
+                <!-- Botão para adicionar item - sempre visível -->
+                <button type="button" class="btn btn-success" id="btnAdicionarItem" data-bs-toggle="modal" data-bs-target="#modalAdicionarItem" data-testid="btn-adicionar-item">
+                    <i class="bi bi-plus-circle"></i> Adicionar Item
+                </button>
+                
+                {% if orcamento %}
+                <!-- Botões extras para edição -->
+                <div class="btn-group w-100" role="group">
+                    <a href="{% url 'orcamentos:visualizar' orcamento.pk %}" class="btn btn-outline-info" data-testid="btn-visualizar">
+                        <i class="bi bi-eye"></i> Visualizar
+                    </a>
+                    <a href="{% url 'orcamentos:gerar_pdf' orcamento.pk %}" class="btn btn-outline-success" target="_blank" data-testid="btn-gerar-pdf">
+                        <i class="bi bi-file-pdf"></i> PDF
+                    </a>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>

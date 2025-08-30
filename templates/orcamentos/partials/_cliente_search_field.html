@@ -1,0 +1,30 @@
+<!-- Busca de Cliente -->
+<div class="col-md-8 cliente-expandido">
+    <div class="mb-3">
+        <label for="cliente-busca" class="form-label">
+            <i class="bi bi-person-check"></i> Cliente *
+        </label>
+        <div class="busca-cliente">
+            <input type="text" 
+                   class="form-control cliente-busca" 
+                   id="cliente-busca" 
+                   data-testid="input-cliente-busca"
+                   placeholder="Digite o nome da empresa ou representante..." 
+                   autocomplete="off"
+                   value="{{ cliente_inicial|default:'' }}">
+            
+            <div class="resultados-busca cliente-resultados" style="display: none;">
+                <!-- Resultados da busca aparecerão aqui -->
+            </div>
+        </div>
+        
+        <!-- Campo oculto para armazenar o ID do cliente selecionado -->
+        {{ form.cliente.as_hidden }}
+        
+        {% if form.cliente.errors %}
+            <div class="invalid-feedback d-block">
+                {{ form.cliente.errors }}
+            </div>
+        {% endif %}
+    </div>
+</div>
