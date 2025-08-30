@@ -1,0 +1,299 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Novo Orçamento{% endblock %}
+
+{% block extra_css %}
+<style>
+    /* Estilos para busca dinâmica de clientes */
+    .cliente-resultados {
+        max-height: 300px;
+        overflow-y: auto;
+        display: none;
+    }
+    
+    .resultado-item {
+        padding: 0.5rem;
+        cursor: pointer;
+        border-bottom: 1px solid #f8f9fa;
+    }
+    
+    .resultado-item:hover {
+        background-color: #f8f9fa;
+    }
+    
+    .resultado-item:last-child {
+        border-bottom: none;
+    }
+    
+    /* Esconder campos originais de desconto e acréscimo */
+    #id_desconto_valor,
+    #id_desconto_percentual,
+    #id_acrescimo_valor,
+    #id_acrescimo_percentual {
+        display: none !important;
+    }
+    
+    /* Estilos para campos unificados */
+    .input-group .form-select {
+        flex: 0 0 auto;
+    }
+    
+    /* Estilos para os botões de tipo de desconto/acréscimo */
+    .tipo-desconto-btn {
+        min-width: 60px;
+        font-weight: 600;
+        border-color: #dee2e6;
+        background-color: #f8f9fa;
+        transition: all 0.2s ease-in-out;
+        position: relative;
+        border-radius: 0.5rem !important;
+        border-top-left-radius: 0 !important;
+        border-bottom-left-radius: 0 !important;
+    }
+    
+    .tipo-desconto-btn:hover {
+        background-color: #e9ecef;
+        border-color: #adb5bd;
+        transform: translateY(-1px);
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+    
+    .tipo-desconto-btn[data-tipo="valor"] {
+        color: #198754;
+        border-color: #198754;
+        background-color: #d1e7dd;
+    }
+    
+    .tipo-desconto-btn[data-tipo="percentual"] {
+        color: #0d6efd;
+        border-color: #0d6efd;
+        background-color: #cfe2ff;
+    }
+    
+    /* Layout para campo cliente expandido */
+    .cliente-expandido {
+        flex: 0 0 66.666667% !important;
+        max-width: 66.666667% !important;
+    }
+    
+    .vendedor-compacto {
+        flex: 0 0 33.333333% !important;
+        max-width: 33.333333% !important;
+    }
+    
+    /* Campos de desconto e acréscimo - menor largura */
+    #desconto_valor_unificado,
+    #acrescimo_valor_unificado {
+        max-width: 120px !important;
+        text-align: right;
+        border-top-right-radius: 0 !important;
+        border-bottom-right-radius: 0 !important;
+    }
+    
+    /* Campo quantidade compacto */
+    #quantidade {
+        max-width: 100px !important;
+        min-width: 80px !important;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h1 class="h3 mb-0">
+                    <i class="bi bi-receipt text-primary"></i> Novo Orçamento
+                </h1>
+                <div>
+                    <a href="{% url 'cliente_cadastro' %}" 
+                       class="btn btn-outline-primary" 
+                       target="_blank" 
+                       title="Cadastrar novo cliente"
+                       data-testid="btn-novo-cliente">
+                        <i class="bi bi-person-plus"></i> Novo Cliente
+                    </a>
+                    <a href="{% url 'orcamentos:listar' %}" class="btn btn-outline-secondary" data-testid="btn-voltar">
+                        <i class="bi bi-arrow-left"></i> Voltar
+                    </a>
+                </div>
+            </div>
+
+            <div class="row">
+                <div class="col-lg-8">
+                    <!-- Formulário Principal -->
+                    <div class="card mb-4">
+                        <div class="card-header">
+                            <i class="bi bi-info-circle"></i> Dados do Orçamento
+                        </div>
+                        <div class="card-body">
+                            <form method="post" id="orcamento-form" data-testid="form-orcamento">
+                                {% csrf_token %}
+                                <input type="hidden" name="itens_pedido_json" id="itens-pedido-json" value="" data-testid="input-itens-json">
+                                
+                                {% if form.non_field_errors %}
+                                    <div class="alert alert-danger">
+                                        {{ form.non_field_errors }}
+                                    </div>
+                                {% endif %}
+
+                                <div class="row g-3">
+                                    <!-- Campo Cliente - usando partial -->
+                                    {% include 'orcamentos/partials/_cliente_search_field.html' %}
+
+                                    <!-- Vendedor -->
+                                    <div class="col-12 col-md-4 vendedor-compacto">
+                                        <label class="form-label">Vendedor</label>
+                                        <input type="text" class="form-control" value="{{ user.get_full_name }}" readonly data-testid="input-vendedor">
+                                    </div>
+
+                                    <!-- Faixa de Preço -->
+                                    <div class="col-md-4">
+                                        <label for="{{ form.faixa_preco.id_for_label }}" class="form-label">
+                                            {{ form.faixa_preco.label }}
+                                        </label>
+                                        {{ form.faixa_preco }}
+                                        {% if form.faixa_preco.errors %}
+                                            <div class="text-danger small">{{ form.faixa_preco.errors }}</div>
+                                        {% endif %}
+                                    </div>
+
+                                    <!-- Forma de Pagamento -->
+                                    <div class="col-md-4">
+                                        <label for="{{ form.forma_pagamento.id_for_label }}" class="form-label">
+                                            {{ form.forma_pagamento.label }}
+                                        </label>
+                                        {{ form.forma_pagamento }}
+                                        {% if form.forma_pagamento.errors %}
+                                            <div class="text-danger small">{{ form.forma_pagamento.errors }}</div>
+                                        {% endif %}
+                                    </div>
+
+                                    <!-- Status -->
+                                    <div class="col-md-4">
+                                        <label for="{{ form.status.id_for_label }}" class="form-label">
+                                            {{ form.status.label }}
+                                        </label>
+                                        {{ form.status }}
+                                        {% if form.status.errors %}
+                                            <div class="text-danger small">{{ form.status.errors }}</div>
+                                        {% endif %}
+                                    </div>
+
+                                    <!-- Datas -->
+                                    <div class="col-md-6">
+                                        <label for="{{ form.data_entrega.id_for_label }}" class="form-label">
+                                            {{ form.data_entrega.label }}
+                                        </label>
+                                        {{ form.data_entrega }}
+                                        {% if form.data_entrega.errors %}
+                                            <div class="text-danger small">{{ form.data_entrega.errors }}</div>
+                                        {% endif %}
+                                    </div>
+
+                                    <div class="col-md-6">
+                                        <label for="{{ form.data_validade.id_for_label }}" class="form-label">
+                                            {{ form.data_validade.label }}
+                                        </label>
+                                        {{ form.data_validade }}
+                                        {% if form.data_validade.errors %}
+                                            <div class="text-danger small">{{ form.data_validade.errors }}</div>
+                                        {% endif %}
+                                    </div>
+
+                                    <!-- Descontos e Acréscimos - usando partial -->
+                                    {% include 'orcamentos/partials/_desconto_acrescimo_unificado.html' %}
+
+                                    <!-- Observações -->
+                                    <div class="col-12">
+                                        <label for="{{ form.observacoes.id_for_label }}" class="form-label">
+                                            {{ form.observacoes.label }}
+                                        </label>
+                                        {{ form.observacoes }}
+                                        {% if form.observacoes.errors %}
+                                            <div class="text-danger small">{{ form.observacoes.errors }}</div>
+                                        {% endif %}
+                                    </div>
+                                </div>
+
+                                <div class="mt-3">
+                                    <button type="submit" class="btn btn-primary" data-testid="btn-salvar">
+                                        <i class="bi bi-save"></i> Salvar Orçamento
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+
+                    <!-- Seção de Itens do Pedido -->
+                    <div class="card mt-4">
+                        <div class="card-header d-flex justify-content-between align-items-center">
+                            <h5 class="mb-0">
+                                <i class="bi bi-cart-plus"></i> Itens do Pedido
+                            </h5>
+                            <button type="button" class="btn btn-success btn-sm" id="btnAdicionarItemHeader" data-bs-toggle="modal" data-bs-target="#modalAdicionarItem" data-testid="btn-adicionar-item-header">
+                                <i class="bi bi-plus-circle"></i> Adicionar Item
+                            </button>
+                        </div>
+                        <div class="card-body">
+                            <div id="itens-pedido" data-testid="container-itens-pedido">
+                                <div class="text-muted text-center py-4" id="sem-itens" data-testid="sem-itens">
+                                    <i class="bi bi-cart-x fs-1"></i>
+                                    <p class="mt-2">Nenhum item adicionado ainda.<br>
+                                    Clique em "Adicionar Item" para começar.</p>
+                                </div>
+                                
+                                <!-- Tabela de itens será inserida aqui via JavaScript -->
+                                <div class="table-responsive" id="tabela-itens" data-testid="tabela-itens" style="display: none;">
+                                    <table class="table table-striped">
+                                        <thead>
+                                            <tr>
+                                                <th>Produto</th>
+                                                <th>Referência</th>
+                                                <th>Quantidade</th>
+                                                <th>Preço Unit.</th>
+                                                <th>Total</th>
+                                                <th width="100">Ações</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="tbody-itens" data-testid="tbody-itens">
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Sidebar com totais - usando partial -->
+                {% include 'orcamentos/partials/_sidebar_totais.html' %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal para adicionar itens - usando partial -->
+{% include 'orcamentos/partials/_modal_itens.html' %}
+
+{% endblock %}
+
+{% block extra_js %}
+<!-- JavaScript será modularizado em arquivos separados -->
+<script>
+// Variáveis globais
+window.orcamentoPk = null;
+window.orcamentoData = null;
+window.itensPedido = [];
+window.contadorItens = 0;
+window.produtoSelecionado = null;
+
+console.log('Novo Orçamento - Inicializando página');
+</script>
+
+<!-- Scripts compartilhados -->
+<script src="{% static 'orcamentos/shared.js' %}"></script>
+<!-- Scripts específicos para criação -->
+<script src="{% static 'orcamentos/novo.js' %}"></script>
+{% endblock %}

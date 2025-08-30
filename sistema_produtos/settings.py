@@ -29,6 +29,8 @@ DEBUG = config('DEBUG', default=True, cast=bool)
 
 ALLOWED_HOSTS = config('ALLOWED_HOSTS', default='').split(',')
 
+ALLOWED_HOSTS = ["127.0.0.1", "localhost", "testserver"]
+
 CSRF_TRUSTED_ORIGINS = [
     "https://meitans.shop",
     "https://www.meitans.shop",
