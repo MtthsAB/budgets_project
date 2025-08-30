@@ -17,9 +17,6 @@ function inicializarNovoOrcamento() {
     // Configurar comportamento específico do formulário
     configurarFormularioNovo();
     
-    // Inicializar busca de cliente sem valor inicial
-    inicializarBuscaClienteComValor(null);
-    
     console.log('✅ Novo orçamento inicializado');
 }
 
