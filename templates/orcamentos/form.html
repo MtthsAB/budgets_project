@@ -1183,11 +1183,8 @@
 // Variável global para indicar se estamos editando um orçamento existente
 {% if orcamento %}
 window.orcamentoPk = {{ orcamento.pk }};
-window.orcamentoData = {{ orcamento_data_json|safe }};
-console.log('Dados do orçamento carregados:', window.orcamentoData);
 {% else %}
 window.orcamentoPk = null;
-window.orcamentoData = null;
 {% endif %}
 
 // Variáveis globais para o modal e itens do pedido
@@ -1201,17 +1198,6 @@ document.addEventListener('DOMContentLoaded', function() {
     // Inicializar campos unificados de desconto e acréscimo
     inicializarCamposUnificados();
     
-    // Hidratar todos os campos com dados do orçamento existente
-    // Usar setTimeout para garantir que todos os elementos estejam prontos
-    setTimeout(function() {
-        if (window.orcamentoData) {
-            console.log('Executando hidratação após timeout...');
-            hidratarCamposOrcamento();
-        } else {
-            console.log('Nenhum dado de orçamento para hidratação (orçamento novo)');
-        }
-    }, 100);
-    
     // Elementos do DOM
     const tipoSelect = document.getElementById('tipo-produto');
     const produtoSelect = document.getElementById('produto');
@@ -1223,8 +1209,6 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // Função para inicializar campos unificados
     function inicializarCamposUnificados() {
-        console.log('Inicializando campos unificados...');
-        
         // Configurar desconto
         const descontoValorUnif = document.getElementById('desconto_valor_unificado');
         const descontoTipo = document.getElementById('desconto_tipo');
@@ -1245,8 +1229,26 @@ document.addEventListener('DOMContentLoaded', function() {
             return;
         }
         
-        console.log('✅ Campos unificados encontrados, configurando event listeners...');
+        // Carregar valores iniciais e sincronizar botões
+        if (descontoValorOrig && descontoValorOrig.value && parseFloat(descontoValorOrig.value) > 0) {
+            descontoValorUnif.value = descontoValorOrig.value;
+            descontoTipo.value = 'valor';
+            atualizarBotaoTipo(descontoTipoBtn, 'valor');
+        } else if (descontoPercOrig && descontoPercOrig.value && parseFloat(descontoPercOrig.value) > 0) {
+            descontoValorUnif.value = descontoPercOrig.value;
+            descontoTipo.value = 'percentual';
+            atualizarBotaoTipo(descontoTipoBtn, 'percentual');
+        }
         
+        if (acrescimoValorOrig && acrescimoValorOrig.value && parseFloat(acrescimoValorOrig.value) > 0) {
+            acrescimoValorUnif.value = acrescimoValorOrig.value;
+            acrescimoTipo.value = 'valor';
+            atualizarBotaoTipo(acrescimoTipoBtn, 'valor');
+        } else if (acrescimoPercOrig && acrescimoPercOrig.value && parseFloat(acrescimoPercOrig.value) > 0) {
+            acrescimoValorUnif.value = acrescimoPercOrig.value;
+            acrescimoTipo.value = 'percentual';
+            atualizarBotaoTipo(acrescimoTipoBtn, 'percentual');
+        }
         
         // Função para atualizar visual do botão
         function atualizarBotaoTipo(botao, tipo) {
@@ -1266,194 +1268,6 @@ document.addEventListener('DOMContentLoaded', function() {
                 textoSpan.textContent = '%';
             }
         }
-    }
-    
-    // Função para hidratar todos os campos do orçamento
-    function hidratarCamposOrcamento() {
-        console.log('=== INICIANDO HIDRATAÇÃO DOS CAMPOS ===');
-        console.log('Dados do orçamento:', window.orcamentoData);
-        
-        const data = window.orcamentoData;
-        if (!data) {
-            console.log('Nenhum dado para hidratação');
-            return;
-        }
-        
-        // Hidratar campo cliente
-        console.log('--- Hidratando campo cliente ---');
-        if (data.cliente_id && data.cliente_nome) {
-            const clienteBusca = document.getElementById('cliente-busca');
-            const clienteSelect = document.getElementById('id_cliente');
-            
-            console.log('Cliente busca element:', clienteBusca);
-            console.log('Cliente select element:', clienteSelect);
-            
-            if (clienteBusca) {
-                clienteBusca.value = data.cliente_nome;
-                console.log('✓ Cliente hidratado no campo busca:', data.cliente_nome);
-            } else {
-                console.error('✗ Campo cliente-busca não encontrado');
-            }
-            
-            if (clienteSelect) {
-                clienteSelect.value = data.cliente_id;
-                console.log('✓ Cliente ID definido no select:', data.cliente_id);
-            } else {
-                console.error('✗ Select id_cliente não encontrado');
-            }
-        } else {
-            console.log('Dados do cliente não disponíveis');
-        }
-        
-        // Hidratar selects
-        console.log('--- Hidratando selects ---');
-        if (data.faixa_preco_id) {
-            const faixaSelect = document.getElementById('id_faixa_preco');
-            console.log('Faixa preço element:', faixaSelect);
-            if (faixaSelect) {
-                faixaSelect.value = data.faixa_preco_id;
-                console.log('✓ Faixa de preço definida:', data.faixa_preco_id);
-            } else {
-                console.error('✗ Select id_faixa_preco não encontrado');
-            }
-        }
-        
-        if (data.forma_pagamento_id) {
-            const formaSelect = document.getElementById('id_forma_pagamento');
-            console.log('Forma pagamento element:', formaSelect);
-            if (formaSelect) {
-                formaSelect.value = data.forma_pagamento_id;
-                console.log('✓ Forma de pagamento definida:', data.forma_pagamento_id);
-            } else {
-                console.error('✗ Select id_forma_pagamento não encontrado');
-            }
-        }
-        
-        if (data.status) {
-            const statusSelect = document.getElementById('id_status');
-            console.log('Status element:', statusSelect);
-            if (statusSelect) {
-                statusSelect.value = data.status;
-                console.log('✓ Status definido:', data.status);
-            } else {
-                console.error('✗ Select id_status não encontrado');
-            }
-        }
-        
-        // Hidratar datas
-        console.log('--- Hidratando datas ---');
-        if (data.data_entrega) {
-            const dataEntregaInput = document.getElementById('id_data_entrega');
-            console.log('Data entrega element:', dataEntregaInput);
-            if (dataEntregaInput) {
-                dataEntregaInput.value = data.data_entrega;
-                console.log('✓ Data de entrega definida:', data.data_entrega);
-            } else {
-                console.error('✗ Input id_data_entrega não encontrado');
-            }
-        }
-        
-        if (data.data_validade) {
-            const dataValidadeInput = document.getElementById('id_data_validade');
-            console.log('Data validade element:', dataValidadeInput);
-            if (dataValidadeInput) {
-                dataValidadeInput.value = data.data_validade;
-                console.log('✓ Data de validade definida:', data.data_validade);
-            } else {
-                console.error('✗ Input id_data_validade não encontrado');
-            }
-        }
-        
-        // Hidratar campos de desconto e acréscimo
-        console.log('--- Hidratando desconto e acréscimo ---');
-        hidratarDescontoAcrescimo(data);
-        
-        console.log('=== HIDRATAÇÃO CONCLUÍDA ===');
-    }
-    
-    // Função específica para hidratar desconto e acréscimo
-    function hidratarDescontoAcrescimo(data) {
-        console.log('Dados de desconto/acréscimo recebidos:', {
-            desconto_valor: data.desconto_valor,
-            desconto_percentual: data.desconto_percentual,
-            acrescimo_valor: data.acrescimo_valor,
-            acrescimo_percentual: data.acrescimo_percentual
-        });
-        
-        // Elementos dos campos unificados
-        const descontoInput = document.getElementById('desconto_valor_unificado');
-        const descontoBtn = document.getElementById('desconto_tipo_btn');
-        const acrescimoInput = document.getElementById('acrescimo_valor_unificado');
-        const acrescimoBtn = document.getElementById('acrescimo_tipo_btn');
-        
-        // Elementos dos campos originais
-        const descontoValorOrig = document.getElementById('id_desconto_valor');
-        const descontoPercOrig = document.getElementById('id_desconto_percentual');
-        const acrescimoValorOrig = document.getElementById('id_acrescimo_valor');
-        const acrescimoPercOrig = document.getElementById('id_acrescimo_percentual');
-        
-        // Hidratar desconto
-        if (data.desconto_valor && data.desconto_valor > 0) {
-            console.log('Hidratando desconto em VALOR:', data.desconto_valor);
-            if (descontoInput) descontoInput.value = data.desconto_valor;
-            if (descontoBtn) {
-                descontoBtn.setAttribute('data-tipo', 'valor');
-                const textoSpan = descontoBtn.querySelector('.tipo-texto');
-                if (textoSpan) textoSpan.textContent = 'R$';
-            }
-            if (descontoValorOrig) descontoValorOrig.value = data.desconto_valor;
-            if (descontoPercOrig) descontoPercOrig.value = '';
-            console.log('✓ Desconto em valor hidratado');
-        } else if (data.desconto_percentual && data.desconto_percentual > 0) {
-            console.log('Hidratando desconto em PERCENTUAL:', data.desconto_percentual);
-            if (descontoInput) descontoInput.value = data.desconto_percentual;
-            if (descontoBtn) {
-                descontoBtn.setAttribute('data-tipo', 'percentual');
-                const textoSpan = descontoBtn.querySelector('.tipo-texto');
-                if (textoSpan) textoSpan.textContent = '%';
-            }
-            if (descontoPercOrig) descontoPercOrig.value = data.desconto_percentual;
-            if (descontoValorOrig) descontoValorOrig.value = '';
-            console.log('✓ Desconto em percentual hidratado');
-        } else {
-            console.log('Nenhum desconto para hidratar');
-        }
-        
-        // Hidratar acréscimo
-        if (data.acrescimo_valor && data.acrescimo_valor > 0) {
-            console.log('Hidratando acréscimo em VALOR:', data.acrescimo_valor);
-            if (acrescimoInput) acrescimoInput.value = data.acrescimo_valor;
-            if (acrescimoBtn) {
-                acrescimoBtn.setAttribute('data-tipo', 'valor');
-                const textoSpan = acrescimoBtn.querySelector('.tipo-texto');
-                if (textoSpan) textoSpan.textContent = 'R$';
-            }
-            if (acrescimoValorOrig) acrescimoValorOrig.value = data.acrescimo_valor;
-            if (acrescimoPercOrig) acrescimoPercOrig.value = '';
-            console.log('✓ Acréscimo em valor hidratado');
-        } else if (data.acrescimo_percentual && data.acrescimo_percentual > 0) {
-            console.log('Hidratando acréscimo em PERCENTUAL:', data.acrescimo_percentual);
-            if (acrescimoInput) acrescimoInput.value = data.acrescimo_percentual;
-            if (acrescimoBtn) {
-                acrescimoBtn.setAttribute('data-tipo', 'percentual');
-                const textoSpan = acrescimoBtn.querySelector('.tipo-texto');
-                if (textoSpan) textoSpan.textContent = '%';
-            }
-            if (acrescimoPercOrig) acrescimoPercOrig.value = data.acrescimo_percentual;
-            if (acrescimoValorOrig) acrescimoValorOrig.value = '';
-            console.log('✓ Acréscimo em percentual hidratado');
-        } else {
-            console.log('Nenhum acréscimo para hidratar');
-        }
-        
-        // Disparar recálculo dos totais após hidratação
-        setTimeout(function() {
-            if (typeof atualizarTotaisSidebar === 'function') {
-                console.log('Disparando recálculo dos totais após hidratação');
-                atualizarTotaisSidebar();
-            }
-        }, 100);
-    }
         
         // Event listeners para os botões de tipo
         if (descontoTipoBtn) {
@@ -2420,43 +2234,10 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Inicializar campo se já existe seleção
     if (clienteSelect.value) {
-        inicializarClienteExistente(clienteSelect.value);
-    }
-
-    // Função para inicializar cliente existente no modo de edição
-    function inicializarClienteExistente(clienteId) {
-        // Primeiro, tentar usar dados já disponíveis no window.orcamentoData
-        if (window.orcamentoData && window.orcamentoData.cliente_nome) {
-            console.log('Usando dados do cliente já carregados:', window.orcamentoData.cliente_nome);
-            clienteBusca.value = window.orcamentoData.cliente_nome;
-            clienteSelecionado = {
-                id: window.orcamentoData.cliente_id,
-                nome_empresa: window.orcamentoData.cliente_nome
-            };
-            return;
+        const option = clienteSelect.options[clienteSelect.selectedIndex];
+        if (option && option.text) {
+            clienteBusca.value = option.text;
         }
-        
-        // Fallback: buscar via AJAX
-        fetch(`/orcamentos/cliente/${clienteId}/`)
-            .then(response => response.json())
-            .then(data => {
-                if (data.nome_empresa) {
-                    clienteBusca.value = data.nome_empresa;
-                    clienteSelecionado = data;
-                    console.log('Cliente carregado via AJAX:', data.nome_empresa);
-                }
-            })
-            .catch(error => {
-                console.error('Erro ao carregar dados do cliente:', error);
-                // Fallback: tentar extrair nome da empresa do option.text
-                const option = clienteSelect.options[clienteSelect.selectedIndex];
-                if (option && option.text) {
-                    // option.text é "NOME_EMPRESA - CNPJ", vamos extrair só o nome
-                    const nomeEmpresa = option.text.split(' - ')[0];
-                    clienteBusca.value = nomeEmpresa;
-                    console.log('Cliente carregado via fallback:', nomeEmpresa);
-                }
-            });
     }
 
     // CSS adicional para navegação por teclado

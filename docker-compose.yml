@@ -55,12 +55,16 @@ services:
       CSRF_COOKIE_SECURE: "True"
     volumes:
       - ./media:/app/media
-      - staticfiles_data:/app/staticfiles
+      - ./staticfiles:/app/staticfiles
     depends_on:
       db:
         condition: service_healthy
     networks:
       - app_network
+    command: >
+      sh -c "python manage.py migrate --noinput &&
+             python manage.py collectstatic --noinput --clear &&
+             gunicorn --bind 0.0.0.0:8000 --workers 3 --timeout 120 sistema_produtos.wsgi:application"
 
   # Nginx Reverse Proxy Service
   nginx:
@@ -73,7 +77,7 @@ services:
     volumes:
       - ./docker/nginx/nginx.conf:/etc/nginx/nginx.conf:ro
       - ./docker/nginx/default.conf:/etc/nginx/conf.d/default.conf:ro
-      - staticfiles_data:/app/staticfiles:ro
+      - ./staticfiles:/app/staticfiles:ro
       - ./media:/app/media:ro
       - ./docker/nginx/ssl:/etc/nginx/ssl:ro
     depends_on:
@@ -89,8 +93,6 @@ services:
 # Named volumes for data persistence
 volumes:
   postgres_data:
-    driver: local
-  staticfiles_data:
     driver: local
 
 # Custom network for service communication

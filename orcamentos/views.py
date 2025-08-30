@@ -60,42 +60,7 @@ def listar_orcamentos(request):
 def novo_orcamento(request):
     """Cria um novo orçamento"""
     if request.method == 'POST':
-        # Processar campos unificados de desconto e acréscimo antes de validar o form
-        post_data = request.POST.copy()
-        
-        # Processar desconto unificado
-        desconto_valor_unif = post_data.get('desconto_valor_unificado', '')
-        if desconto_valor_unif:
-            try:
-                desconto_valor = float(desconto_valor_unif)
-                # O tipo já é determinado pelos campos originais que o JS sincroniza
-                # Mas vamos garantir que apenas um tipo tenha valor
-                if post_data.get('desconto_valor') and float(post_data.get('desconto_valor', 0)) > 0:
-                    # É valor em R$
-                    post_data['desconto_percentual'] = ''
-                elif post_data.get('desconto_percentual') and float(post_data.get('desconto_percentual', 0)) > 0:
-                    # É percentual
-                    post_data['desconto_valor'] = ''
-            except (ValueError, TypeError):
-                pass
-        
-        # Processar acréscimo unificado
-        acrescimo_valor_unif = post_data.get('acrescimo_valor_unificado', '')
-        if acrescimo_valor_unif:
-            try:
-                acrescimo_valor = float(acrescimo_valor_unif)
-                # O tipo já é determinado pelos campos originais que o JS sincroniza
-                # Mas vamos garantir que apenas um tipo tenha valor
-                if post_data.get('acrescimo_valor') and float(post_data.get('acrescimo_valor', 0)) > 0:
-                    # É valor em R$
-                    post_data['acrescimo_percentual'] = ''
-                elif post_data.get('acrescimo_percentual') and float(post_data.get('acrescimo_percentual', 0)) > 0:
-                    # É percentual
-                    post_data['acrescimo_valor'] = ''
-            except (ValueError, TypeError):
-                pass
-        
-        form = OrcamentoForm(post_data)
+        form = OrcamentoForm(request.POST)
         if form.is_valid():
             orcamento = form.save(commit=False)
             orcamento.vendedor = request.user
@@ -191,58 +156,17 @@ def novo_orcamento(request):
         'titulo': 'Novo Orçamento',
     }
     
-    return render(request, 'orcamentos/novo.html', context)
+    return render(request, 'orcamentos/form.html', context)
 
 
 @login_required
 @orcamentos_access_required
 def editar_orcamento(request, pk):
     """Edita um orçamento existente"""
-    # Buscar orçamento com todos os relacionamentos necessários
-    orcamento = get_object_or_404(
-        Orcamento.objects.select_related(
-            'cliente', 'faixa_preco', 'forma_pagamento', 'vendedor'
-        ),
-        pk=pk
-    )
+    orcamento = get_object_or_404(Orcamento, pk=pk)
     
     if request.method == 'POST':
-        # Processar campos unificados de desconto e acréscimo antes de validar o form
-        post_data = request.POST.copy()
-        
-        # Processar desconto unificado
-        desconto_valor_unif = post_data.get('desconto_valor_unificado', '')
-        if desconto_valor_unif:
-            try:
-                desconto_valor = float(desconto_valor_unif)
-                # O tipo já é determinado pelos campos originais que o JS sincroniza
-                # Mas vamos garantir que apenas um tipo tenha valor
-                if post_data.get('desconto_valor') and float(post_data.get('desconto_valor', 0)) > 0:
-                    # É valor em R$
-                    post_data['desconto_percentual'] = ''
-                elif post_data.get('desconto_percentual') and float(post_data.get('desconto_percentual', 0)) > 0:
-                    # É percentual
-                    post_data['desconto_valor'] = ''
-            except (ValueError, TypeError):
-                pass
-        
-        # Processar acréscimo unificado
-        acrescimo_valor_unif = post_data.get('acrescimo_valor_unificado', '')
-        if acrescimo_valor_unif:
-            try:
-                acrescimo_valor = float(acrescimo_valor_unif)
-                # O tipo já é determinado pelos campos originais que o JS sincroniza
-                # Mas vamos garantir que apenas um tipo tenha valor
-                if post_data.get('acrescimo_valor') and float(post_data.get('acrescimo_valor', 0)) > 0:
-                    # É valor em R$
-                    post_data['acrescimo_percentual'] = ''
-                elif post_data.get('acrescimo_percentual') and float(post_data.get('acrescimo_percentual', 0)) > 0:
-                    # É percentual
-                    post_data['acrescimo_valor'] = ''
-            except (ValueError, TypeError):
-                pass
-        
-        form = OrcamentoForm(post_data, instance=orcamento)
+        form = OrcamentoForm(request.POST, instance=orcamento)
         if form.is_valid():
             form.save()
             messages.success(request, 'Orçamento atualizado com sucesso!')
@@ -251,36 +175,16 @@ def editar_orcamento(request, pk):
         form = OrcamentoForm(instance=orcamento)
     
     # Buscar itens do orçamento
-    itens = orcamento.itens.select_related('produto__id_tipo_produto').all()
-    
-    # Dados do orçamento para JavaScript (hidratação dos campos)
-    import json
-    orcamento_data = {
-        'cliente_id': orcamento.cliente.id if orcamento.cliente else None,
-        'cliente_nome': orcamento.cliente.nome_empresa if orcamento.cliente else '',
-        'vendedor_id': orcamento.vendedor.id if orcamento.vendedor else None,
-        'vendedor_nome': f"{orcamento.vendedor.first_name} {orcamento.vendedor.last_name}".strip() if orcamento.vendedor else '',
-        'faixa_preco_id': orcamento.faixa_preco.id if orcamento.faixa_preco else None,
-        'forma_pagamento_id': orcamento.forma_pagamento.id if orcamento.forma_pagamento else None,
-        'status': orcamento.status,
-        'data_entrega': orcamento.data_entrega.isoformat() if orcamento.data_entrega else None,
-        'data_validade': orcamento.data_validade.isoformat() if orcamento.data_validade else None,
-        'desconto_valor': float(orcamento.desconto_valor) if orcamento.desconto_valor else 0,
-        'desconto_percentual': float(orcamento.desconto_percentual) if orcamento.desconto_percentual else 0,
-        'acrescimo_valor': float(orcamento.acrescimo_valor) if orcamento.acrescimo_valor else 0,
-        'acrescimo_percentual': float(orcamento.acrescimo_percentual) if orcamento.acrescimo_percentual else 0,
-    }
-    orcamento_data_json = json.dumps(orcamento_data)
+    itens = orcamento.itens.select_related('produto').all()
     
     context = {
         'form': form,
         'orcamento': orcamento,
-        'orcamento_data_json': orcamento_data_json,
         'itens': itens,
         'titulo': f'Editar Orçamento {orcamento.numero}',
     }
     
-    return render(request, 'orcamentos/editar.html', context)
+    return render(request, 'orcamentos/form.html', context)
 
 
 @login_required
@@ -347,22 +251,6 @@ def buscar_cliente(request):
     ).values('id', 'nome_empresa', 'representante', 'cnpj')[:10]
     
     return JsonResponse({'clientes': list(clientes)})
-
-
-@login_required
-@orcamentos_access_required
-def obter_cliente(request, cliente_id):
-    """Obtém dados completos de um cliente específico"""
-    try:
-        cliente = Cliente.objects.get(id=cliente_id)
-        return JsonResponse({
-            'id': cliente.id,
-            'nome_empresa': cliente.nome_empresa,
-            'representante': cliente.representante,
-            'cnpj': cliente.cnpj
-        })
-    except Cliente.DoesNotExist:
-        return JsonResponse({'error': 'Cliente não encontrado'}, status=404)
 
 
 @login_required
