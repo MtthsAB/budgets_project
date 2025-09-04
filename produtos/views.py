@@ -2012,3 +2012,27 @@ def sofa_excluir_view(request, sofa_id):
 # =====================================================
 
 from .views_sofas_formsets import sofa_editar_formset_view
+
+# =====================================================
+# VIEWS PARA MÓDULOS
+# =====================================================
+
+@produtos_access_required
+def modulo_detalhes_view(request, modulo_id):
+    """View para visualizar detalhes de um módulo específico"""
+    modulo = get_object_or_404(Modulo, id=modulo_id)
+    
+    # Buscar todos os tamanhos detalhados do módulo
+    tamanhos_detalhados = modulo.tamanhos_detalhados.all().order_by('largura_total')
+    
+    context = {
+        'modulo': modulo,
+        'tamanhos_detalhados': tamanhos_detalhados,
+    }
+    
+    # Se for uma requisição AJAX, retornar apenas o conteúdo do modal
+    if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+        return render(request, 'produtos/sofas/modulo_detalhes_modal.html', context)
+    
+    # Se não for AJAX, renderizar página completa
+    return render(request, 'produtos/sofas/modulo_detalhes.html', context)

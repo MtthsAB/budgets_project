@@ -1,0 +1,398 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}{{ modulo.nome }} - Detalhes do Módulo{% endblock %}
+
+{% block extra_css %}
+<style>
+    .page-title {
+        background: linear-gradient(135deg, #0056b3 0%, #004085 100%);
+        color: white;
+        padding: 2rem;
+        border-radius: 15px;
+        margin-bottom: 2rem;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .page-title::before {
+        content: '';
+        position: absolute;
+        top: -50%;
+        right: -50%;
+        width: 200%;
+        height: 200%;
+        background: linear-gradient(45deg, transparent, rgba(255,255,255,0.1), transparent);
+        transform: rotate(45deg);
+        animation: shine 3s ease-in-out infinite;
+    }
+
+    @keyframes shine {
+        0%, 100% { transform: translateX(-100%) translateY(-100%) rotate(45deg); }
+        50% { transform: translateX(-50%) translateY(-50%) rotate(45deg); }
+    }
+
+    .card {
+        border: none;
+        border-radius: 15px;
+        box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+        margin-bottom: 2rem;
+        transition: all 0.3s ease;
+    }
+
+    .card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 8px 30px rgba(0,0,0,0.15);
+    }
+
+    .card-header {
+        background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+        border-bottom: 2px solid #dee2e6;
+        border-radius: 15px 15px 0 0 !important;
+        padding: 1.5rem;
+    }
+
+    .card-header h5 {
+        margin: 0;
+        font-weight: 600;
+    }
+
+    .btn-back {
+        background: linear-gradient(135deg, #6c757d 0%, #5a6268 100%);
+        border: none;
+        border-radius: 10px;
+        padding: 0.75rem 1.5rem;
+        color: white;
+        text-decoration: none;
+        transition: all 0.3s ease;
+    }
+
+    .btn-back:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 15px rgba(108,117,125,0.3);
+        color: white;
+    }
+
+    .table {
+        margin-bottom: 0;
+    }
+
+    .table th {
+        border-top: none;
+        background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+        font-weight: 600;
+        padding: 1rem;
+    }
+
+    .table td {
+        padding: 1rem;
+        vertical-align: middle;
+    }
+
+    .table-hover tbody tr:hover {
+        background-color: rgba(0,123,255,0.05);
+    }
+
+    .info-item {
+        background: linear-gradient(135deg, #f8f9fa 0%, #ffffff 100%);
+        padding: 1rem;
+        border-radius: 10px;
+        border-left: 4px solid #007bff;
+        margin-bottom: 1rem;
+    }
+
+    .info-item .label {
+        font-size: 0.875rem;
+        color: #6c757d;
+        font-weight: 500;
+        margin-bottom: 0.25rem;
+    }
+
+    .info-item .value {
+        font-size: 1.1rem;
+        font-weight: 600;
+        color: #495057;
+    }
+
+    .image-container {
+        position: relative;
+        overflow: hidden;
+        border-radius: 10px;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+    }
+
+    .image-container img {
+        width: 100%;
+        height: auto;
+        transition: transform 0.3s ease;
+    }
+
+    .image-container:hover img {
+        transform: scale(1.05);
+    }
+
+    .alert {
+        border-radius: 10px;
+        border: none;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    }
+
+    .no-data {
+        text-align: center;
+        padding: 3rem;
+        color: #6c757d;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <!-- Título da Página -->
+            <div class="page-title">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h1 class="mb-2">
+                            <i class="fas fa-puzzle-piece me-3"></i>
+                            {{ modulo.nome }}
+                        </h1>
+                        <p class="mb-0 opacity-75">
+                            <i class="fas fa-couch me-2"></i>
+                            Módulo do {{ modulo.produto.nome_produto }}
+                        </p>
+                    </div>
+                    <a href="{% url 'sofa_detalhes' modulo.produto.id %}" class="btn-back">
+                        <i class="fas fa-arrow-left me-2"></i>
+                        Voltar ao Sofá
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- Informações Básicas do Módulo -->
+        <div class="col-lg-8">
+            <div class="card">
+                <div class="card-header">
+                    <h5>
+                        <i class="fas fa-info-circle me-2 text-primary"></i>
+                        Informações do Módulo
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        {% if modulo.profundidade %}
+                        <div class="col-md-4">
+                            <div class="info-item">
+                                <div class="label">Profundidade</div>
+                                <div class="value">{{ modulo.profundidade }} cm</div>
+                            </div>
+                        </div>
+                        {% endif %}
+                        {% if modulo.altura %}
+                        <div class="col-md-4">
+                            <div class="info-item">
+                                <div class="label">Altura</div>
+                                <div class="value">{{ modulo.altura }} cm</div>
+                            </div>
+                        </div>
+                        {% endif %}
+                        {% if modulo.braco %}
+                        <div class="col-md-4">
+                            <div class="info-item">
+                                <div class="label">Braço</div>
+                                <div class="value">{{ modulo.braco }} cm</div>
+                            </div>
+                        </div>
+                        {% endif %}
+                    </div>
+                    
+                    {% if modulo.descricao %}
+                    <div class="row mt-3">
+                        <div class="col-12">
+                            <div class="info-item">
+                                <div class="label">Descrição</div>
+                                <div class="value">{{ modulo.descricao }}</div>
+                            </div>
+                        </div>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Tamanhos Disponíveis -->
+            <div class="card">
+                <div class="card-header">
+                    <h5>
+                        <i class="fas fa-ruler me-2 text-primary"></i>
+                        Tamanhos Disponíveis
+                        {% if tamanhos_detalhados %}
+                        <span class="badge bg-primary ms-2">{{ tamanhos_detalhados.count }}</span>
+                        {% endif %}
+                    </h5>
+                </div>
+                <div class="card-body">
+                    {% if tamanhos_detalhados %}
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th><i class="fas fa-arrows-alt-h me-1"></i> Largura Total</th>
+                                    <th><i class="fas fa-chair me-1"></i> Largura Assento</th>
+                                    <th><i class="fas fa-tshirt me-1"></i> Tecido</th>
+                                    <th><i class="fas fa-cube me-1"></i> Volume</th>
+                                    <th><i class="fas fa-weight me-1"></i> Peso</th>
+                                    <th><i class="fas fa-dollar-sign me-1"></i> Preço</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for tamanho in tamanhos_detalhados %}
+                                <tr>
+                                    <td>
+                                        {% if tamanho.largura_total %}
+                                            <span class="fw-bold text-primary">{{ tamanho.largura_total }} cm</span>
+                                        {% else %}
+                                            <span class="text-muted">-</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        {% if tamanho.largura_assento %}
+                                            {{ tamanho.largura_assento }} cm
+                                        {% else %}
+                                            <span class="text-muted">-</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        {% if tamanho.tecido_metros %}
+                                            {{ tamanho.tecido_metros }} m
+                                        {% else %}
+                                            <span class="text-muted">-</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        {% if tamanho.volume_m3 %}
+                                            {{ tamanho.volume_m3 }} m³
+                                        {% else %}
+                                            <span class="text-muted">-</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        {% if tamanho.peso_kg %}
+                                            {{ tamanho.peso_kg }} kg
+                                        {% else %}
+                                            <span class="text-muted">-</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        {% if tamanho.preco %}
+                                            <span class="text-success fw-bold">R$ {{ tamanho.preco }}</span>
+                                        {% else %}
+                                            <span class="text-muted">-</span>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                                {% if tamanho.descricao %}
+                                <tr>
+                                    <td colspan="6" class="border-0 pt-0 pb-3">
+                                        <small class="text-muted fst-italic">
+                                            <i class="fas fa-comment me-1"></i>
+                                            {{ tamanho.descricao }}
+                                        </small>
+                                    </td>
+                                </tr>
+                                {% endif %}
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    {% else %}
+                    <div class="no-data">
+                        <i class="fas fa-ruler-combined fa-3x text-muted mb-3"></i>
+                        <h5 class="text-muted">Nenhum tamanho cadastrado</h5>
+                        <p class="text-muted">Este módulo ainda não possui tamanhos específicos cadastrados.</p>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Imagens do Módulo -->
+        <div class="col-lg-4">
+            {% if modulo.imagem_principal or modulo.imagem_secundaria %}
+            <div class="card">
+                <div class="card-header">
+                    <h5>
+                        <i class="fas fa-images me-2 text-primary"></i>
+                        Imagens do Módulo
+                    </h5>
+                </div>
+                <div class="card-body">
+                    {% if modulo.imagem_principal %}
+                    <div class="mb-4">
+                        <label class="form-label fw-bold text-muted small">Imagem Principal</label>
+                        <div class="image-container">
+                            <img src="{{ modulo.imagem_principal.url }}" 
+                                 alt="Imagem Principal - {{ modulo.nome }}" 
+                                 class="img-fluid">
+                        </div>
+                    </div>
+                    {% endif %}
+                    
+                    {% if modulo.imagem_secundaria %}
+                    <div>
+                        <label class="form-label fw-bold text-muted small">Imagem Secundária</label>
+                        <div class="image-container">
+                            <img src="{{ modulo.imagem_secundaria.url }}" 
+                                 alt="Imagem Secundária - {{ modulo.nome }}" 
+                                 class="img-fluid">
+                        </div>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+            {% else %}
+            <div class="card">
+                <div class="card-header">
+                    <h5>
+                        <i class="fas fa-images me-2 text-primary"></i>
+                        Imagens do Módulo
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="no-data">
+                        <i class="fas fa-image fa-3x text-muted mb-3"></i>
+                        <h6 class="text-muted">Nenhuma imagem disponível</h6>
+                        <p class="text-muted small">Este módulo ainda não possui imagens cadastradas.</p>
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+
+            <!-- Informações do Produto -->
+            <div class="card">
+                <div class="card-header">
+                    <h5>
+                        <i class="fas fa-couch me-2 text-primary"></i>
+                        Produto Relacionado
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="d-flex align-items-center">
+                        <div class="flex-grow-1">
+                            <h6 class="mb-1">{{ modulo.produto.nome_produto }}</h6>
+                            <small class="text-muted">{{ modulo.produto.id_tipo_produto.nome }}</small>
+                        </div>
+                        <a href="{% url 'sofa_detalhes' modulo.produto.id %}" 
+                           class="btn btn-outline-primary btn-sm">
+                            <i class="fas fa-eye me-1"></i>
+                            Ver Produto
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

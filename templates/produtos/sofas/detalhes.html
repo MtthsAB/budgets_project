@@ -369,7 +369,11 @@
                     </div>
                     <div class="card-body">
                         {% for modulo in modulos %}
-                        <div class="card mb-3">
+                        <div class="card mb-3 modulo-card" 
+                             style="cursor: pointer; transition: all 0.3s ease;" 
+                             data-modulo-id="{{ modulo.id }}"
+                             onmouseover="this.style.boxShadow='0 4px 15px rgba(0,123,255,0.3)'; this.style.transform='translateY(-2px)'"
+                             onmouseout="this.style.boxShadow=''; this.style.transform='translateY(0)'">
                             <div class="card-body">
                                 <div class="d-flex justify-content-between align-items-start">
                                     <div>
@@ -377,11 +381,15 @@
                                             <i class="fas fa-puzzle-piece"></i> {{ modulo.nome }}
                                         </h6>
                                         {% if modulo.descricao %}
-                                            <p class="text-muted small">{{ modulo.descricao }}</p>
+                                            <p class="text-muted small mb-2">{{ modulo.descricao }}</p>
                                         {% endif %}
+                                        <small class="text-muted">
+                                            <i class="fas fa-hand-pointer me-1"></i>
+                                            Clique para ver detalhes e tamanhos
+                                        </small>
                                     </div>
                                     <span class="badge bg-primary">
-                                        <i class="fas fa-eye"></i> Módulo
+                                        <i class="fas fa-eye"></i> Ver Detalhes
                                     </span>
                                 </div>
                             </div>
@@ -461,4 +469,73 @@
         </div>
     </div>
 </div>
+
+<!-- Modal de Detalhes do Módulo -->
+<div class="modal fade" id="moduloDetalhesModal" tabindex="-1" aria-labelledby="moduloDetalhesModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-xl">
+        <div class="modal-content">
+            <!-- Conteúdo será carregado via AJAX -->
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Adicionar event listeners para os cards dos módulos
+    const moduloCards = document.querySelectorAll('.modulo-card');
+    
+    moduloCards.forEach(card => {
+        card.addEventListener('click', function() {
+            const moduloId = this.getAttribute('data-modulo-id');
+            
+            // Mostrar loading no modal
+            const modal = new bootstrap.Modal(document.getElementById('moduloDetalhesModal'));
+            const modalContent = document.querySelector('#moduloDetalhesModal .modal-content');
+            
+            modalContent.innerHTML = `
+                <div class="modal-body text-center">
+                    <div class="spinner-border text-primary" role="status">
+                        <span class="visually-hidden">Carregando...</span>
+                    </div>
+                    <p class="mt-3">Carregando detalhes do módulo...</p>
+                </div>
+            `;
+            
+            modal.show();
+            
+            // Fazer requisição AJAX para carregar os detalhes
+            fetch(`{% url 'modulo_detalhes' 0 %}`.replace('0', moduloId), {
+                method: 'GET',
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'Content-Type': 'application/json',
+                }
+            })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Erro ao carregar detalhes do módulo');
+                }
+                return response.text();
+            })
+            .then(html => {
+                modalContent.innerHTML = html;
+            })
+            .catch(error => {
+                console.error('Erro:', error);
+                modalContent.innerHTML = `
+                    <div class="modal-body text-center">
+                        <div class="alert alert-danger">
+                            <i class="fas fa-exclamation-triangle me-2"></i>
+                            Erro ao carregar detalhes do módulo. Tente novamente.
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Fechar</button>
+                    </div>
+                `;
+            });
+        });
+    });
+});
+</script>
 {% endblock %}

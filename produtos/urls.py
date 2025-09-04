@@ -83,4 +83,7 @@ urlpatterns = [
     path('almofadas/<int:almofada_id>/editar/', views.almofada_editar_view, name='almofada_editar'),
     path('almofadas/<int:almofada_id>/excluir/', views.almofada_excluir_view, name='almofada_excluir'),
     path('almofadas/<int:almofada_id>/teste-imagem/', views.almofada_teste_imagem_view, name='almofada_teste_imagem'),
+    
+    # URLs para módulos
+    path('modulos/<int:modulo_id>/', views.modulo_detalhes_view, name='modulo_detalhes'),
 ]
