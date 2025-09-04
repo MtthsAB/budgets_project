@@ -28,5 +28,6 @@ urlpatterns = [
     path('buscar-produtos-por-tipo/', views.buscar_produtos_por_tipo, name='buscar_produtos_por_tipo'),
     path('detalhes-produto/', views.obter_detalhes_produto, name='obter_detalhes_produto'),
     path('informacoes-produto/', views.obter_informacoes_produto, name='obter_informacoes_produto'),
+    path('tamanhos-modulo/', views.obter_tamanhos_modulo, name='obter_tamanhos_modulo'),
     path('catalogo-produtos/', views.catalogo_produtos, name='catalogo_produtos'),
 ]

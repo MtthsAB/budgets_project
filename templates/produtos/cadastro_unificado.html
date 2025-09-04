@@ -18,5 +18,10 @@
 {% endblock %}
 
 {% block extra_product_js %}
+{{ acessorios_disponiveis|json_script:"acessorios-data" }}
+<script>
+// Dados dos acessórios disponíveis injetados do backend
+window.acessoriosData = JSON.parse(document.getElementById('acessorios-data').textContent);
+</script>
 {% include 'produtos/includes/cadastro_unificado_js.html' %}
 {% endblock %}

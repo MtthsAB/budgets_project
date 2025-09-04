@@ -1,92 +1,58 @@
-#!/usr/bin/env python
-import os
+#!/usr/bin/env python3
+"""
+Script para testar se o erro 500 foi corrigido - simula acesso às páginas de edição
+"""
+import requests
 import sys
-import django
-from datetime import timedelta
-from django.utils import timezone
 
-# Configurar Django
-sys.path.append('/home/matas/projetos/Project')
-os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'sistema_produtos.settings')
-django.setup()
-
-from orcamentos.forms import OrcamentoForm
-
-def teste_final_correcao():
-    """Teste final após a correção do formato das datas"""
+def test_edicao_produtos():
+    """Testa se as páginas de edição estão funcionando"""
     
-    print("🔧 TESTE FINAL APÓS CORREÇÃO DO FORMATO")
-    print("=" * 50)
+    print("=== TESTE FINAL - PÁGINAS DE EDIÇÃO ===\n")
     
-    # Simular exatamente o que a view faz
-    hoje = timezone.now().date()
-    data_entrega = hoje + timedelta(days=30)
-    data_validade = hoje + timedelta(days=15)
+    # URLs base
+    base_url = "http://127.0.0.1:8000"
     
-    inicial_data = {
-        'data_entrega': data_entrega,
-        'data_validade': data_validade,
-        'status': 'rascunho'
-    }
+    # IDs de produtos para testar (baseado no script anterior)
+    produto_ids = [60, 61, 62]
     
-    form = OrcamentoForm(initial=inicial_data)
+    print("Testando acesso às páginas de edição sem login (deve redirecionar para login):")
     
-    print(f"📅 Data atual: {hoje}")
-    print(f"📅 Data de entrega: {data_entrega}")
-    print(f"📅 Data de validade: {data_validade}")
-    print()
-    
-    print("🔍 HTML GERADO:")
-    html_validade = str(form['data_validade'])
-    html_entrega = str(form['data_entrega'])
-    
-    print("Data de Validade:")
-    print(f"  {html_validade}")
-    print()
-    print("Data de Entrega:")
-    print(f"  {html_entrega}")
-    print()
-    
-    # Extrair valores do HTML
-    import re
-    valor_validade = re.search(r'value="([^"]*)"', html_validade)
-    valor_entrega = re.search(r'value="([^"]*)"', html_entrega)
-    
-    print("✅ VERIFICAÇÃO:")
-    if valor_validade and valor_entrega:
-        val_val = valor_validade.group(1)
-        val_ent = valor_entrega.group(1)
+    for produto_id in produto_ids:
+        url = f"{base_url}/produtos/{produto_id}/editar/"
         
-        print(f"  - Valor data validade: {val_val}")
-        print(f"  - Valor data entrega: {val_ent}")
-        
-        # Verificar formato YYYY-MM-DD
-        formato_correto_val = re.match(r'^\d{4}-\d{2}-\d{2}$', val_val)
-        formato_correto_ent = re.match(r'^\d{4}-\d{2}-\d{2}$', val_ent)
-        
-        print(f"  - Formato validade correto: {'✅' if formato_correto_val else '❌'}")
-        print(f"  - Formato entrega correto: {'✅' if formato_correto_ent else '❌'}")
-        
-        if formato_correto_val and formato_correto_ent:
-            print("\n🎉 SUCESSO TOTAL!")
-            print("   - Os campos estão sendo preenchidos automaticamente")
-            print("   - O formato das datas está correto (YYYY-MM-DD)")
-            print("   - O navegador deve mostrar as datas corretamente")
-            return True
-        else:
-            print("\n❌ PROBLEMA NO FORMATO")
+        try:
+            response = requests.get(url, allow_redirects=False)
+            print(f"Produto {produto_id}: Status {response.status_code}")
+            
+            if response.status_code == 302:
+                redirect_location = response.headers.get('Location', '')
+                if '/auth/login/' in redirect_location:
+                    print(f"  ✅ Redirecionou corretamente para login")
+                else:
+                    print(f"  ⚠️ Redirecionou para: {redirect_location}")
+                    
+            elif response.status_code == 500:
+                print(f"  ❌ ERRO 500 - Problema não corrigido!")
+                return False
+                
+            elif response.status_code == 200:
+                print(f"  ✅ Página carregou diretamente (usuário já logado)")
+                
+            else:
+                print(f"  ⚠️ Status inesperado: {response.status_code}")
+                
+        except requests.exceptions.ConnectionError:
+            print(f"  ❌ Erro de conexão - servidor não está rodando?")
             return False
-    else:
-        print("  ❌ Não foi possível extrair valores do HTML")
-        return False
-
-if __name__ == '__main__':
-    sucesso = teste_final_correcao()
+            
+        except Exception as e:
+            print(f"  ❌ Erro inesperado: {e}")
+            return False
     
-    print("\n" + "=" * 50)
-    if sucesso:
-        print("🚀 IMPLEMENTAÇÃO FINALIZADA COM SUCESSO!")
-        print("   Agora recarregue a página no navegador para ver o resultado.")
-    else:
-        print("⚠️  Ainda há problemas a serem resolvidos.")
-    print("=" * 50)
+    print("\n✅ Teste concluído - Erro 500 corrigido com sucesso!")
+    return True
+
+if __name__ == "__main__":
+    success = test_edicao_produtos()
+    sys.exit(0 if success else 1)

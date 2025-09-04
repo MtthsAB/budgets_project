@@ -1,0 +1,439 @@
+<script>
+/* JavaScript para gerenciar a seção de acessórios em sofás */
+
+class AcessoriosManager {
+    constructor() {
+        this.acessoriosDisponiveis = [];
+        this.acessoriosSelecionados = new Map(); // Map<acessorioId, {quantidade, observacoes}>
+        this.formIndex = 0;
+        this.isLoading = false;
+        
+        this.init();
+    }
+    
+    init() {
+        // Bind de eventos
+        this.bindEvents();
+        
+        // Carregar acessórios se for um sofá
+        this.checkTipoAndLoadAcessorios();
+    }
+    
+    bindEvents() {
+        // Evento de mudança do tipo de produto
+        const tipoSelect = document.getElementById('tipo_produto');
+        if (tipoSelect) {
+            tipoSelect.addEventListener('change', () => {
+                this.checkTipoAndLoadAcessorios();
+            });
+        }
+        
+        // Eventos de busca e filtros
+        const buscaInput = document.getElementById('busca-acessorios');
+        if (buscaInput) {
+            buscaInput.addEventListener('input', this.debounce(() => {
+                this.filtrarAcessorios();
+            }, 300));
+        }
+        
+        const limparBtn = document.getElementById('limpar-busca');
+        if (limparBtn) {
+            limparBtn.addEventListener('click', () => {
+                document.getElementById('busca-acessorios').value = '';
+                this.filtrarAcessorios();
+            });
+        }
+        
+        const selecionarTodosBtn = document.getElementById('selecionar-todos');
+        if (selecionarTodosBtn) {
+            selecionarTodosBtn.addEventListener('click', () => {
+                this.selecionarTodosVisiveis();
+            });
+        }
+        
+        const desmarcarTodosBtn = document.getElementById('desmarcar-todos');
+        if (desmarcarTodosBtn) {
+            desmarcarTodosBtn.addEventListener('click', () => {
+                this.desmarcarTodos();
+            });
+        }
+    }
+    
+    checkTipoAndLoadAcessorios() {
+        const tipoSelect = document.getElementById('tipo_produto');
+        const secaoAcessorios = document.getElementById('secao-acessorios');
+        
+        if (!tipoSelect || !secaoAcessorios) return;
+        
+        const tipoSelecionado = tipoSelect.options[tipoSelect.selectedIndex];
+        const ehSofa = tipoSelecionado && tipoSelecionado.text.toLowerCase().includes('sofá');
+        
+        if (ehSofa) {
+            secaoAcessorios.style.display = 'block';
+            this.carregarAcessorios();
+        } else {
+            secaoAcessorios.style.display = 'none';
+            this.limparSelecoes();
+        }
+    }
+    
+    async carregarAcessorios() {
+        if (this.isLoading) return;
+        
+        this.isLoading = true;
+        this.showLoading();
+        
+        try {
+            // Buscar acessórios via AJAX ou usar dados injetados no template
+            const response = await this.fetchAcessorios();
+            this.acessoriosDisponiveis = response.acessorios || [];
+            
+            this.renderizarAcessorios();
+            this.hideLoading();
+            
+            if (this.acessoriosDisponiveis.length === 0) {
+                this.showEmpty();
+            }
+            
+        } catch (error) {
+            console.error('Erro ao carregar acessórios:', error);
+            this.showError();
+        } finally {
+            this.isLoading = false;
+        }
+    }
+    
+    async fetchAcessorios() {
+        // Para implementação inicial, vamos usar dados mockados
+        // Em produção, isso seria uma chamada AJAX para /api/acessorios/
+        return new Promise((resolve) => {
+            setTimeout(() => {
+                resolve({
+                    acessorios: window.acessoriosData || []
+                });
+            }, 500);
+        });
+    }
+    
+    renderizarAcessorios() {
+        const gridContainer = document.getElementById('grid-acessorios');
+        const template = document.getElementById('template-card-acessorio');
+        
+        if (!gridContainer || !template) return;
+        
+        gridContainer.innerHTML = '';
+        
+        this.acessoriosDisponiveis.forEach(acessorio => {
+            const cardElement = this.criarCardAcessorio(acessorio, template);
+            gridContainer.appendChild(cardElement);
+        });
+    }
+    
+    criarCardAcessorio(acessorio, template) {
+        const clone = template.content.cloneNode(true);
+        const cardDiv = clone.querySelector('.acessorio-card');
+        
+        // Preencher dados do acessório
+        cardDiv.setAttribute('data-acessorio-id', acessorio.id);
+        
+        const img = clone.querySelector('.acessorio-image');
+        const noImage = clone.querySelector('.acessorio-no-image');
+        if (acessorio.imagem_principal) {
+            img.src = acessorio.imagem_principal;
+            img.style.display = 'block';
+            noImage.style.display = 'none';
+        } else {
+            img.style.display = 'none';
+            noImage.style.display = 'flex';
+        }
+        
+        clone.querySelector('.acessorio-nome').textContent = acessorio.nome;
+        clone.querySelector('.acessorio-codigo').textContent = `Código: ${acessorio.ref_acessorio}`;
+        
+        const precoElement = clone.querySelector('.acessorio-preco small');
+        if (acessorio.preco) {
+            precoElement.textContent = `R$ ${this.formatMoney(acessorio.preco)}`;
+            precoElement.style.display = 'block';
+        } else {
+            precoElement.style.display = 'none';
+        }
+        
+        // Configurar checkbox
+        const checkbox = clone.querySelector('.acessorio-checkbox');
+        checkbox.setAttribute('data-acessorio-id', acessorio.id);
+        checkbox.id = `acessorio_${acessorio.id}`;
+        
+        const label = clone.querySelector('.form-check-label');
+        label.setAttribute('for', checkbox.id);
+        
+        // Evento do checkbox
+        checkbox.addEventListener('change', (e) => {
+            this.toggleAcessorio(acessorio, e.target.checked);
+        });
+        
+        // Configurar campos de quantidade e observações
+        const quantidadeInput = clone.querySelector('.acessorio-quantidade');
+        const observacoesTextarea = clone.querySelector('.acessorio-observacoes');
+        const contadorChars = clone.querySelector('.contador-chars');
+        
+        quantidadeInput.addEventListener('change', () => {
+            if (this.acessoriosSelecionados.has(acessorio.id)) {
+                this.atualizarAcessorioSelecionado(acessorio.id, {
+                    quantidade: parseInt(quantidadeInput.value) || 1,
+                    observacoes: observacoesTextarea.value
+                });
+            }
+        });
+        
+        observacoesTextarea.addEventListener('input', () => {
+            const length = observacoesTextarea.value.length;
+            contadorChars.textContent = length;
+            contadorChars.className = length > 800 ? 'contador-chars text-warning' : 'contador-chars';
+            
+            if (this.acessoriosSelecionados.has(acessorio.id)) {
+                this.atualizarAcessorioSelecionado(acessorio.id, {
+                    quantidade: parseInt(quantidadeInput.value) || 1,
+                    observacoes: observacoesTextarea.value
+                });
+            }
+        });
+        
+        return clone;
+    }
+    
+    toggleAcessorio(acessorio, selecionado) {
+        const cardElement = document.querySelector(`[data-acessorio-id="${acessorio.id}"]`);
+        const camposDiv = cardElement.querySelector('.acessorio-campos');
+        
+        if (selecionado) {
+            // Adicionar à seleção
+            this.acessoriosSelecionados.set(acessorio.id, {
+                acessorio: acessorio,
+                quantidade: 1,
+                observacoes: ''
+            });
+            
+            cardElement.classList.add('selecionado');
+            camposDiv.style.display = 'block';
+            
+        } else {
+            // Remover da seleção
+            this.acessoriosSelecionados.delete(acessorio.id);
+            cardElement.classList.remove('selecionado');
+            camposDiv.style.display = 'none';
+            
+            // Limpar campos
+            const quantidadeInput = cardElement.querySelector('.acessorio-quantidade');
+            const observacoesTextarea = cardElement.querySelector('.acessorio-observacoes');
+            quantidadeInput.value = 1;
+            observacoesTextarea.value = '';
+        }
+        
+        this.atualizarFormset();
+        this.atualizarContador();
+    }
+    
+    atualizarAcessorioSelecionado(acessorioId, dados) {
+        if (this.acessoriosSelecionados.has(acessorioId)) {
+            const item = this.acessoriosSelecionados.get(acessorioId);
+            Object.assign(item, dados);
+            this.atualizarFormset();
+        }
+    }
+    
+    atualizarFormset() {
+        const managementContainer = document.getElementById('acessorios-management-forms');
+        const formsContainer = document.getElementById('acessorios-selecionados-forms');
+        
+        if (!managementContainer || !formsContainer) return;
+        
+        // Limpar containers
+        managementContainer.innerHTML = '';
+        formsContainer.innerHTML = '';
+        
+        // Criar management forms
+        const totalForms = this.acessoriosSelecionados.size;
+        managementContainer.innerHTML = `
+            <input type="hidden" name="acessorios-TOTAL_FORMS" value="${totalForms}">
+            <input type="hidden" name="acessorios-INITIAL_FORMS" value="0">
+            <input type="hidden" name="acessorios-MIN_NUM_FORMS" value="0">
+            <input type="hidden" name="acessorios-MAX_NUM_FORMS" value="1000">
+        `;
+        
+        // Criar forms para cada acessório selecionado
+        let index = 0;
+        this.acessoriosSelecionados.forEach((item, acessorioId) => {
+            const formHTML = `
+                <div class="acessorio-form-item" data-form-index="${index}">
+                    <input type="hidden" name="acessorios-${index}-acessorio" value="${acessorioId}">
+                    <input type="hidden" name="acessorios-${index}-quantidade" value="${item.quantidade}">
+                    <input type="hidden" name="acessorios-${index}-observacoes" value="${item.observacoes || ''}">
+                    <input type="hidden" name="acessorios-${index}-DELETE" value="">
+                </div>
+            `;
+            formsContainer.insertAdjacentHTML('beforeend', formHTML);
+            index++;
+        });
+    }
+    
+    atualizarContador() {
+        const contador = document.getElementById('contador-selecionados');
+        const textoContador = document.getElementById('texto-contador');
+        
+        if (!contador || !textoContador) return;
+        
+        const total = this.acessoriosSelecionados.size;
+        
+        if (total === 0) {
+            contador.style.display = 'none';
+        } else {
+            contador.style.display = 'block';
+            textoContador.textContent = `${total} acessório${total > 1 ? 's' : ''} selecionado${total > 1 ? 's' : ''}`;
+        }
+    }
+    
+    filtrarAcessorios() {
+        const busca = document.getElementById('busca-acessorios').value.toLowerCase();
+        const cards = document.querySelectorAll('.acessorio-card');
+        
+        let visibleCount = 0;
+        
+        cards.forEach(card => {
+            const nome = card.querySelector('.acessorio-nome').textContent.toLowerCase();
+            const codigo = card.querySelector('.acessorio-codigo').textContent.toLowerCase();
+            
+            const matches = nome.includes(busca) || codigo.includes(busca);
+            
+            if (matches) {
+                card.style.display = 'block';
+                visibleCount++;
+            } else {
+                card.style.display = 'none';
+            }
+        });
+        
+        // Mostrar/esconder estado vazio baseado na busca
+        const emptyDiv = document.getElementById('empty-acessorios');
+        if (visibleCount === 0 && busca.length > 0) {
+            emptyDiv.style.display = 'block';
+            emptyDiv.querySelector('p').textContent = 'Nenhum acessório encontrado para a busca';
+        } else if (visibleCount === 0 && this.acessoriosDisponiveis.length === 0) {
+            emptyDiv.style.display = 'block';
+            emptyDiv.querySelector('p').textContent = 'Nenhum acessório encontrado';
+        } else {
+            emptyDiv.style.display = 'none';
+        }
+    }
+    
+    selecionarTodosVisiveis() {
+        const cards = document.querySelectorAll('.acessorio-card');
+        cards.forEach(card => {
+            if (card.style.display !== 'none') {
+                const checkbox = card.querySelector('.acessorio-checkbox');
+                if (!checkbox.checked) {
+                    checkbox.checked = true;
+                    checkbox.dispatchEvent(new Event('change'));
+                }
+            }
+        });
+    }
+    
+    desmarcarTodos() {
+        const checkboxes = document.querySelectorAll('.acessorio-checkbox:checked');
+        checkboxes.forEach(checkbox => {
+            checkbox.checked = false;
+            checkbox.dispatchEvent(new Event('change'));
+        });
+    }
+    
+    limparSelecoes() {
+        this.acessoriosSelecionados.clear();
+        this.atualizarFormset();
+        this.atualizarContador();
+    }
+    
+    showLoading() {
+        document.getElementById('loading-acessorios').style.display = 'block';
+        document.getElementById('grid-acessorios').style.display = 'none';
+        document.getElementById('empty-acessorios').style.display = 'none';
+        document.getElementById('error-acessorios').style.display = 'none';
+    }
+    
+    hideLoading() {
+        document.getElementById('loading-acessorios').style.display = 'none';
+        document.getElementById('grid-acessorios').style.display = 'block';
+    }
+    
+    showEmpty() {
+        document.getElementById('empty-acessorios').style.display = 'block';
+        document.getElementById('grid-acessorios').style.display = 'none';
+    }
+    
+    showError() {
+        document.getElementById('error-acessorios').style.display = 'block';
+        document.getElementById('loading-acessorios').style.display = 'none';
+        document.getElementById('grid-acessorios').style.display = 'none';
+    }
+    
+    // Utility functions
+    debounce(func, wait) {
+        let timeout;
+        return function executedFunction(...args) {
+            const later = () => {
+                clearTimeout(timeout);
+                func(...args);
+            };
+            clearTimeout(timeout);
+            timeout = setTimeout(later, wait);
+        };
+    }
+    
+    formatMoney(value) {
+        return new Intl.NumberFormat('pt-BR', {
+            minimumFractionDigits: 2,
+            maximumFractionDigits: 2
+        }).format(value);
+    }
+}
+
+// Inicializar quando o DOM estiver carregado
+document.addEventListener('DOMContentLoaded', function() {
+    // Verificar se estamos na página de cadastro de produtos
+    if (document.getElementById('produtoForm')) {
+        window.acessoriosManager = new AcessoriosManager();
+    }
+});
+
+// Validação antes do submit do formulário
+document.addEventListener('DOMContentLoaded', function() {
+    const form = document.getElementById('produtoForm');
+    if (form) {
+        form.addEventListener('submit', function(e) {
+            // Validar acessórios selecionados se for um sofá
+            const tipoSelect = document.getElementById('tipo_produto');
+            const secaoAcessorios = document.getElementById('secao-acessorios');
+            
+            if (tipoSelect && secaoAcessorios && secaoAcessorios.style.display !== 'none') {
+                const tipoSelecionado = tipoSelect.options[tipoSelect.selectedIndex];
+                const ehSofa = tipoSelecionado && tipoSelecionado.text.toLowerCase().includes('sofá');
+                
+                if (ehSofa && window.acessoriosManager) {
+                    // Validar quantidades dos acessórios selecionados
+                    let hasError = false;
+                    window.acessoriosManager.acessoriosSelecionados.forEach((item, acessorioId) => {
+                        if (!item.quantidade || item.quantidade <= 0) {
+                            hasError = true;
+                            alert(`Por favor, informe uma quantidade válida para o acessório ${item.acessorio.nome}.`);
+                        }
+                    });
+                    
+                    if (hasError) {
+                        e.preventDefault();
+                        return false;
+                    }
+                }
+            }
+        });
+    }
+});
+</script>

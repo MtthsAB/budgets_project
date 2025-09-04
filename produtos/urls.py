@@ -27,6 +27,9 @@ urlpatterns = [
     path('sofas/<int:sofa_id>/editar/', views.sofa_editar_view, name='sofa_editar'),
     path('sofas/<int:sofa_id>/excluir/', views.sofa_excluir_view, name='sofa_excluir'),
     
+    # NOVA URL para edição com formsets (temporária para teste)
+    path('sofas/<int:sofa_id>/editar-formsets/', views.sofa_editar_formset_view, name='sofa_editar_formsets'),
+    
     # URLs para acessórios (atualizadas para seguir o padrão)
     path('acessorios/', views.acessorios_list_view, name='acessorios_lista'),
     path('acessorios/cadastro/', views.acessorio_cadastro_view, name='acessorio_cadastro'),

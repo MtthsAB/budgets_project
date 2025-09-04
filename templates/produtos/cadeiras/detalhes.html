@@ -4,387 +4,686 @@
 
 {% block extra_css %}
 <style>
-    .tamanho-card {
+    /* Estilo principal da página */
+    .cadeira-detalhes {
         background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
-        border: 1px solid #dee2e6 !important;
+        min-height: 100vh;
+        padding: 2rem 0;
+    }
+    
+    /* Cards com estilo melhorado */
+    .card {
+        border: none;
+        border-radius: 15px;
+        box-shadow: 0 4px 20px rgba(0,0,0,0.08);
         transition: all 0.3s ease;
-        position: relative;
         overflow: hidden;
+        margin-bottom: 2rem;
     }
-    .tamanho-card:hover {
-        box-shadow: 0 6px 20px rgba(0,0,0,0.15);
-        transform: translateY(-3px);
-        border-color: #007bff !important;
+    
+    .card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 8px 30px rgba(0,0,0,0.15);
     }
-    .tamanho-card::before {
+    
+    .card-header {
+        background: linear-gradient(135deg, #198754 0%, #146c43 100%);
+        color: white;
+        border: none;
+        padding: 1.5rem;
+        position: relative;
+    }
+    
+    .card-header::before {
         content: '';
         position: absolute;
         top: 0;
         left: 0;
         right: 0;
-        height: 3px;
-        background: linear-gradient(90deg, #007bff, #28a745);
-        opacity: 0;
-        transition: opacity 0.3s ease;
+        bottom: 0;
+        background: linear-gradient(45deg, rgba(255,255,255,0.1) 0%, transparent 100%);
+        pointer-events: none;
     }
-    .tamanho-card:hover::before {
-        opacity: 1;
-    }
-    .tamanho-details small {
-        display: block;
-        line-height: 1.4;
-    }
-    .badge.bg-success {
-        font-size: 0.85rem;
-        padding: 0.4rem 0.6rem;
-    }
-    .card-header {
-        border-bottom: 2px solid #007bff;
-    }
+    
     .card-header h5 {
-        color: #495057;
+        color: white;
         font-weight: 600;
+        margin: 0;
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+    }
+    
+    .card-header i {
+        font-size: 1.25rem;
+        opacity: 0.9;
+    }
+    
+    .card-body {
+        padding: 2rem;
+        background: white;
+    }
+    
+    /* Estilo para itens de detalhes */
+    .detail-item {
+        background: linear-gradient(135deg, #f8f9fa 0%, #ffffff 100%);
+        padding: 1.5rem;
+        border-radius: 12px;
+        border-left: 4px solid #198754;
+        margin-bottom: 1.5rem;
+        transition: all 0.3s ease;
+        position: relative;
+        overflow: hidden;
+    }
+    
+    .detail-item::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        right: 0;
+        width: 60px;
+        height: 60px;
+        background: linear-gradient(45deg, rgba(25,135,84,0.1), transparent);
+        border-radius: 0 0 0 100%;
+    }
+    
+    .detail-item:hover {
+        transform: translateX(5px);
+        border-left-color: #28a745;
+        box-shadow: 0 4px 15px rgba(25,135,84,0.1);
+    }
+    
+    .detail-label {
+        font-weight: 700;
+        color: #495057;
+        margin-bottom: 0.5rem;
+        font-size: 0.9rem;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+    
+    .detail-label::before {
+        content: '▶';
+        color: #198754;
+        font-size: 0.8rem;
+    }
+    
+    .detail-value {
+        color: #212529;
+        font-size: 1.2rem;
+        font-weight: 500;
+        margin: 0;
+    }
+    
+    /* Badges melhorados */
+    .badge {
+        font-size: 0.9rem;
+        padding: 0.5rem 1rem;
+        border-radius: 25px;
+        font-weight: 500;
+        letter-spacing: 0.5px;
+    }
+    
+    .badge.bg-success {
+        background: linear-gradient(135deg, #28a745 0%, #20c997 100%) !important;
+        border: none;
+        box-shadow: 0 2px 10px rgba(40,167,69,0.3);
+    }
+    
+    .badge.bg-danger {
+        background: linear-gradient(135deg, #dc3545 0%, #c82333 100%) !important;
+        border: none;
+        box-shadow: 0 2px 10px rgba(220,53,69,0.3);
+    }
+    
+    .badge.bg-secondary {
+        background: linear-gradient(135deg, #6c757d 0%, #545b62 100%) !important;
+        border: none;
+        box-shadow: 0 2px 10px rgba(108,117,125,0.3);
+    }
+    
+    .badge.bg-primary {
+        background: linear-gradient(135deg, #007bff 0%, #0056b3 100%) !important;
+        border: none;
+        box-shadow: 0 2px 10px rgba(0,123,255,0.3);
+    }
+    
+    .badge.bg-info {
+        background: linear-gradient(135deg, #17a2b8 0%, #138496 100%) !important;
+        border: none;
+        box-shadow: 0 2px 10px rgba(23,162,184,0.3);
+    }
+    
+    .badge.tipo-cadeiras {
+        background: linear-gradient(135deg, #198754 0%, #146c43 100%) !important;
+        color: white;
+        border: none;
+        box-shadow: 0 2px 10px rgba(25,135,84,0.3);
+    }
+    
+    /* Título da página */
+    .page-title {
+        background: linear-gradient(135deg, #198754 0%, #146c43 100%);
+        color: white;
+        padding: 2rem;
+        border-radius: 15px;
+        margin-bottom: 2rem;
+        position: relative;
+        overflow: hidden;
+    }
+    
+    .page-title::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: linear-gradient(45deg, rgba(255,255,255,0.1) 0%, transparent 100%);
+        pointer-events: none;
+    }
+    
+    .page-title h1 {
+        margin: 0;
+        font-weight: 700;
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+    }
+    
+    .page-title .actions {
+        margin-top: 1rem;
+    }
+    
+    /* Botões melhorados */
+    .btn {
+        border-radius: 25px;
+        padding: 0.6rem 1.5rem;
+        font-weight: 500;
+        letter-spacing: 0.5px;
+        transition: all 0.3s ease;
+        position: relative;
+        overflow: hidden;
+    }
+    
+    .btn:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 20px rgba(0,0,0,0.15);
+    }
+    
+    .btn-warning {
+        background: linear-gradient(135deg, #ffc107 0%, #e0a800 100%);
+        border: none;
+        color: #000;
+    }
+    
+    .btn-danger {
+        background: linear-gradient(135deg, #dc3545 0%, #c82333 100%);
+        border: none;
+    }
+    
+    .btn-outline-secondary {
+        border: 2px solid #6c757d;
+        color: #6c757d;
+        background: transparent;
+    }
+    
+    .btn-outline-secondary:hover {
+        background: #6c757d;
+        color: white;
+    }
+    
+    .btn-outline-light {
+        border: 2px solid rgba(255,255,255,0.5);
+        color: white;
+        background: transparent;
+    }
+    
+    .btn-outline-light:hover {
+        background: rgba(255,255,255,0.2);
+        color: white;
+        border-color: white;
+    }
+    
+    /* Seção de imagens melhorada */
+    .image-container {
+        position: relative;
+        overflow: hidden;
+        border-radius: 15px;
+        background: #f8f9fa;
+        padding: 1rem;
+        transition: all 0.3s ease;
+    }
+    
+    .image-container:hover {
+        transform: scale(1.02);
+        box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+    }
+    
+    .image-container img {
+        width: 100%;
+        height: auto;
+        border-radius: 10px;
+        transition: all 0.3s ease;
+    }
+    
+    .no-image-placeholder {
+        background: linear-gradient(135deg, #e9ecef 0%, #f8f9fa 100%);
+        border: 2px dashed #dee2e6;
+        border-radius: 15px;
+        padding: 3rem;
+        text-align: center;
+        transition: all 0.3s ease;
+    }
+    
+    .no-image-placeholder:hover {
+        border-color: #198754;
+        background: linear-gradient(135deg, #f8f9fa 0%, #ffffff 100%);
+    }
+    
+    .no-image-placeholder i {
+        font-size: 4rem;
+        color: #dee2e6;
+        margin-bottom: 1rem;
+        transition: all 0.3s ease;
+    }
+    
+    .no-image-placeholder:hover i {
+        color: #198754;
+        transform: scale(1.1);
+    }
+    
+    /* Campo especial para tem_cor_tecido */
+    .tecido-info {
+        background: linear-gradient(135deg, #e3f2fd 0%, #f8f9fa 100%);
+        border: 1px solid #2196f3;
+        border-radius: 10px;
+        padding: 1rem;
+        margin-bottom: 1rem;
+    }
+    
+    /* Responsividade melhorada */
+    @media (max-width: 768px) {
+        .cadeira-detalhes {
+            padding: 1rem 0;
+        }
+        
+        .page-title {
+            padding: 1.5rem;
+            text-align: center;
+        }
+        
+        .page-title h1 {
+            font-size: 1.5rem;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+        
+        .page-title .actions {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+        
+        .card-body {
+            padding: 1.5rem;
+        }
+        
+        .detail-item {
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+        
+        .detail-value {
+            font-size: 1rem;
+        }
+        
+        .btn {
+            width: 100%;
+            margin-bottom: 0.5rem;
+        }
+        
+        .d-flex.gap-2 {
+            flex-direction: column;
+        }
+        
+        .d-flex.gap-2 .btn {
+            margin-bottom: 0.5rem;
+        }
+    }
+    
+    @media (max-width: 576px) {
+        .card-header {
+            padding: 1rem;
+        }
+        
+        .card-header h5 {
+            font-size: 1rem;
+            flex-direction: column;
+            gap: 0.5rem;
+            text-align: center;
+        }
     }
 </style>
 {% endblock %}
 
 {% block content %}
-<div class="row mb-4">
-    <div class="col-12">
-        <div class="d-flex justify-content-between align-items-center">
-            <h1 class="h2 mb-0">
-                <i class="bi bi-eye"></i> Detalhes da Cadeira
+<div class="cadeira-detalhes">
+    <div class="container">
+        <!-- Título da página -->
+        <div class="page-title">
+            <h1>
+                <i class="fas fa-chair"></i>
+                {{ cadeira.nome }}
+                <span class="badge tipo-cadeiras">{{ cadeira.ref_cadeira }}</span>
             </h1>
-            <div>
-                <a href="{% url 'cadeira_editar' cadeira.id %}" class="btn btn-warning">
-                    <i class="bi bi-pencil"></i> Editar
-                </a>
-                <a href="{% url 'produtos_lista' %}" class="btn btn-outline-secondary">
-                    <i class="bi bi-arrow-left"></i> Voltar
+            <div class="actions">
+                <a href="{% url 'produtos_lista' %}" class="btn btn-outline-light">
+                    <i class="fas fa-arrow-left me-2"></i>Voltar à Lista
                 </a>
             </div>
         </div>
-    </div>
-</div>
 
-<!-- Informações Básicas -->
-<div class="row mb-4">
-    <div class="col-12">
-        <div class="card">
-            <div class="card-header">
-                <h5 class="mb-0">
-                    <i class="bi bi-info-circle"></i> Informações Básicas
-                </h5>
-            </div>
-            <div class="card-body">
-                <div class="row">
-                    <div class="col-md-6">
-                        <table class="table table-borderless">
-                            <tr>
-                                <td><strong>Referência:</strong></td>
-                                <td>{{ cadeira.ref_cadeira }}</td>
-                            </tr>
-                            <tr>
-                                <td><strong>Nome:</strong></td>
-                                <td>{{ cadeira.nome }}</td>
-                            </tr>
-                            <tr>
-                                <td><strong>Tipo:</strong></td>
-                                <td>
-                                    <span class="badge bg-secondary">Cadeiras</span>
-                                </td>
-                            </tr>
-                            <tr>
-                                <td><strong>Status:</strong></td>
-                                <td>
-                                    {% if cadeira.ativo %}
-                                        <span class="badge bg-success">Ativo</span>
-                                    {% else %}
-                                        <span class="badge bg-danger">Inativo</span>
-                                    {% endif %}
-                                </td>
-                            </tr>
-                        </table>
+        <div class="row">
+            <!-- Coluna da esquerda - Detalhes -->
+            <div class="col-lg-8">
+                <!-- Card de Informações Básicas -->
+                <div class="card">
+                    <div class="card-header">
+                        <h5><i class="fas fa-info-circle"></i> Informações Básicas</h5>
                     </div>
-                    <div class="col-md-6">
-                        <table class="table table-borderless">
-                            <tr>
-                                <td><strong>Criado em:</strong></td>
-                                <td>{{ cadeira.created_at|date:"d/m/Y H:i" }}</td>
-                            </tr>
-                            <tr>
-                                <td><strong>Criado por:</strong></td>
-                                <td>
-                                    {% if cadeira.created_by %}
-                                        <span class="badge bg-primary">{{ cadeira.created_by.get_full_name|default:cadeira.created_by.email }}</span>
-                                    {% else %}
-                                        <span class="badge bg-secondary">Sistema</span>
-                                    {% endif %}
-                                </td>
-                            </tr>
-                            <tr>
-                                <td><strong>Atualizado em:</strong></td>
-                                <td>{{ cadeira.updated_at|date:"d/m/Y H:i" }}</td>
-                            </tr>
-                            <tr>
-                                <td><strong>Atualizado por:</strong></td>
-                                <td>
-                                    {% if cadeira.updated_by %}
-                                        <span class="badge bg-info">{{ cadeira.updated_by.get_full_name|default:cadeira.updated_by.email }}</span>
-                                    {% else %}
-                                        <span class="badge bg-secondary">Sistema</span>
-                                    {% endif %}
-                                </td>
-                            </tr>
-                        </table>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-</div>
-
-<!-- Dimensões -->
-<div class="row mb-4">
-    <div class="col-12">
-        <div class="card">
-            <div class="card-header">
-                <h5 class="mb-0">
-                    <i class="bi bi-rulers"></i> Dimensões
-                </h5>
-            </div>
-            <div class="card-body">
-                <div class="row">
-                    <div class="col-md-4">
-                        <div class="detail-item">
-                            <div class="detail-label">Largura</div>
-                            <div class="detail-value">{{ cadeira.largura }} cm</div>
-                        </div>
-                    </div>
-                    <div class="col-md-4">
-                        <div class="detail-item">
-                            <div class="detail-label">Profundidade</div>
-                            <div class="detail-value">{{ cadeira.profundidade }} cm</div>
-                        </div>
-                    </div>
-                    <div class="col-md-4">
-                        <div class="detail-item">
-                            <div class="detail-label">Altura</div>
-                            <div class="detail-value">{{ cadeira.altura }} cm</div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-</div>
-
-<!-- Características da Cadeira -->
-<div class="row mb-4">
-    <div class="col-12">
-        <div class="card">
-            <div class="card-header">
-                <h5 class="mb-0">
-                    <i class="bi bi-gear"></i> Características
-                </h5>
-            </div>
-            <div class="card-body">
-                <div class="row">
-                    <div class="col-md-6">
-                        <div class="text-center p-3 border rounded">
-                            <i class="bi bi-palette fs-3 text-info mb-2"></i>
-                            <h6>Cor de Tecido</h6>
-                            <span class="badge {% if cadeira.tem_cor_tecido %}bg-success{% else %}bg-secondary{% endif %}">
-                                {% if cadeira.tem_cor_tecido %}Sim{% else %}Não{% endif %}
-                            </span>
-                        </div>
-                    </div>
-                    <div class="col-md-6">
-                        <div class="text-center p-3 border rounded">
-                            <i class="bi bi-check-circle fs-3 text-success mb-2"></i>
-                            <h6>Status</h6>
-                            <span class="badge {% if cadeira.ativo %}bg-success{% else %}bg-danger{% endif %}">
-                                {% if cadeira.ativo %}Ativo{% else %}Inativo{% endif %}
-                            </span>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-</div>
-
-<!-- Especificações Técnicas -->
-<div class="row mb-4">
-    <div class="col-12">
-        <div class="card">
-            <div class="card-header">
-                <h5 class="mb-0">
-                    <i class="bi bi-wrench"></i> Especificações Técnicas
-                </h5>
-            </div>
-            <div class="card-body">
-                <div class="row">
-                    <div class="col-md-3">
-                        <div class="detail-item">
-                            <div class="detail-label">Tecido</div>
-                            <div class="detail-value">{{ cadeira.tecido_metros }} m</div>
-                        </div>
-                    </div>
-                    <div class="col-md-3">
-                        <div class="detail-item">
-                            <div class="detail-label">Volume</div>
-                            <div class="detail-value">{{ cadeira.volume_m3 }} m³</div>
-                        </div>
-                    </div>
-                    <div class="col-md-3">
-                        <div class="detail-item">
-                            <div class="detail-label">Peso</div>
-                            <div class="detail-value">{{ cadeira.peso_kg }} kg</div>
-                        </div>
-                    </div>
-                    <div class="col-md-3">
-                        <div class="detail-item">
-                            <div class="detail-label">Preço</div>
-                            <div class="detail-value">R$ {{ cadeira.preco }}</div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-</div>
-
-<!-- Imagens do Produto -->
-<div class="row mb-4">
-    <div class="col-12">
-        <div class="card">
-            <div class="card-header">
-                <h5 class="mb-0">
-                    <i class="bi bi-images"></i> Imagens do Produto
-                </h5>
-            </div>
-            <div class="card-body">
-                {% if cadeira.imagem_principal or cadeira.imagem_secundaria %}
-                    <div class="row">
-                        {% if cadeira.imagem_principal %}
-                        <div class="col-md-6 text-center mb-3">
-                            <div class="image-container">
-                                <img src="{{ cadeira.imagem_principal.url }}" 
-                                     alt="Imagem Principal - {{ cadeira.nome }}" 
-                                     class="img-fluid rounded shadow-sm"
-                                     style="max-height: 300px; object-fit: contain;">
-                                <p class="mt-2 text-muted">Imagem Principal</p>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="detail-item">
+                                    <div class="detail-label">Referência</div>
+                                    <div class="detail-value">{{ cadeira.ref_cadeira }}</div>
+                                </div>
                             </div>
+                            <div class="col-md-6">
+                                <div class="detail-item">
+                                    <div class="detail-label">Nome</div>
+                                    <div class="detail-value">{{ cadeira.nome }}</div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        {% if cadeira.descricao %}
+                        <div class="detail-item">
+                            <div class="detail-label">Descrição</div>
+                            <div class="detail-value">{{ cadeira.descricao }}</div>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <!-- Card de Características Técnicas -->
+                <div class="card">
+                    <div class="card-header">
+                        <h5><i class="fas fa-cogs"></i> Características Técnicas</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            {% if cadeira.largura %}
+                            <div class="col-md-4">
+                                <div class="detail-item">
+                                    <div class="detail-label">Largura</div>
+                                    <div class="detail-value">{{ cadeira.largura }} cm</div>
+                                </div>
+                            </div>
+                            {% endif %}
+                            
+                            {% if cadeira.profundidade %}
+                            <div class="col-md-4">
+                                <div class="detail-item">
+                                    <div class="detail-label">Profundidade</div>
+                                    <div class="detail-value">{{ cadeira.profundidade }} cm</div>
+                                </div>
+                            </div>
+                            {% endif %}
+                            
+                            {% if cadeira.altura %}
+                            <div class="col-md-4">
+                                <div class="detail-item">
+                                    <div class="detail-label">Altura</div>
+                                    <div class="detail-value">{{ cadeira.altura }} cm</div>
+                                </div>
+                            </div>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="row">
+                            {% if cadeira.altura_assento %}
+                            <div class="col-md-6">
+                                <div class="detail-item">
+                                    <div class="detail-label">Altura do Assento</div>
+                                    <div class="detail-value">{{ cadeira.altura_assento }} cm</div>
+                                </div>
+                            </div>
+                            {% endif %}
+                            
+                            {% if cadeira.peso %}
+                            <div class="col-md-6">
+                                <div class="detail-item">
+                                    <div class="detail-label">Peso</div>
+                                    <div class="detail-value">{{ cadeira.peso }} kg</div>
+                                </div>
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Card de Informações de Cor e Tecido -->
+                {% if cadeira.tem_cor_tecido %}
+                <div class="card">
+                    <div class="card-header">
+                        <h5><i class="fas fa-palette"></i> Informações de Cor e Tecido</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="tecido-info">
+                            <i class="fas fa-check-circle text-primary me-2"></i>
+                            <strong>Esta cadeira possui opções de cor e tecido disponíveis</strong>
+                        </div>
+                        
+                        {% if cadeira.cor %}
+                        <div class="detail-item">
+                            <div class="detail-label">Cor Padrão</div>
+                            <div class="detail-value">{{ cadeira.cor }}</div>
                         </div>
                         {% endif %}
                         
-                        {% if cadeira.imagem_secundaria %}
-                        <div class="col-md-6 text-center mb-3">
-                            <div class="image-container">
-                                <img src="{{ cadeira.imagem_secundaria.url }}" 
-                                     alt="Imagem Secundária - {{ cadeira.nome }}" 
-                                     class="img-fluid rounded shadow-sm"
-                                     style="max-height: 300px; object-fit: contain;">
-                                <p class="mt-2 text-muted">Imagem Secundária</p>
-                            </div>
+                        {% if cadeira.observacoes_cor %}
+                        <div class="detail-item">
+                            <div class="detail-label">Observações sobre Cor</div>
+                            <div class="detail-value">{{ cadeira.observacoes_cor }}</div>
                         </div>
                         {% endif %}
                     </div>
+                </div>
                 {% else %}
-                    <div class="text-center py-4">
-                        <div class="bg-light rounded p-4 d-inline-block">
-                            <i class="bi bi-image text-muted" style="font-size: 3rem;"></i>
-                            <p class="text-muted mt-2 mb-0">Nenhuma imagem disponível</p>
-                            <small class="text-muted">Faça upload de imagens através do painel de edição</small>
+                <div class="card">
+                    <div class="card-header">
+                        <h5><i class="fas fa-palette"></i> Informações de Cor</h5>
+                    </div>
+                    <div class="card-body">
+                        {% if cadeira.cor %}
+                        <div class="detail-item">
+                            <div class="detail-label">Cor</div>
+                            <div class="detail-value">{{ cadeira.cor }}</div>
+                        </div>
+                        {% endif %}
+                        
+                        {% if cadeira.observacoes_cor %}
+                        <div class="detail-item">
+                            <div class="detail-label">Observações sobre Cor</div>
+                            <div class="detail-value">{{ cadeira.observacoes_cor }}</div>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+                {% endif %}
+
+                <!-- Card de Status e Controle -->
+                <div class="card">
+                    <div class="card-header">
+                        <h5><i class="fas fa-chart-line"></i> Status e Controle</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="detail-item">
+                                    <div class="detail-label">Status</div>
+                                    <div class="detail-value">
+                                        {% if cadeira.ativo %}
+                                            <span class="badge bg-success">Ativo</span>
+                                        {% else %}
+                                            <span class="badge bg-danger">Inativo</span>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            {% if cadeira.preco %}
+                            <div class="col-md-6">
+                                <div class="detail-item">
+                                    <div class="detail-label">Preço</div>
+                                    <div class="detail-value">R$ {{ cadeira.preco|floatformat:2 }}</div>
+                                </div>
+                            </div>
+                            {% endif %}
+                        </div>
+                        
+                        <!-- Informações de Auditoria -->
+                        <div class="row mt-3">
+                            <div class="col-md-6">
+                                <div class="detail-item">
+                                    <div class="detail-label">Criado em</div>
+                                    <div class="detail-value">{{ cadeira.criado_em|date:"d/m/Y H:i" }}</div>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="detail-item">
+                                    <div class="detail-label">Atualizado em</div>
+                                    <div class="detail-value">{{ cadeira.atualizado_em|date:"d/m/Y H:i" }}</div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        {% if cadeira.criado_por %}
+                        <div class="detail-item">
+                            <div class="detail-label">Criado por</div>
+                            <div class="detail-value">{{ cadeira.criado_por.username }}</div>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+
+            <!-- Coluna da direita - Imagens e Ações -->
+            <div class="col-lg-4">
+                <!-- Card de Imagem Principal -->
+                <div class="card">
+                    <div class="card-header">
+                        <h5><i class="fas fa-image"></i> Imagem Principal</h5>
+                    </div>
+                    <div class="card-body">
+                        {% if cadeira.foto_principal %}
+                            <div class="image-container">
+                                <img src="{{ cadeira.foto_principal.url }}" 
+                                     alt="{{ cadeira.nome }}" 
+                                     class="img-fluid">
+                            </div>
+                        {% else %}
+                            <div class="no-image-placeholder">
+                                <i class="fas fa-chair"></i>
+                                <p class="text-muted mb-0">Nenhuma imagem disponível</p>
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <!-- Card de Ações -->
+                {% if user.is_authenticated %}
+                <div class="card">
+                    <div class="card-header">
+                        <h5><i class="fas fa-tools"></i> Ações</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="d-grid gap-2">
+                            <a href="{% url 'cadeira_editar' cadeira.pk %}" 
+                               class="btn btn-warning">
+                                <i class="fas fa-edit me-2"></i>Editar Cadeira
+                            </a>
+                            
+                            <button type="button" 
+                                    class="btn btn-danger" 
+                                    data-bs-toggle="modal" 
+                                    data-bs-target="#deleteModal">
+                                <i class="fas fa-trash me-2"></i>Excluir Cadeira
+                            </button>
                         </div>
                     </div>
+                </div>
+                {% endif %}
+
+                <!-- Card de Informações Adicionais -->
+                {% if cadeira.observacoes %}
+                <div class="card">
+                    <div class="card-header">
+                        <h5><i class="fas fa-clipboard-list"></i> Observações</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="detail-item">
+                            <div class="detail-value">{{ cadeira.observacoes|linebreaks }}</div>
+                        </div>
+                    </div>
+                </div>
                 {% endif %}
             </div>
         </div>
     </div>
 </div>
 
-<!-- Descrição -->
-{% if cadeira.descricao %}
-<div class="row mb-4">
-    <div class="col-12">
-        <div class="card">
-            <div class="card-header">
-                <h5 class="mb-0">
-                    <i class="bi bi-card-text"></i> Descrição
-                </h5>
-            </div>
-            <div class="card-body">
-                <p class="mb-0">{{ cadeira.descricao|linebreaks }}</p>
-            </div>
-        </div>
-    </div>
-</div>
-{% endif %}
-
-<!-- Botões de Ação -->
-<div class="row mb-4">
-    <div class="col-12">
-        <div class="d-flex justify-content-start gap-2">
-            <a href="{% url 'cadeira_editar' cadeira.id %}" class="btn btn-warning">
-                <i class="bi bi-pencil"></i> Editar Produto
-            </a>
-            <button type="button" class="btn btn-danger" data-bs-toggle="modal" data-bs-target="#deleteModal">
-                <i class="bi bi-trash"></i> Excluir Produto
-            </button>
-            <a href="{% url 'produtos_lista' %}" class="btn btn-outline-secondary">
-                <i class="bi bi-arrow-left"></i> Voltar para Lista
-            </a>
-        </div>
-    </div>
-</div>
-
 <!-- Modal de Confirmação de Exclusão -->
+{% if user.is_authenticated %}
 <div class="modal fade" id="deleteModal" tabindex="-1">
     <div class="modal-dialog">
         <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title">Confirmar Exclusão</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            <div class="modal-header bg-danger text-white">
+                <h5 class="modal-title">
+                    <i class="fas fa-exclamation-triangle me-2"></i>
+                    Confirmar Exclusão
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
             </div>
             <div class="modal-body">
-                <p>Tem certeza que deseja excluir a cadeira:</p>
-                <strong>{{ cadeira.ref_cadeira }} - {{ cadeira.nome }}</strong>
-                <p class="text-danger mt-2">Esta ação não pode ser desfeita!</p>
+                <div class="alert alert-warning d-flex align-items-center">
+                    <i class="fas fa-exclamation-triangle me-3 fs-4"></i>
+                    <div>
+                        <strong>Atenção!</strong><br>
+                        Esta ação não pode ser desfeita. Deseja realmente excluir a cadeira 
+                        <strong>"{{ cadeira.nome }}"</strong> ({{ cadeira.ref_cadeira }})?
+                    </div>
+                </div>
             </div>
             <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
-                    Cancelar
+                <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">
+                    <i class="fas fa-times me-2"></i>Cancelar
                 </button>
-                <form method="post" action="{% url 'cadeira_excluir' cadeira.id %}" class="d-inline">
+                <form method="post" action="{% url 'cadeira_excluir' cadeira.pk %}" class="d-inline">
                     {% csrf_token %}
                     <button type="submit" class="btn btn-danger">
-                        <i class="bi bi-trash"></i> Excluir
+                        <i class="fas fa-trash me-2"></i>Excluir Definitivamente
                     </button>
                 </form>
             </div>
         </div>
     </div>
 </div>
-
-<style>
-.detail-item {
-    background: #f8f9fa;
-    padding: 1rem;
-    border-radius: 6px;
-    border-left: 3px solid #007bff;
-    margin-bottom: 1rem;
-}
-.detail-label {
-    font-weight: 600;
-    color: #495057;
-    margin-bottom: 0.25rem;
-    font-size: 0.875rem;
-}
-.detail-value {
-    color: #212529;
-    font-size: 1rem;
-}
-</style>
+{% endif %}
 {% endblock %}
+

@@ -358,6 +358,21 @@ def adicionar_item(request, orcamento_pk):
                 dados_produto=dados_especificos
             )
             
+            # Se é um sofá com módulos, salvar os módulos detalhados
+            if dados_especificos.get('tipo') == 'sofa' and dados_especificos.get('modulos'):
+                from .models import OrcamentoModulo
+                
+                for modulo_data in dados_especificos['modulos']:
+                    OrcamentoModulo.objects.create(
+                        item_orcamento=item,
+                        modulo_id=modulo_data.get('modulo_id'),
+                        nome_modulo=modulo_data.get('modulo_nome', ''),
+                        tamanho_selecionado=modulo_data.get('tamanho_nome', ''),
+                        tamanho_id=modulo_data.get('tamanho_id'),
+                        quantidade=modulo_data.get('quantidade', 1),
+                        observacoes=modulo_data.get('observacoes', '')
+                    )
+            
             return JsonResponse({
                 'success': True,
                 'item_id': item.id,
@@ -1229,28 +1244,73 @@ def obter_informacoes_produto(request):
                 'produto': {
                     'nome': almofada.nome,
                     'foto': almofada.imagem_principal.url if almofada.imagem_principal else None,
-                    'dimensoes': f"{almofada.largura} x {almofada.altura} cm (Almofada)",
+                    'dimensoes': f"{almofada.largura} x {almofada.altura} cm",
                     'tipo': 'Almofada'
                 }
             })
-            
-        elif produto_id.startswith('acessorio_'):
-            # Acessório
-            from produtos.models import Acessorio
-            acessorio_id = produto_id.replace('acessorio_', '')
-            acessorio = Acessorio.objects.get(id=acessorio_id)
-            
-            return JsonResponse({
-                'produto': {
-                    'nome': acessorio.nome,
-                    'foto': acessorio.imagem_principal.url if acessorio.imagem_principal else None,
-                    'dimensoes': 'Acessório',
-                    'tipo': 'Acessório'
-                }
-            })
-            
+        
         else:
             return JsonResponse({'erro': 'Tipo de produto não reconhecido'}, status=400)
             
+    except Exception as e:
+        return JsonResponse({'erro': str(e)}, status=500)
+
+
+@login_required
+@orcamentos_access_required
+def obter_tamanhos_modulo(request):
+    """Retorna tamanhos disponíveis para um módulo específico"""
+    try:
+        modulo_id = request.GET.get('modulo_id')
+        if not modulo_id:
+            return JsonResponse({'erro': 'ID do módulo não fornecido'}, status=400)
+        
+        from produtos.models import Modulo
+        modulo = Modulo.objects.get(id=modulo_id)
+        
+        # Buscar tamanhos detalhados do módulo
+        tamanhos = []
+        for tamanho in modulo.tamanhos_detalhados.all():
+            tamanhos.append({
+                'id': tamanho.id,
+                'nome': f"{tamanho.largura_total}cm" if tamanho.largura_total else f"Tamanho {tamanho.id}",
+                'largura_total': float(tamanho.largura_total) if tamanho.largura_total else 0,
+                'largura_assento': float(tamanho.largura_assento) if tamanho.largura_assento else 0,
+                'tecido_metros': float(tamanho.tecido_metros) if tamanho.tecido_metros else 0,
+                'volume_m3': float(tamanho.volume_m3) if tamanho.volume_m3 else 0,
+                'peso_kg': float(tamanho.peso_kg) if tamanho.peso_kg else 0,
+                'preco': float(tamanho.preco) if tamanho.preco else 0.00,
+                'descricao': tamanho.descricao or '',
+                'medidas': f"L: {tamanho.largura_total}cm" if tamanho.largura_total else "Medidas não informadas"
+            })
+        
+        # Buscar também tamanhos simples se não houver detalhados
+        if not tamanhos:
+            from produtos.models import TamanhosModulos
+            tamanhos_simples = TamanhosModulos.objects.filter(id_modulo=modulo)
+            for tamanho in tamanhos_simples:
+                tamanhos.append({
+                    'id': f"simples_{tamanho.id}",
+                    'nome': tamanho.tamanho,
+                    'largura_total': 0,
+                    'largura_assento': 0,
+                    'tecido_metros': 0,
+                    'volume_m3': 0,
+                    'peso_kg': 0,
+                    'preco': 0.00,
+                    'descricao': f"Tamanho: {tamanho.tamanho}",
+                    'medidas': tamanho.tamanho
+                })
+        
+        return JsonResponse({
+            'tamanhos': tamanhos,
+            'modulo': {
+                'id': modulo.id,
+                'nome': modulo.nome
+            }
+        })
+        
+    except Modulo.DoesNotExist:
+        return JsonResponse({'erro': 'Módulo não encontrado'}, status=404)
     except Exception as e:
         return JsonResponse({'erro': str(e)}, status=500)

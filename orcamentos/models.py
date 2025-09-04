@@ -345,6 +345,23 @@ class OrcamentoModulo(BaseModel):
         null=True,
         verbose_name="Tamanho Selecionado"
     )
+    tamanho_id = models.PositiveIntegerField(
+        blank=True,
+        null=True,
+        verbose_name="ID do Tamanho",
+        help_text="ID do tamanho detalhado selecionado"
+    )
+    quantidade = models.PositiveIntegerField(
+        default=1,
+        verbose_name="Quantidade"
+    )
+    observacoes = models.TextField(
+        blank=True,
+        null=True,
+        max_length=1000,
+        verbose_name="Observações",
+        help_text="Observações específicas deste módulo"
+    )
     
     class Meta:
         verbose_name = "Módulo do Orçamento"
@@ -352,4 +369,4 @@ class OrcamentoModulo(BaseModel):
         ordering = ['id']
     
     def __str__(self):
-        return f"{self.nome_modulo} - {self.tamanho_selecionado}"
+        return f"{self.nome_modulo} - {self.tamanho_selecionado} (Qtd: {self.quantidade})"

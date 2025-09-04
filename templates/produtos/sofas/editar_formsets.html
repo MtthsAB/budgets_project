@@ -1,0 +1,519 @@
+{% extends 'produtos/includes/editar_base.html' %}
+{% load l10n %}
+
+{% block edit_title %}Editar Sofá (Formsets){% endblock %}
+{% block page_title %}Editar Sofá - {{ sofa.ref_produto }}{% endblock %}
+{% block section_title %}Dados do Sofá{% endblock %}
+
+{% block extra_head %}
+<!-- Cache busting para Edge -->
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<meta http-equiv="Pragma" content="no-cache">
+<meta http-equiv="Expires" content="0">
+<meta name="cache-control" content="max-age=0">
+<meta name="timestamp" content="{{ timestamp|default_if_none:'' }}">
+{% endblock %}
+
+{% block edit_message %}
+Você está editando o sofá <strong>{{ sofa.ref_produto }} - {{ sofa.nome_produto }}</strong> usando formsets hierárquicos.
+{% endblock %}
+
+{% block back_url %}{% url 'produtos_lista' %}{% endblock %}
+{% block cancel_url %}{% url 'sofa_detalhes' sofa.id %}{% endblock %}
+
+{% block extra_buttons %}
+<a href="{% url 'sofa_detalhes' sofa.id %}" class="btn btn-outline-info">
+    <i class="bi bi-eye"></i> Ver Detalhes
+</a>
+{% endblock %}
+
+{% block form_content %}
+<!-- Dados Básicos do Sofá -->
+<div class="card mb-4">
+    <div class="card-header">
+        <h6 class="mb-0"><i class="bi bi-info-circle"></i> Dados Básicos - {{ sofa.ref_produto }}</h6>
+    </div>
+    <div class="card-body">
+        <div class="row">
+            <div class="col-md-6">
+                <div class="form-floating mb-3">
+                    {{ sofa_form.ref_produto }}
+                    <label>{{ sofa_form.ref_produto.label }}</label>
+                    {% if sofa_form.ref_produto.errors %}
+                        <div class="text-danger">{{ sofa_form.ref_produto.errors }}</div>
+                    {% endif %}
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="form-floating mb-3">
+                    {{ sofa_form.nome_produto }}
+                    <label>{{ sofa_form.nome_produto.label }}</label>
+                    {% if sofa_form.nome_produto.errors %}
+                        <div class="text-danger">{{ sofa_form.nome_produto.errors }}</div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        
+        <div class="row">
+            <div class="col-md-6">
+                <div class="form-floating mb-3">
+                    {{ sofa_form.id_tipo_produto }}
+                    <label>{{ sofa_form.id_tipo_produto.label }}</label>
+                    {% if sofa_form.id_tipo_produto.errors %}
+                        <div class="text-danger">{{ sofa_form.id_tipo_produto.errors }}</div>
+                    {% endif %}
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="form-check mt-4">
+                    {{ sofa_form.ativo }}
+                    <label class="form-check-label" for="{{ sofa_form.ativo.id_for_label }}">
+                        {{ sofa_form.ativo.label }}
+                    </label>
+                    {% if sofa_form.ativo.errors %}
+                        <div class="text-danger">{{ sofa_form.ativo.errors }}</div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        
+        <div class="row">
+            <div class="col-md-4">
+                <div class="form-check mb-3">
+                    {{ sofa_form.tem_cor_tecido }}
+                    <label class="form-check-label" for="{{ sofa_form.tem_cor_tecido.id_for_label }}">
+                        {{ sofa_form.tem_cor_tecido.label }}
+                    </label>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="form-check mb-3">
+                    {{ sofa_form.tem_difer_desenho_lado_dir_esq }}
+                    <label class="form-check-label" for="{{ sofa_form.tem_difer_desenho_lado_dir_esq.id_for_label }}">
+                        {{ sofa_form.tem_difer_desenho_lado_dir_esq.label }}
+                    </label>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="form-check mb-3">
+                    {{ sofa_form.tem_difer_desenho_tamanho }}
+                    <label class="form-check-label" for="{{ sofa_form.tem_difer_desenho_tamanho.id_for_label }}">
+                        {{ sofa_form.tem_difer_desenho_tamanho.label }}
+                    </label>
+                </div>
+            </div>
+        </div>
+        
+        <div class="row">
+            <div class="col-md-6">
+                <div class="mb-3">
+                    <label class="form-label">{{ sofa_form.imagem_principal.label }}</label>
+                    {{ sofa_form.imagem_principal }}
+                    {% if sofa.imagem_principal %}
+                        <div class="mt-2">
+                            <small class="text-muted">Imagem atual: {{ sofa.imagem_principal.name }}</small>
+                        </div>
+                    {% endif %}
+                    {% if sofa_form.imagem_principal.errors %}
+                        <div class="text-danger">{{ sofa_form.imagem_principal.errors }}</div>
+                    {% endif %}
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="mb-3">
+                    <label class="form-label">{{ sofa_form.imagem_secundaria.label }}</label>
+                    {{ sofa_form.imagem_secundaria }}
+                    {% if sofa.imagem_secundaria %}
+                        <div class="mt-2">
+                            <small class="text-muted">Imagem atual: {{ sofa.imagem_secundaria.name }}</small>
+                        </div>
+                    {% endif %}
+                    {% if sofa_form.imagem_secundaria.errors %}
+                        <div class="text-danger">{{ sofa_form.imagem_secundaria.errors }}</div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Módulos e Tamanhos -->
+<div class="card">
+    <div class="card-header d-flex justify-content-between align-items-center">
+        <h6 class="mb-0"><i class="bi bi-grid-3x3"></i> Módulos</h6>
+        <button type="button" class="btn btn-sm btn-success" onclick="adicionarModuloFormset()">
+            <i class="bi bi-plus"></i> Adicionar Módulo
+        </button>
+    </div>
+    <div class="card-body">
+        <!-- Management Form para Módulos -->
+        {{ modulo_formset.management_form }}
+        
+        <div id="modulosFormsetContainer">
+            {% for form in modulo_formset %}
+                <div class="modulo-formset-item border rounded mb-3" id="modulo-formset-{{ forloop.counter0 }}">
+                    <div class="card-header d-flex justify-content-between align-items-center bg-primary bg-opacity-10">
+                        <h6 class="mb-0">
+                            <i class="bi bi-cube"></i> 
+                            <span class="modulo-titulo">
+                                {% if form.instance.pk %}
+                                    {{ form.instance.nome }} (ID: {{ form.instance.pk }})
+                                    {% for tamanho_data in tamanho_formsets_data %}
+                                        {% if tamanho_data.index == forloop.counter0 %}
+                                            <span class="badge bg-info ms-2">{{ tamanho_data.formset.initial_form_count }} tamanho{{ tamanho_data.formset.initial_form_count|pluralize }}</span>
+                                        {% endif %}
+                                    {% endfor %}
+                                {% else %}
+                                    Novo Módulo
+                                {% endif %}
+                            </span>
+                        </h6>
+                        <div class="btn-group">
+                            <button type="button" class="btn btn-sm btn-outline-secondary" onclick="toggleModuloFormset({{ forloop.counter0 }})">
+                                {% if form.instance.pk %}
+                                    <i class="bi bi-chevron-up toggle-icon"></i>
+                                {% else %}
+                                    <i class="bi bi-chevron-down toggle-icon"></i>
+                                {% endif %}
+                            </button>
+                            {% if form.instance.pk %}
+                                <button type="button" class="btn btn-sm btn-outline-danger" onclick="marcarModuloParaDeletar({{ forloop.counter0 }})">
+                                    <i class="bi bi-trash"></i>
+                                </button>
+                            {% else %}
+                                <button type="button" class="btn btn-sm btn-outline-danger" onclick="removerModuloFormset({{ forloop.counter0 }})">
+                                    <i class="bi bi-trash"></i>
+                                </button>
+                            {% endif %}
+                        </div>
+                    </div>
+                    
+                    <div class="modulo-formset-content p-3" {% if form.instance.pk %}style="display: block;"{% else %}style="display: none;"{% endif %}>
+                        <!-- Campos ocultos do formset -->
+                        {% for hidden in form.hidden_fields %}
+                            {{ hidden }}
+                        {% endfor %}
+                        
+                        <!-- Checkbox DELETE (oculto) -->
+                        {% if form.DELETE %}
+                            <div style="display: none;">
+                                {{ form.DELETE }}
+                            </div>
+                        {% endif %}
+                        
+                        <!-- Campos do módulo -->
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-floating mb-3">
+                                    {{ form.nome }}
+                                    <label>{{ form.nome.label }}</label>
+                                    {% if form.nome.errors %}
+                                        <div class="text-danger">{{ form.nome.errors }}</div>
+                                    {% endif %}
+                                    <!-- DEBUG: {{ form.nome.value|default:"VAZIO" }} -->
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-floating mb-3">
+                                    {{ form.profundidade }}
+                                    <label>{{ form.profundidade.label }}</label>
+                                    {% if form.profundidade.errors %}
+                                        <div class="text-danger">{{ form.profundidade.errors }}</div>
+                                    {% endif %}
+                                    <!-- DEBUG: {{ form.profundidade.value|default:"VAZIO" }} -->
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-md-4">
+                                <div class="form-floating mb-3">
+                                    {{ form.altura }}
+                                    <label>{{ form.altura.label }}</label>
+                                    {% if form.altura.errors %}
+                                        <div class="text-danger">{{ form.altura.errors }}</div>
+                                    {% endif %}
+                                    <!-- DEBUG: {{ form.altura.value|default:"VAZIO" }} -->
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="form-floating mb-3">
+                                    {{ form.braco }}
+                                    <label>{{ form.braco.label }}</label>
+                                    {% if form.braco.errors %}
+                                        <div class="text-danger">{{ form.braco.errors }}</div>
+                                    {% endif %}
+                                    <!-- DEBUG: {{ form.braco.value|default:"VAZIO" }} -->
+                            <div class="col-md-4">
+                                <div class="mb-3">
+                                    <label class="form-label">{{ form.imagem_principal.label }}</label>
+                                    {{ form.imagem_principal }}
+                                    {% if form.imagem_principal.errors %}
+                                        <div class="text-danger">{{ form.imagem_principal.errors }}</div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label class="form-label">{{ form.descricao.label }}</label>
+                            {{ form.descricao }}
+                            {% if form.descricao.errors %}
+                                <div class="text-danger">{{ form.descricao.errors }}</div>
+                            {% endif %}
+                        </div>
+                        
+                        <!-- Tamanhos deste módulo -->
+                        <div class="mt-4">
+                            <div class="d-flex justify-content-between align-items-center mb-3">
+                                <h6 class="mb-0"><i class="bi bi-rulers text-success"></i> Tamanhos</h6>
+                                <button type="button" class="btn btn-sm btn-outline-success" onclick="adicionarTamanhoFormset({{ forloop.counter0 }})">
+                                    <i class="bi bi-plus"></i> Adicionar Tamanho
+                                </button>
+                            </div>
+                            
+                            <div id="tamanhosFormsetContainer_{{ forloop.counter0 }}">
+                                {% for tamanho_data in tamanho_formsets_data %}
+                                    {% if tamanho_data.index == forloop.counter0 %}
+                                        {{ tamanho_data.formset.management_form }}
+                                        
+                                        {% for tamanho_form in tamanho_data.formset %}
+                                            <div class="tamanho-formset-item card mb-2" id="tamanho-formset-{{ forloop.parentloop.counter0 }}-{{ forloop.counter0 }}">
+                                                <div class="card-header d-flex justify-content-between align-items-center bg-success bg-opacity-10">
+                                                    <span><i class="bi bi-rulers"></i> 
+                                                        {% if tamanho_form.instance.pk %}
+                                                            {{ tamanho_form.instance.descricao|default:"Tamanho" }} ({{ tamanho_form.instance.largura_total|unlocalize }}cm)
+                                                        {% else %}
+                                                            Novo Tamanho
+                                                        {% endif %}
+                                                    </span>
+                                                    <div class="btn-group">
+                                                        <button type="button" class="btn btn-sm btn-outline-secondary" onclick="toggleTamanhoFormset({{ forloop.parentloop.counter0 }}, {{ forloop.counter0 }})">
+                                                            {% if tamanho_form.instance.pk %}
+                                                                <i class="bi bi-chevron-up"></i>
+                                                            {% else %}
+                                                                <i class="bi bi-chevron-down"></i>
+                                                            {% endif %}
+                                                        </button>
+                                                        {% if tamanho_form.instance.pk %}
+                                                            <button type="button" class="btn btn-sm btn-outline-danger" onclick="marcarTamanhoParaDeletar({{ forloop.parentloop.counter0 }}, {{ forloop.counter0 }})">
+                                                                <i class="bi bi-trash"></i>
+                                                            </button>
+                                                        {% else %}
+                                                            <button type="button" class="btn btn-sm btn-outline-danger" onclick="removerTamanhoFormset({{ forloop.parentloop.counter0 }}, {{ forloop.counter0 }})">
+                                                                <i class="bi bi-trash"></i>
+                                                            </button>
+                                                        {% endif %}
+                                                    </div>
+                                                </div>
+                                                
+                                                <div class="tamanho-formset-content card-body" {% if tamanho_form.instance.pk %}style="display: block;"{% else %}style="display: none;"{% endif %}>
+                                                    <!-- Campos ocultos -->
+                                                    {% for hidden in tamanho_form.hidden_fields %}
+                                                        {{ hidden }}
+                                                    {% endfor %}
+                                                    
+                                                    <!-- Checkbox DELETE (oculto) -->
+                                                    {% if tamanho_form.DELETE %}
+                                                        <div style="display: none;">
+                                                            {{ tamanho_form.DELETE }}
+                                                        </div>
+                                                    {% endif %}
+                                                    
+                                                    <!-- Campos do tamanho -->
+                                                    <div class="row">
+                                                        <div class="col-md-4">
+                                                            <div class="form-floating mb-2">
+                                                                {{ tamanho_form.largura_total }}
+                                                                <label>{{ tamanho_form.largura_total.label }}</label>
+                                                                {% if tamanho_form.largura_total.errors %}
+                                                                    <div class="text-danger">{{ tamanho_form.largura_total.errors }}</div>
+                                                                {% endif %}
+                                                                <!-- DEBUG TAM: {{ tamanho_form.largura_total.value|default:"VAZIO" }} -->
+                                                            </div>
+                                                        </div>
+                                                        <div class="col-md-4">
+                                                            <div class="form-floating mb-2">
+                                                                {{ tamanho_form.largura_assento }}
+                                                                <label>{{ tamanho_form.largura_assento.label }}</label>
+                                                                {% if tamanho_form.largura_assento.errors %}
+                                                                    <div class="text-danger">{{ tamanho_form.largura_assento.errors }}</div>
+                                                                {% endif %}
+                                                            </div>
+                                                        </div>
+                                                        <div class="col-md-4">
+                                                            <div class="form-floating mb-2">
+                                                                {{ tamanho_form.tecido_metros }}
+                                                                <label>{{ tamanho_form.tecido_metros.label }}</label>
+                                                                {% if tamanho_form.tecido_metros.errors %}
+                                                                    <div class="text-danger">{{ tamanho_form.tecido_metros.errors }}</div>
+                                                                {% endif %}
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                    
+                                                    <div class="row">
+                                                        <div class="col-md-3">
+                                                            <div class="form-floating mb-2">
+                                                                {{ tamanho_form.volume_m3 }}
+                                                                <label>{{ tamanho_form.volume_m3.label }}</label>
+                                                                {% if tamanho_form.volume_m3.errors %}
+                                                                    <div class="text-danger">{{ tamanho_form.volume_m3.errors }}</div>
+                                                                {% endif %}
+                                                            </div>
+                                                        </div>
+                                                        <div class="col-md-3">
+                                                            <div class="form-floating mb-2">
+                                                                {{ tamanho_form.peso_kg }}
+                                                                <label>{{ tamanho_form.peso_kg.label }}</label>
+                                                                {% if tamanho_form.peso_kg.errors %}
+                                                                    <div class="text-danger">{{ tamanho_form.peso_kg.errors }}</div>
+                                                                {% endif %}
+                                                            </div>
+                                                        </div>
+                                                        <div class="col-md-3">
+                                                            <div class="form-floating mb-2">
+                                                                {{ tamanho_form.preco }}
+                                                                <label>{{ tamanho_form.preco.label }}</label>
+                                                                {% if tamanho_form.preco.errors %}
+                                                                    <div class="text-danger">{{ tamanho_form.preco.errors }}</div>
+                                                                {% endif %}
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                    
+                                                    <!-- Descrição do tamanho (linha separada) -->
+                                                    <div class="row">
+                                                        <div class="col-12">
+                                                            <div class="mb-2">
+                                                                <label class="form-label">{{ tamanho_form.descricao.label }}</label>
+                                                                {{ tamanho_form.descricao }}
+                                                                {% if tamanho_form.descricao.errors %}
+                                                                    <div class="text-danger">{{ tamanho_form.descricao.errors }}</div>
+                                                                {% endif %}
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        {% endfor %}
+                                    {% endif %}
+                                {% endfor %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+        
+        <div class="alert alert-info" id="noModulosAlert" {% if modulo_formset|length > 0 %}style="display: none;"{% endif %}>
+            <i class="bi bi-info-circle"></i> Nenhum módulo adicionado. Clique em "Adicionar Módulo" para começar.
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+// Controle de formsets dinâmicos
+
+let moduloCount = {{ modulo_formset.total_form_count }};
+
+function toggleModuloFormset(index) {
+    const content = document.querySelector(`#modulo-formset-${index} .modulo-formset-content`);
+    const icon = document.querySelector(`#modulo-formset-${index} .toggle-icon`);
+    
+    if (content.style.display === 'none') {
+        content.style.display = 'block';
+        icon.classList.remove('bi-chevron-down');
+        icon.classList.add('bi-chevron-up');
+    } else {
+        content.style.display = 'none';
+        icon.classList.remove('bi-chevron-up');
+        icon.classList.add('bi-chevron-down');
+    }
+}
+
+function toggleTamanhoFormset(moduloIndex, tamanhoIndex) {
+    const content = document.querySelector(`#tamanho-formset-${moduloIndex}-${tamanhoIndex} .tamanho-formset-content`);
+    const icon = document.querySelector(`#tamanho-formset-${moduloIndex}-${tamanhoIndex} .bi-chevron-down, #tamanho-formset-${moduloIndex}-${tamanhoIndex} .bi-chevron-up`);
+    
+    if (content.style.display === 'none') {
+        content.style.display = 'block';
+        icon.classList.remove('bi-chevron-down');
+        icon.classList.add('bi-chevron-up');
+    } else {
+        content.style.display = 'none';
+        icon.classList.remove('bi-chevron-up');
+        icon.classList.add('bi-chevron-down');
+    }
+}
+
+function marcarModuloParaDeletar(index) {
+    if (confirm('Tem certeza que deseja remover este módulo? Todos os tamanhos relacionados também serão removidos.')) {
+        const deleteCheckbox = document.querySelector(`#id_modulo-${index}-DELETE`);
+        if (deleteCheckbox) {
+            deleteCheckbox.checked = true;
+            const moduloDiv = document.querySelector(`#modulo-formset-${index}`);
+            moduloDiv.style.opacity = '0.5';
+            moduloDiv.style.background = '#ffebee';
+        }
+    }
+}
+
+function marcarTamanhoParaDeletar(moduloIndex, tamanhoIndex) {
+    if (confirm('Tem certeza que deseja remover este tamanho?')) {
+        const deleteCheckbox = document.querySelector(`#id_modulo-${moduloIndex}-tamanho-${tamanhoIndex}-DELETE`);
+        if (deleteCheckbox) {
+            deleteCheckbox.checked = true;
+            const tamanhoDiv = document.querySelector(`#tamanho-formset-${moduloIndex}-${tamanhoIndex}`);
+            tamanhoDiv.style.opacity = '0.5';
+            tamanhoDiv.style.background = '#ffebee';
+        }
+    }
+}
+
+function removerModuloFormset(index) {
+    if (confirm('Tem certeza que deseja remover este módulo?')) {
+        const moduloDiv = document.querySelector(`#modulo-formset-${index}`);
+        moduloDiv.remove();
+        atualizarTotalFormsModulos();
+    }
+}
+
+function removerTamanhoFormset(moduloIndex, tamanhoIndex) {
+    if (confirm('Tem certeza que deseja remover este tamanho?')) {
+        const tamanhoDiv = document.querySelector(`#tamanho-formset-${moduloIndex}-${tamanhoIndex}`);
+        tamanhoDiv.remove();
+        atualizarTotalFormsTamanhos(moduloIndex);
+    }
+}
+
+function atualizarTotalFormsModulos() {
+    const totalForms = document.querySelectorAll('.modulo-formset-item').length;
+    const totalFormsInput = document.querySelector('#id_modulo-TOTAL_FORMS');
+    if (totalFormsInput) {
+        totalFormsInput.value = totalForms;
+    }
+}
+
+function atualizarTotalFormsTamanhos(moduloIndex) {
+    const totalForms = document.querySelectorAll(`#tamanhosFormsetContainer_${moduloIndex} .tamanho-formset-item`).length;
+    const totalFormsInput = document.querySelector(`#id_modulo-${moduloIndex}-tamanho-TOTAL_FORMS`);
+    if (totalFormsInput) {
+        totalFormsInput.value = totalForms;
+    }
+}
+
+function adicionarModuloFormset() {
+    // TODO: Implementar adição dinâmica de módulos
+    alert('Funcionalidade de adicionar módulo será implementada em breve.');
+}
+
+function adicionarTamanhoFormset(moduloIndex) {
+    // TODO: Implementar adição dinâmica de tamanhos
+    alert('Funcionalidade de adicionar tamanho será implementada em breve.');
+}
+</script>
+{% endblock %}

@@ -1,0 +1,227 @@
+<!-- Seção de Acessórios disponíveis para Sofás -->
+<div class="row mb-4" id="secao-acessorios" style="display: none;">
+    <div class="col-12">
+        <div class="card border-success">
+            <div class="card-header bg-success text-white">
+                <h5 class="mb-0">
+                    <i class="bi bi-puzzle"></i> Acessórios Disponíveis
+                </h5>
+            </div>
+            <div class="card-body">
+                
+                <!-- Busca e Filtros -->
+                <div class="row mb-3">
+                    <div class="col-md-8">
+                        <div class="input-group">
+                            <span class="input-group-text">
+                                <i class="bi bi-search"></i>
+                            </span>
+                            <input type="text" class="form-control" id="busca-acessorios" 
+                                   placeholder="Buscar por nome ou código do acessório...">
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="d-flex gap-2">
+                            <button type="button" class="btn btn-outline-secondary btn-sm" id="limpar-busca" title="Limpar busca">
+                                <i class="bi bi-x-circle"></i> Limpar
+                            </button>
+                            <button type="button" class="btn btn-outline-primary btn-sm" id="selecionar-todos" title="Selecionar todos visíveis">
+                                <i class="bi bi-check-all"></i> Todos
+                            </button>
+                            <button type="button" class="btn btn-outline-danger btn-sm" id="desmarcar-todos" title="Desmarcar todos">
+                                <i class="bi bi-x-square"></i> Nenhum
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Estado de Loading -->
+                <div id="loading-acessorios" class="text-center py-4" style="display: none;">
+                    <div class="spinner-border text-primary" role="status">
+                        <span class="visually-hidden">Carregando acessórios...</span>
+                    </div>
+                    <p class="text-muted mt-2">Carregando acessórios disponíveis...</p>
+                </div>
+                
+                <!-- Estado Vazio -->
+                <div id="empty-acessorios" class="text-center py-4" style="display: none;">
+                    <i class="bi bi-puzzle text-muted" style="font-size: 3rem;"></i>
+                    <p class="text-muted mt-2">Nenhum acessório encontrado</p>
+                    <small class="text-muted">Verifique os filtros ou cadastre novos acessórios.</small>
+                </div>
+                
+                <!-- Estado de Erro -->
+                <div id="error-acessorios" class="alert alert-warning" style="display: none;" role="alert">
+                    <i class="bi bi-exclamation-triangle"></i>
+                    <strong>Erro ao carregar acessórios</strong>
+                    <p class="mb-0">Houve um problema ao carregar a lista de acessórios. Tente novamente.</p>
+                </div>
+                
+                <!-- Grid de Acessórios -->
+                <div id="grid-acessorios" class="row">
+                    <!-- Os cards de acessórios serão inseridos aqui via JavaScript -->
+                </div>
+                
+                <!-- Contador de selecionados -->
+                <div class="row mt-3">
+                    <div class="col-12">
+                        <div class="alert alert-info" id="contador-selecionados" style="display: none;">
+                            <i class="bi bi-info-circle"></i>
+                            <span id="texto-contador">Nenhum acessório selecionado</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Formset Management Forms (será preenchido via JavaScript) -->
+                <div id="acessorios-management-forms">
+                    <!-- Management forms do Django Formset serão inseridos aqui -->
+                </div>
+                
+                <!-- Container para os forms dos acessórios selecionados -->
+                <div id="acessorios-selecionados-forms">
+                    <!-- Forms dos acessórios selecionados serão inseridos aqui -->
+                </div>
+                
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Template para Card de Acessório -->
+<template id="template-card-acessorio">
+    <div class="col-lg-4 col-md-6 col-sm-12 mb-3 acessorio-card" data-acessorio-id="">
+        <div class="card h-100 border-secondary">
+            <div class="card-body">
+                <div class="row align-items-center">
+                    <div class="col-3">
+                        <div class="acessorio-image-container">
+                            <img src="" alt="Imagem do acessório" class="img-fluid rounded border acessorio-image" 
+                                 style="width: 60px; height: 60px; object-fit: cover;">
+                            <div class="acessorio-no-image text-center bg-light rounded border d-flex align-items-center justify-content-center" 
+                                 style="width: 60px; height: 60px; display: none;">
+                                <i class="bi bi-image text-muted"></i>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-6">
+                        <h6 class="card-title mb-1 acessorio-nome">Nome do Acessório</h6>
+                        <small class="text-muted acessorio-codigo">Código: ABC123</small>
+                        <div class="acessorio-preco mt-1">
+                            <small class="text-success fw-bold">R$ 0,00</small>
+                        </div>
+                    </div>
+                    <div class="col-3 text-end">
+                        <div class="form-check form-switch">
+                            <input class="form-check-input acessorio-checkbox" type="checkbox" 
+                                   role="switch" data-acessorio-id="">
+                            <label class="form-check-label" for="">
+                                <small>Vincular</small>
+                            </label>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Campos que aparecem quando o acessório é selecionado -->
+                <div class="acessorio-campos mt-3" style="display: none;">
+                    <hr class="my-2">
+                    <div class="row">
+                        <div class="col-6">
+                            <div class="form-floating">
+                                <input type="number" class="form-control form-control-sm acessorio-quantidade" 
+                                       min="1" value="1" placeholder="Quantidade">
+                                <label>Quantidade</label>
+                            </div>
+                        </div>
+                        <div class="col-12 mt-2">
+                            <div class="form-floating">
+                                <textarea class="form-control acessorio-observacoes" 
+                                          placeholder="Observações" 
+                                          maxlength="1000" 
+                                          style="height: 60px;"></textarea>
+                                <label>Observações (opcional)</label>
+                            </div>
+                            <div class="form-text">
+                                <span class="contador-chars">0</span>/1000 caracteres
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</template>
+
+<!-- Template para Form de Acessório Selecionado (oculto) -->
+<template id="template-form-acessorio">
+    <div class="acessorio-form-item" data-form-index="" style="display: none;">
+        <input type="hidden" name="acessorios-__prefix__-acessorio" value="">
+        <input type="hidden" name="acessorios-__prefix__-quantidade" value="1">
+        <input type="hidden" name="acessorios-__prefix__-observacoes" value="">
+        <input type="hidden" name="acessorios-__prefix__-DELETE" value="">
+    </div>
+</template>
+
+<style>
+/* Estilos específicos para a seção de acessórios */
+.acessorio-card {
+    transition: transform 0.2s ease-in-out;
+}
+
+.acessorio-card:hover {
+    transform: translateY(-2px);
+}
+
+.acessorio-card.selecionado .card {
+    border-color: #28a745 !important;
+    box-shadow: 0 0 0 0.2rem rgba(40, 167, 69, 0.25);
+}
+
+.acessorio-image {
+    border: 1px solid #dee2e6;
+}
+
+.form-check-input:checked {
+    background-color: #28a745;
+    border-color: #28a745;
+}
+
+.acessorio-campos {
+    background-color: #f8f9fa;
+    padding: 10px;
+    border-radius: 4px;
+    border-left: 3px solid #28a745;
+}
+
+.contador-chars {
+    font-weight: 500;
+}
+
+/* Animação para mostrar/esconder campos */
+.acessorio-campos {
+    transition: all 0.3s ease-in-out;
+}
+
+/* Responsividade */
+@media (max-width: 768px) {
+    .acessorio-card {
+        margin-bottom: 1rem;
+    }
+    
+    .acessorio-card .col-3,
+    .acessorio-card .col-6 {
+        flex: 0 0 auto;
+        width: 100%;
+        margin-bottom: 0.5rem;
+    }
+    
+    .acessorio-card .row {
+        flex-direction: column;
+    }
+}
+
+/* Loading state */
+#loading-acessorios .spinner-border {
+    width: 3rem;
+    height: 3rem;
+}
+</style>

@@ -110,6 +110,31 @@ Você está editando o sofá <strong>{{ sofa.ref_produto }} - {{ sofa.nome_produ
 {% include 'produtos/includes/secao_modulos_sofa.html' %}
 {% endblock %}
 
+{% load static %}
 {% block extra_scripts %}
 {% include 'produtos/includes/sofa_js.html' %}
+<script src="{% static 'js/correcao-campos-numericos.js' %}"></script>
+<script>
+// Inicializar moduloCount com a quantidade de módulos existentes na edição
+moduloCount = {{ modulos|length|default:0 }};
+
+// CORREÇÃO: Substituir vírgulas por pontos em campos numéricos após carregamento
+document.addEventListener('DOMContentLoaded', function() {
+    console.log('🔧 Aplicando correção de vírgulas em campos numéricos...');
+    
+    // Selecionar todos os inputs do tipo number
+    const inputsNumber = document.querySelectorAll('input[type="number"]');
+    
+    inputsNumber.forEach(function(input) {
+        if (input.value && input.value.includes(',')) {
+            const valorOriginal = input.value;
+            const valorCorrigido = input.value.replace(/,/g, '.');
+            input.value = valorCorrigido;
+            console.log(`✅ Corrigido: "${valorOriginal}" → "${valorCorrigido}" no campo ${input.name || input.id}`);
+        }
+    });
+    
+    console.log(`🔧 Verificados ${inputsNumber.length} campos numéricos`);
+});
+</script>
 {% endblock %}

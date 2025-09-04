@@ -1,0 +1,652 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ almofada.ref_almofada }} - {{ almofada.nome }} - Sistema de Produtos{% endblock %}
+
+{% block extra_css %}
+<style>
+    /* Estilo principal da página */
+    .almofada-detalhes {
+        background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+        min-height: 100vh;
+        padding: 2rem 0;
+    }
+    
+    /* Cards com estilo melhorado */
+    .card {
+        border: none;
+        border-radius: 15px;
+        box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+        transition: all 0.3s ease;
+        overflow: hidden;
+        margin-bottom: 2rem;
+    }
+    
+    .card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 8px 30px rgba(0,0,0,0.15);
+    }
+    
+    .card-header {
+        background: linear-gradient(135deg, #fd7e14 0%, #e85d04 100%);
+        color: white;
+        border: none;
+        padding: 1.5rem;
+        position: relative;
+    }
+    
+    .card-header::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: linear-gradient(45deg, rgba(255,255,255,0.1) 0%, transparent 100%);
+        pointer-events: none;
+    }
+    
+    .card-header h5 {
+        color: white;
+        font-weight: 600;
+        margin: 0;
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+    }
+    
+    .card-header i {
+        font-size: 1.25rem;
+        opacity: 0.9;
+    }
+    
+    .card-body {
+        padding: 2rem;
+        background: white;
+    }
+    
+    /* Estilo para itens de detalhes */
+    .detail-item {
+        background: linear-gradient(135deg, #f8f9fa 0%, #ffffff 100%);
+        padding: 1.5rem;
+        border-radius: 12px;
+        border-left: 4px solid #fd7e14;
+        margin-bottom: 1.5rem;
+        transition: all 0.3s ease;
+        position: relative;
+        overflow: hidden;
+    }
+    
+    .detail-item::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        right: 0;
+        width: 60px;
+        height: 60px;
+        background: linear-gradient(45deg, rgba(253,126,20,0.1), transparent);
+        border-radius: 0 0 0 100%;
+    }
+    
+    .detail-item:hover {
+        transform: translateX(5px);
+        border-left-color: #e85d04;
+        box-shadow: 0 4px 15px rgba(253,126,20,0.1);
+    }
+    
+    .detail-label {
+        font-weight: 700;
+        color: #495057;
+        margin-bottom: 0.5rem;
+        font-size: 0.9rem;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+    
+    .detail-label::before {
+        content: '▶';
+        color: #fd7e14;
+        font-size: 0.8rem;
+    }
+    
+    .detail-value {
+        color: #212529;
+        font-size: 1.2rem;
+        font-weight: 500;
+        margin: 0;
+    }
+    
+    /* Badges melhorados */
+    .badge {
+        font-size: 0.9rem;
+        padding: 0.5rem 1rem;
+        border-radius: 25px;
+        font-weight: 500;
+        letter-spacing: 0.5px;
+    }
+    
+    .badge.bg-success {
+        background: linear-gradient(135deg, #28a745 0%, #20c997 100%) !important;
+        border: none;
+        box-shadow: 0 2px 10px rgba(40,167,69,0.3);
+    }
+    
+    .badge.bg-danger {
+        background: linear-gradient(135deg, #dc3545 0%, #c82333 100%) !important;
+        border: none;
+        box-shadow: 0 2px 10px rgba(220,53,69,0.3);
+    }
+    
+    .badge.bg-secondary {
+        background: linear-gradient(135deg, #6c757d 0%, #545b62 100%) !important;
+        border: none;
+        box-shadow: 0 2px 10px rgba(108,117,125,0.3);
+    }
+    
+    .badge.bg-primary {
+        background: linear-gradient(135deg, #007bff 0%, #0056b3 100%) !important;
+        border: none;
+        box-shadow: 0 2px 10px rgba(0,123,255,0.3);
+    }
+    
+    .badge.bg-info {
+        background: linear-gradient(135deg, #17a2b8 0%, #138496 100%) !important;
+        border: none;
+        box-shadow: 0 2px 10px rgba(23,162,184,0.3);
+    }
+    
+    .badge.tipo-almofadas {
+        background: linear-gradient(135deg, #fd7e14 0%, #e85d04 100%) !important;
+        color: white;
+        border: none;
+        box-shadow: 0 2px 10px rgba(253,126,20,0.3);
+    }
+    
+    /* Título da página */
+    .page-title {
+        background: linear-gradient(135deg, #fd7e14 0%, #e85d04 100%);
+        color: white;
+        padding: 2rem;
+        border-radius: 15px;
+        margin-bottom: 2rem;
+        position: relative;
+        overflow: hidden;
+    }
+    
+    .page-title::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: linear-gradient(45deg, rgba(255,255,255,0.1) 0%, transparent 100%);
+        pointer-events: none;
+    }
+    
+    .page-title h1 {
+        margin: 0;
+        font-weight: 700;
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+    }
+    
+    .page-title .actions {
+        margin-top: 1rem;
+    }
+    
+    /* Botões melhorados */
+    .btn {
+        border-radius: 25px;
+        padding: 0.6rem 1.5rem;
+        font-weight: 500;
+        letter-spacing: 0.5px;
+        transition: all 0.3s ease;
+        position: relative;
+        overflow: hidden;
+    }
+    
+    .btn:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 20px rgba(0,0,0,0.15);
+    }
+    
+    .btn-warning {
+        background: linear-gradient(135deg, #ffc107 0%, #e0a800 100%);
+        border: none;
+        color: #000;
+    }
+    
+    .btn-danger {
+        background: linear-gradient(135deg, #dc3545 0%, #c82333 100%);
+        border: none;
+    }
+    
+    .btn-outline-secondary {
+        border: 2px solid #6c757d;
+        color: #6c757d;
+        background: transparent;
+    }
+    
+    .btn-outline-secondary:hover {
+        background: #6c757d;
+        color: white;
+    }
+    
+    .btn-outline-light {
+        border: 2px solid rgba(255,255,255,0.5);
+        color: white;
+        background: transparent;
+    }
+    
+    .btn-outline-light:hover {
+        background: rgba(255,255,255,0.2);
+        color: white;
+        border-color: white;
+    }
+    
+    /* Seção de imagens melhorada */
+    .image-container {
+        position: relative;
+        overflow: hidden;
+        border-radius: 15px;
+        background: #f8f9fa;
+        padding: 1rem;
+        transition: all 0.3s ease;
+    }
+    
+    .image-container:hover {
+        transform: scale(1.02);
+        box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+    }
+    
+    .image-container img {
+        width: 100%;
+        height: auto;
+        border-radius: 10px;
+        transition: all 0.3s ease;
+    }
+    
+    .no-image-placeholder {
+        background: linear-gradient(135deg, #e9ecef 0%, #f8f9fa 100%);
+        border: 2px dashed #dee2e6;
+        border-radius: 15px;
+        padding: 3rem;
+        text-align: center;
+        transition: all 0.3s ease;
+    }
+    
+    .no-image-placeholder:hover {
+        border-color: #fd7e14;
+        background: linear-gradient(135deg, #f8f9fa 0%, #ffffff 100%);
+    }
+    
+    .no-image-placeholder i {
+        font-size: 4rem;
+        color: #dee2e6;
+        margin-bottom: 1rem;
+        transition: all 0.3s ease;
+    }
+    
+    .no-image-placeholder:hover i {
+        color: #fd7e14;
+        transform: scale(1.1);
+    }
+    
+    /* Campo especial para tecidos (se aplicável) */
+    .tecido-info {
+        background: linear-gradient(135deg, #e3f2fd 0%, #f8f9fa 100%);
+        border: 1px solid #2196f3;
+        border-radius: 10px;
+        padding: 1rem;
+        margin-bottom: 1rem;
+    }
+    
+    /* Responsividade melhorada */
+    @media (max-width: 768px) {
+        .almofada-detalhes {
+            padding: 1rem 0;
+        }
+        
+        .page-title {
+            padding: 1.5rem;
+            text-align: center;
+        }
+        
+        .page-title h1 {
+            font-size: 1.5rem;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+        
+        .page-title .actions {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+        
+        .card-body {
+            padding: 1.5rem;
+        }
+        
+        .detail-item {
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+        
+        .detail-value {
+            font-size: 1rem;
+        }
+        
+        .btn {
+            width: 100%;
+            margin-bottom: 0.5rem;
+        }
+        
+        .d-flex.gap-2 {
+            flex-direction: column;
+        }
+        
+        .d-flex.gap-2 .btn {
+            margin-bottom: 0.5rem;
+        }
+    }
+    
+    @media (max-width: 576px) {
+        .card-header {
+            padding: 1rem;
+        }
+        
+        .card-header h5 {
+            font-size: 1rem;
+            flex-direction: column;
+            gap: 0.5rem;
+            text-align: center;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="almofada-detalhes">
+    <div class="container">
+        <!-- Título da página -->
+        <div class="page-title">
+            <h1>
+                <i class="fas fa-square"></i>
+                {{ almofada.nome }}
+                <span class="badge tipo-almofadas">{{ almofada.ref_almofada }}</span>
+            </h1>
+            <div class="actions">
+                <a href="{% url 'produtos_lista' %}" class="btn btn-outline-light">
+                    <i class="fas fa-arrow-left me-2"></i>Voltar à Lista
+                </a>
+            </div>
+        </div>
+
+        <div class="row">
+            <!-- Coluna da esquerda - Detalhes -->
+            <div class="col-lg-8">
+                <!-- Card de Informações Básicas -->
+                <div class="card">
+                    <div class="card-header">
+                        <h5><i class="fas fa-info-circle"></i> Informações Básicas</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="detail-item">
+                                    <div class="detail-label">Referência</div>
+                                    <div class="detail-value">{{ almofada.ref_almofada }}</div>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="detail-item">
+                                    <div class="detail-label">Nome</div>
+                                    <div class="detail-value">{{ almofada.nome }}</div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        {% if almofada.descricao %}
+                        <div class="detail-item">
+                            <div class="detail-label">Descrição</div>
+                            <div class="detail-value">{{ almofada.descricao }}</div>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <!-- Card de Dimensões -->
+                <div class="card">
+                    <div class="card-header">
+                        <h5><i class="fas fa-ruler-combined"></i> Dimensões</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            {% if almofada.largura %}
+                            <div class="col-md-6">
+                                <div class="detail-item">
+                                    <div class="detail-label">Largura</div>
+                                    <div class="detail-value">{{ almofada.largura }} cm</div>
+                                </div>
+                            </div>
+                            {% endif %}
+                            
+                            {% if almofada.altura %}
+                            <div class="col-md-6">
+                                <div class="detail-item">
+                                    <div class="detail-label">Altura</div>
+                                    <div class="detail-value">{{ almofada.altura }} cm</div>
+                                </div>
+                            </div>
+                            {% endif %}
+                        </div>
+                        
+                        {% if almofada.espessura %}
+                        <div class="detail-item">
+                            <div class="detail-label">Espessura</div>
+                            <div class="detail-value">{{ almofada.espessura }} cm</div>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <!-- Card de Características -->
+                <div class="card">
+                    <div class="card-header">
+                        <h5><i class="fas fa-cogs"></i> Características</h5>
+                    </div>
+                    <div class="card-body">
+                        {% if almofada.formato %}
+                        <div class="detail-item">
+                            <div class="detail-label">Formato</div>
+                            <div class="detail-value">{{ almofada.formato }}</div>
+                        </div>
+                        {% endif %}
+                        
+                        {% if almofada.enchimento %}
+                        <div class="detail-item">
+                            <div class="detail-label">Enchimento</div>
+                            <div class="detail-value">{{ almofada.enchimento }}</div>
+                        </div>
+                        {% endif %}
+                        
+                        {% if almofada.tecido %}
+                        <div class="detail-item">
+                            <div class="detail-label">Tecido</div>
+                            <div class="detail-value">{{ almofada.tecido }}</div>
+                        </div>
+                        {% endif %}
+                        
+                        {% if almofada.cor %}
+                        <div class="detail-item">
+                            <div class="detail-label">Cor</div>
+                            <div class="detail-value">{{ almofada.cor }}</div>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <!-- Card de Status e Controle -->
+                <div class="card">
+                    <div class="card-header">
+                        <h5><i class="fas fa-chart-line"></i> Status e Controle</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="detail-item">
+                                    <div class="detail-label">Status</div>
+                                    <div class="detail-value">
+                                        {% if almofada.ativo %}
+                                            <span class="badge bg-success">Ativo</span>
+                                        {% else %}
+                                            <span class="badge bg-danger">Inativo</span>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            {% if almofada.preco %}
+                            <div class="col-md-6">
+                                <div class="detail-item">
+                                    <div class="detail-label">Preço</div>
+                                    <div class="detail-value">R$ {{ almofada.preco|floatformat:2 }}</div>
+                                </div>
+                            </div>
+                            {% endif %}
+                        </div>
+                        
+                        <!-- Informações de Auditoria -->
+                        <div class="row mt-3">
+                            <div class="col-md-6">
+                                <div class="detail-item">
+                                    <div class="detail-label">Criado em</div>
+                                    <div class="detail-value">{{ almofada.criado_em|date:"d/m/Y H:i" }}</div>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="detail-item">
+                                    <div class="detail-label">Atualizado em</div>
+                                    <div class="detail-value">{{ almofada.atualizado_em|date:"d/m/Y H:i" }}</div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        {% if almofada.criado_por %}
+                        <div class="detail-item">
+                            <div class="detail-label">Criado por</div>
+                            <div class="detail-value">{{ almofada.criado_por.username }}</div>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+
+            <!-- Coluna da direita - Imagens e Ações -->
+            <div class="col-lg-4">
+                <!-- Card de Imagem Principal -->
+                <div class="card">
+                    <div class="card-header">
+                        <h5><i class="fas fa-image"></i> Imagem Principal</h5>
+                    </div>
+                    <div class="card-body">
+                        {% if almofada.foto_principal %}
+                            <div class="image-container">
+                                <img src="{{ almofada.foto_principal.url }}" 
+                                     alt="{{ almofada.nome }}" 
+                                     class="img-fluid">
+                            </div>
+                        {% else %}
+                            <div class="no-image-placeholder">
+                                <i class="fas fa-square"></i>
+                                <p class="text-muted mb-0">Nenhuma imagem disponível</p>
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <!-- Card de Ações -->
+                {% if user.is_authenticated %}
+                <div class="card">
+                    <div class="card-header">
+                        <h5><i class="fas fa-tools"></i> Ações</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="d-grid gap-2">
+                            <a href="{% url 'almofada_editar' almofada.pk %}" 
+                               class="btn btn-warning">
+                                <i class="fas fa-edit me-2"></i>Editar Almofada
+                            </a>
+                            
+                            <button type="button" 
+                                    class="btn btn-danger" 
+                                    data-bs-toggle="modal" 
+                                    data-bs-target="#deleteModal">
+                                <i class="fas fa-trash me-2"></i>Excluir Almofada
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                {% endif %}
+
+                <!-- Card de Informações Adicionais -->
+                {% if almofada.observacoes %}
+                <div class="card">
+                    <div class="card-header">
+                        <h5><i class="fas fa-clipboard-list"></i> Observações</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="detail-item">
+                            <div class="detail-value">{{ almofada.observacoes|linebreaks }}</div>
+                        </div>
+                    </div>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal de Confirmação de Exclusão -->
+{% if user.is_authenticated %}
+<div class="modal fade" id="deleteModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header bg-danger text-white">
+                <h5 class="modal-title">
+                    <i class="fas fa-exclamation-triangle me-2"></i>
+                    Confirmar Exclusão
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="alert alert-warning d-flex align-items-center">
+                    <i class="fas fa-exclamation-triangle me-3 fs-4"></i>
+                    <div>
+                        <strong>Atenção!</strong><br>
+                        Esta ação não pode ser desfeita. Deseja realmente excluir a almofada 
+                        <strong>"{{ almofada.nome }}"</strong> ({{ almofada.ref_almofada }})?
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">
+                    <i class="fas fa-times me-2"></i>Cancelar
+                </button>
+                <form method="post" action="{% url 'almofada_excluir' almofada.pk %}" class="d-inline">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-danger">
+                        <i class="fas fa-trash me-2"></i>Excluir Definitivamente
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+{% endblock %}

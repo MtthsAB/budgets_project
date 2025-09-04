@@ -1,0 +1,460 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load math_filters %}
+
+{% block title %}{{ titulo }} - Sistema de Produtos{% endblock %}
+
+{% block extra_css %}
+<style>
+    .item-orcamento {
+        border: 1px solid #dee2e6;
+        border-radius: 0.375rem;
+        padding: 1rem;
+        margin-bottom: 1rem;
+        background-color: #f8f9fa;
+    }
+    
+    .totais-orcamento {
+        position: sticky;
+        top: 20px;
+    }
+    
+    .busca-cliente, .busca-produto {
+        position: relative;
+    }
+    
+    .resultados-busca {
+        position: absolute;
+        top: 100%;
+        left: 0;
+        right: 0;
+        z-index: 1000;
+        background: white;
+        border: 1px solid #ddd;
+        border-top: none;
+        border-radius: 0 0 0.375rem 0.375rem;
+        max-height: 200px;
+        overflow-y: auto;
+        display: none;
+    }
+    
+    .item-resultado {
+        padding: 8px 12px;
+        cursor: pointer;
+        border-bottom: 1px solid #f0f0f0;
+    }
+    
+    .item-resultado:hover {
+        background-color: #f8f9fa;
+    }
+    
+    .item-resultado:last-child {
+        border-bottom: none;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <div class="row">
+        <!-- Coluna Principal (Formulário) -->
+        <div class="col-lg-8">
+            <div class="card">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">{{ titulo }}</h5>
+                    {% if not orcamento %}
+                    <small class="text-muted">Preencha os dados e adicione itens</small>
+                    {% endif %}
+                </div>
+                <div class="card-body">
+                    <form method="post" id="form-orcamento">
+                        {% csrf_token %}
+                        <input type="hidden" name="itens_pedido_json" id="itens-pedido-json" value="">
+                        
+                        {% if form.non_field_errors %}
+                            <div class="alert alert-danger">
+                                {{ form.non_field_errors }}
+                            </div>
+                        {% endif %}
+
+                        <div class="row g-3">
+                            <!-- Cliente -->
+                            <div class="col-md-6">
+                                <label for="{{ form.cliente.id_for_label }}" class="form-label">
+                                    {{ form.cliente.label }}
+                                </label>
+                                <div class="busca-cliente">
+                                    <input type="text" class="form-control" id="cliente-busca" 
+                                           placeholder="Digite nome da empresa ou CNPJ..." autocomplete="off">
+                                    <div style="display: none;">{{ form.cliente }}</div>
+                                    <div class="resultados-busca" id="cliente-resultados"></div>
+                                </div>
+                                {% if form.cliente.errors %}
+                                    <div class="text-danger small">{{ form.cliente.errors }}</div>
+                                {% endif %}
+                            </div>
+
+                            <!-- Vendedor -->
+                            <div class="col-md-6">
+                                <label class="form-label">Vendedor</label>
+                                <input type="text" class="form-control" value="{{ user.get_full_name }}" readonly>
+                            </div>
+
+                            <!-- Faixa de Preço -->
+                            <div class="col-md-4">
+                                <label for="{{ form.faixa_preco.id_for_label }}" class="form-label">
+                                    {{ form.faixa_preco.label }}
+                                </label>
+                                {{ form.faixa_preco }}
+                                {% if form.faixa_preco.errors %}
+                                    <div class="text-danger small">{{ form.faixa_preco.errors }}</div>
+                                {% endif %}
+                            </div>
+
+                            <!-- Forma de Pagamento -->
+                            <div class="col-md-4">
+                                <label for="{{ form.forma_pagamento.id_for_label }}" class="form-label">
+                                    {{ form.forma_pagamento.label }}
+                                </label>
+                                {{ form.forma_pagamento }}
+                                {% if form.forma_pagamento.errors %}
+                                    <div class="text-danger small">{{ form.forma_pagamento.errors }}</div>
+                                {% endif %}
+                            </div>
+
+                            <!-- Status -->
+                            <div class="col-md-4">
+                                <label for="{{ form.status.id_for_label }}" class="form-label">
+                                    {{ form.status.label }}
+                                </label>
+                                {{ form.status }}
+                                {% if form.status.errors %}
+                                    <div class="text-danger small">{{ form.status.errors }}</div>
+                                {% endif %}
+                            </div>
+
+                            <!-- Observações -->
+                            <div class="col-12">
+                                <label for="{{ form.observacoes.id_for_label }}" class="form-label">
+                                    {{ form.observacoes.label }}
+                                </label>
+                                {{ form.observacoes }}
+                                {% if form.observacoes.errors %}
+                                    <div class="text-danger small">{{ form.observacoes.errors }}</div>
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        <!-- Botão para adicionar item -->
+                        <div class="mt-4">
+                            <button type="button" class="btn btn-success" data-bs-toggle="modal" data-bs-target="#modalAdicionarItem">
+                                <i class="bi bi-plus-circle"></i> Adicionar Item
+                            </button>
+                        </div>
+
+                        <!-- Lista de itens -->
+                        <div class="mt-4" id="lista-itens">
+                            <h6>Itens do Orçamento</h6>
+                            <div id="itens-container">
+                                <!-- Itens serão adicionados aqui dinamicamente -->
+                            </div>
+                        </div>
+
+                        <!-- Botões de ação -->
+                        <div class="row mt-4">
+                            <div class="col-12">
+                                <button type="submit" class="btn btn-primary">
+                                    <i class="bi bi-save"></i> Salvar Orçamento
+                                </button>
+                                <a href="{% url 'orcamentos:listar' %}" class="btn btn-secondary">
+                                    <i class="bi bi-arrow-left"></i> Cancelar
+                                </a>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- Sidebar com totais -->
+        <div class="col-lg-4">
+            <div class="card totais-orcamento">
+                <div class="card-header">
+                    <h6 class="mb-0">Resumo do Orçamento</h6>
+                </div>
+                <div class="card-body">
+                    <div class="d-flex justify-content-between">
+                        <span>Subtotal:</span>
+                        <span id="subtotal">R$ 0,00</span>
+                    </div>
+                    <div class="d-flex justify-content-between">
+                        <span>Desconto:</span>
+                        <span id="desconto">R$ 0,00</span>
+                    </div>
+                    <div class="d-flex justify-content-between">
+                        <span>Acréscimo:</span>
+                        <span id="acrescimo">R$ 0,00</span>
+                    </div>
+                    <hr>
+                    <div class="d-flex justify-content-between fw-bold">
+                        <span>Total:</span>
+                        <span id="total">R$ 0,00</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal para adicionar item -->
+<div class="modal fade" id="modalAdicionarItem" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Adicionar Item ao Orçamento</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="form-adicionar-item">
+                    {% csrf_token %}
+                    
+                    <!-- Tipo de Produto -->
+                    <div class="mb-3">
+                        <label for="tipo-produto" class="form-label">Tipo de Produto *</label>
+                        <select class="form-select" id="tipo-produto" required>
+                            <option value="">Selecione o tipo de produto...</option>
+                            <option value="sofa">Sofás</option>
+                            <option value="banqueta">Banquetas</option>
+                            <option value="cadeira">Cadeiras</option>
+                            <option value="poltrona">Poltronas</option>
+                            <option value="pufe">Pufes</option>
+                            <option value="almofada">Almofadas</option>
+                        </select>
+                    </div>
+                    
+                    <!-- Produto -->
+                    <div class="mb-3" id="selecao-produto" style="display: none;">
+                        <label for="produto" class="form-label">Produto *</label>
+                        <select class="form-select" id="produto" required>
+                            <option value="">Selecione o produto...</option>
+                        </select>
+                    </div>
+                    
+                    <!-- Quantidade -->
+                    <div class="mb-3" id="campo-quantidade" style="display: none;">
+                        <label for="quantidade" class="form-label">Quantidade *</label>
+                        <input type="number" class="form-control" id="quantidade" min="1" value="1" required>
+                    </div>
+                    
+                    <!-- Observações -->
+                    <div class="mb-3" id="campo-observacoes" style="display: none;">
+                        <label for="observacoes-item" class="form-label">Observações</label>
+                        <textarea class="form-control" id="observacoes-item" rows="3" 
+                                  placeholder="Observações sobre este item..."></textarea>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <button type="button" class="btn btn-primary" id="btn-confirmar-item">Adicionar Item</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+let itensPedido = [];
+
+document.addEventListener('DOMContentLoaded', function() {
+    // Elementos
+    const tipoSelect = document.getElementById('tipo-produto');
+    const produtoSelect = document.getElementById('produto');
+    const selecaoProduto = document.getElementById('selecao-produto');
+    const campoQuantidade = document.getElementById('campo-quantidade');
+    const campoObservacoes = document.getElementById('campo-observacoes');
+    const btnConfirmar = document.getElementById('btn-confirmar-item');
+    
+    // Sistema de busca de clientes
+    const clienteBusca = document.getElementById('cliente-busca');
+    const clienteSelect = document.getElementById('id_cliente');
+    const clienteResultados = document.getElementById('cliente-resultados');
+    
+    // Event listener para tipo de produto
+    if (tipoSelect) {
+        tipoSelect.addEventListener('change', function() {
+            const tipo = this.value;
+            console.log('Tipo selecionado:', tipo);
+            
+            if (tipo) {
+                // Mostrar campos
+                selecaoProduto.style.display = 'block';
+                campoQuantidade.style.display = 'block';
+                campoObservacoes.style.display = 'block';
+                
+                // Carregar produtos
+                carregarProdutos(tipo);
+            } else {
+                // Ocultar campos
+                selecaoProduto.style.display = 'none';
+                campoQuantidade.style.display = 'none';
+                campoObservacoes.style.display = 'none';
+            }
+        });
+    }
+    
+    // Função para carregar produtos
+    function carregarProdutos(tipo) {
+        fetch(`/orcamentos/produtos-por-tipo/?tipo=${tipo}`)
+            .then(response => response.json())
+            .then(data => {
+                produtoSelect.innerHTML = '<option value="">Selecione o produto...</option>';
+                
+                if (data.produtos && data.produtos.length > 0) {
+                    data.produtos.forEach(produto => {
+                        const option = document.createElement('option');
+                        option.value = produto.id;
+                        option.textContent = `${produto.nome_produto} - ${produto.ref_produto}`;
+                        produtoSelect.appendChild(option);
+                    });
+                }
+            })
+            .catch(error => {
+                console.error('Erro ao carregar produtos:', error);
+                alert('Erro ao carregar produtos');
+            });
+    }
+    
+    // Busca de clientes
+    if (clienteBusca) {
+        let timeoutBusca;
+        
+        clienteBusca.addEventListener('input', function() {
+            const termo = this.value;
+            
+            clearTimeout(timeoutBusca);
+            
+            if (termo.length < 2) {
+                clienteResultados.style.display = 'none';
+                return;
+            }
+            
+            timeoutBusca = setTimeout(() => {
+                fetch(`{% url 'orcamentos:buscar_cliente' %}?termo=${encodeURIComponent(termo)}`)
+                    .then(response => response.json())
+                    .then(data => {
+                        mostrarClientes(data.clientes);
+                    })
+                    .catch(error => {
+                        console.error('Erro na busca:', error);
+                    });
+            }, 300);
+        });
+    }
+    
+    function mostrarClientes(clientes) {
+        clienteResultados.innerHTML = '';
+        
+        if (clientes.length > 0) {
+            clientes.forEach(cliente => {
+                const div = document.createElement('div');
+                div.className = 'item-resultado';
+                div.innerHTML = `
+                    <div class="fw-bold">${cliente.empresa || 'Sem empresa'}</div>
+                    <small class="text-muted">${cliente.representante || ''} - ${cliente.cnpj || ''}</small>
+                `;
+                
+                div.addEventListener('click', function() {
+                    clienteBusca.value = cliente.empresa || cliente.representante;
+                    clienteSelect.value = cliente.id;
+                    clienteResultados.style.display = 'none';
+                });
+                
+                clienteResultados.appendChild(div);
+            });
+            
+            clienteResultados.style.display = 'block';
+        } else {
+            clienteResultados.style.display = 'none';
+        }
+    }
+    
+    // Adicionar item
+    if (btnConfirmar) {
+        btnConfirmar.addEventListener('click', function() {
+            const tipo = tipoSelect.value;
+            const produtoId = produtoSelect.value;
+            const produtoTexto = produtoSelect.selectedOptions[0]?.textContent;
+            const quantidade = parseInt(document.getElementById('quantidade').value);
+            const observacoes = document.getElementById('observacoes-item').value;
+            
+            if (!tipo || !produtoId || !quantidade) {
+                alert('Por favor, preencha todos os campos obrigatórios');
+                return;
+            }
+            
+            // Adicionar à lista
+            const item = {
+                id: Date.now(),
+                tipo: tipo,
+                produto_id: produtoId,
+                produto_nome: produtoTexto,
+                quantidade: quantidade,
+                observacoes: observacoes
+            };
+            
+            itensPedido.push(item);
+            atualizarListaItens();
+            
+            // Fechar modal e limpar
+            const modal = bootstrap.Modal.getInstance(document.getElementById('modalAdicionarItem'));
+            modal.hide();
+            limparFormModal();
+        });
+    }
+    
+    function atualizarListaItens() {
+        const container = document.getElementById('itens-container');
+        const input = document.getElementById('itens-pedido-json');
+        
+        container.innerHTML = '';
+        
+        itensPedido.forEach(item => {
+            const div = document.createElement('div');
+            div.className = 'item-orcamento';
+            div.innerHTML = `
+                <div class="d-flex justify-content-between align-items-start">
+                    <div>
+                        <h6>${item.produto_nome}</h6>
+                        <p class="mb-1">Tipo: ${item.tipo}</p>
+                        <p class="mb-1">Quantidade: ${item.quantidade}</p>
+                        ${item.observacoes ? `<p class="mb-0 text-muted small">Obs: ${item.observacoes}</p>` : ''}
+                    </div>
+                    <button type="button" class="btn btn-outline-danger btn-sm" onclick="removerItem(${item.id})">
+                        <i class="bi bi-trash"></i>
+                    </button>
+                </div>
+            `;
+            container.appendChild(div);
+        });
+        
+        input.value = JSON.stringify(itensPedido);
+    }
+    
+    function limparFormModal() {
+        tipoSelect.value = '';
+        produtoSelect.innerHTML = '<option value="">Selecione o produto...</option>';
+        document.getElementById('quantidade').value = '1';
+        document.getElementById('observacoes-item').value = '';
+        selecaoProduto.style.display = 'none';
+        campoQuantidade.style.display = 'none';
+        campoObservacoes.style.display = 'none';
+    }
+    
+    // Fazer função global para remover item
+    window.removerItem = function(id) {
+        itensPedido = itensPedido.filter(item => item.id !== id);
+        atualizarListaItens();
+    };
+});
+</script>
+{% endblock %}

@@ -1,7 +1,7 @@
 from django import forms
 from .models import (
     Item, Produto, TipoItem, Modulo, TamanhosModulosDetalhado, 
-    Acessorio, FaixaTecido, PrecosBase, Banqueta, Cadeira, Poltrona, Pufe, Almofada
+    Acessorio, FaixaTecido, PrecosBase, Banqueta, Cadeira, Poltrona, Pufe, Almofada, SofaAcessorio
 )
 
 class TamanhosModulosDetalhadoForm(forms.ModelForm):
@@ -699,3 +699,215 @@ class AlmofadaForm(forms.ModelForm):
                 self.add_error(campo, f"O valor deve ser maior que zero.")
         
         return cleaned_data
+
+
+# =====================================================
+# FORMSETS PARA EDIÇÃO HIERÁRQUICA DE SOFÁS  
+# =====================================================
+
+from django.forms import inlineformset_factory, BaseInlineFormSet
+
+
+class SofaForm(forms.ModelForm):
+    """Formulário para dados básicos do sofá"""
+    
+    class Meta:
+        model = Produto
+        fields = [
+            'ref_produto', 'nome_produto', 'id_tipo_produto', 'ativo',
+            'tem_cor_tecido', 'tem_difer_desenho_lado_dir_esq', 
+            'tem_difer_desenho_tamanho', 'imagem_principal', 'imagem_secundaria'
+        ]
+        widgets = {
+            'ref_produto': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Referência'}),
+            'nome_produto': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Nome do produto'}),
+            'id_tipo_produto': forms.Select(attrs={'class': 'form-select'}),
+            'ativo': forms.CheckboxInput(attrs={'class': 'form-check-input'}),
+            'tem_cor_tecido': forms.CheckboxInput(attrs={'class': 'form-check-input'}),
+            'tem_difer_desenho_lado_dir_esq': forms.CheckboxInput(attrs={'class': 'form-check-input'}),
+            'tem_difer_desenho_tamanho': forms.CheckboxInput(attrs={'class': 'form-check-input'}),
+            'imagem_principal': forms.FileInput(attrs={'class': 'form-control', 'accept': 'image/*'}),
+            'imagem_secundaria': forms.FileInput(attrs={'class': 'form-control', 'accept': 'image/*'}),
+        }
+
+
+class ModuloFormsetForm(forms.ModelForm):
+    """Formulário para um módulo individual dentro do formset"""
+    
+    class Meta:
+        model = Modulo
+        fields = ['nome', 'profundidade', 'altura', 'braco', 'descricao', 'imagem_principal']
+        widgets = {
+            'nome': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Nome do módulo'}),
+            'profundidade': forms.NumberInput(attrs={'class': 'form-control', 'step': '0.01', 'placeholder': 'Profundidade (cm)'}),
+            'altura': forms.NumberInput(attrs={'class': 'form-control', 'step': '0.01', 'placeholder': 'Altura (cm)'}),
+            'braco': forms.NumberInput(attrs={'class': 'form-control', 'step': '0.01', 'placeholder': 'Braço (cm)'}),
+            'descricao': forms.Textarea(attrs={'class': 'form-control', 'rows': 2, 'placeholder': 'Descrição do módulo'}),
+            'imagem_principal': forms.FileInput(attrs={'class': 'form-control', 'accept': 'image/*'}),
+        }
+
+
+class TamanhoDetalhadoFormsetForm(forms.ModelForm):
+    """Formulário para um tamanho detalhado dentro do formset"""
+    
+    class Meta:
+        model = TamanhosModulosDetalhado
+        fields = [
+            'largura_total', 'largura_assento', 'tecido_metros', 
+            'volume_m3', 'peso_kg', 'preco', 'descricao'
+        ]
+        widgets = {
+            'largura_total': forms.NumberInput(attrs={'class': 'form-control', 'step': '0.01', 'placeholder': 'Largura total (cm)'}),
+            'largura_assento': forms.NumberInput(attrs={'class': 'form-control', 'step': '0.01', 'placeholder': 'Largura assento (cm)'}),
+            'tecido_metros': forms.NumberInput(attrs={'class': 'form-control', 'step': '0.01', 'placeholder': 'Tecido (metros)'}),
+            'volume_m3': forms.NumberInput(attrs={'class': 'form-control', 'step': '0.001', 'placeholder': 'Volume (m³)'}),
+            'peso_kg': forms.NumberInput(attrs={'class': 'form-control', 'step': '0.01', 'placeholder': 'Peso (kg)'}),
+            'preco': forms.NumberInput(attrs={'class': 'form-control', 'step': '0.01', 'placeholder': 'Preço (R$)'}),
+            'descricao': forms.Textarea(attrs={'class': 'form-control', 'rows': 2, 'placeholder': 'Descrição do tamanho'}),
+        }
+
+
+class BaseModuloFormSet(BaseInlineFormSet):
+    """FormSet personalizado para módulos"""
+    
+    def clean(self):
+        """Validação customizada para módulos"""
+        if any(self.errors):
+            return
+        
+        nomes_modulos = []
+        for form in self.forms:
+            if self.can_delete and self._should_delete_form(form):
+                continue
+            
+            nome = form.cleaned_data.get('nome')
+            if nome:
+                if nome in nomes_modulos:
+                    raise forms.ValidationError('Nomes de módulos devem ser únicos.')
+                nomes_modulos.append(nome)
+
+
+class BaseTamanhoFormSet(BaseInlineFormSet):
+    """FormSet personalizado para tamanhos"""
+    
+    def clean(self):
+        """Validação customizada para tamanhos"""
+        if any(self.errors):
+            return
+        
+        larguras = []
+        for form in self.forms:
+            if self.can_delete and self._should_delete_form(form):
+                continue
+            
+            largura = form.cleaned_data.get('largura_total')
+            if largura:
+                if largura in larguras:
+                    raise forms.ValidationError('Larguras devem ser únicas dentro do mesmo módulo.')
+                larguras.append(largura)
+
+
+# Factory para criar formsets de módulos
+ModuloFormSet = inlineformset_factory(
+    Produto, 
+    Modulo,
+    form=ModuloFormsetForm,
+    formset=BaseModuloFormSet,
+    extra=0,  # Não criar campos extras por padrão
+    can_delete=True,
+    can_order=False
+)
+
+# Factory para criar formsets de tamanhos  
+TamanhoFormSet = inlineformset_factory(
+    Modulo,
+    TamanhosModulosDetalhado, 
+    form=TamanhoDetalhadoFormsetForm,
+    formset=BaseTamanhoFormSet,
+    extra=0,  # Não criar campos extras por padrão
+    can_delete=True,
+    can_order=False
+)
+
+
+class SofaAcessorioForm(forms.ModelForm):
+    """Formulário para vinculação de acessórios ao sofá"""
+    
+    class Meta:
+        model = SofaAcessorio
+        fields = ['acessorio', 'quantidade', 'observacoes']
+        widgets = {
+            'acessorio': forms.Select(attrs={'class': 'form-select'}),
+            'quantidade': forms.NumberInput(attrs={
+                'class': 'form-control',
+                'min': '1',
+                'value': '1',
+                'placeholder': 'Quantidade'
+            }),
+            'observacoes': forms.Textarea(attrs={
+                'class': 'form-control',
+                'rows': 2,
+                'maxlength': '1000',
+                'placeholder': 'Observações (opcional)',
+                'style': 'height: 60px;'
+            }),
+        }
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        # Filtrar apenas acessórios ativos
+        self.fields['acessorio'].queryset = Acessorio.objects.filter(ativo=True).order_by('ref_acessorio')
+        
+        # Adicionar labels customizados
+        self.fields['acessorio'].label = 'Acessório'
+        self.fields['quantidade'].label = 'Quantidade'
+        self.fields['observacoes'].label = 'Observações'
+        
+        # Tornar acessório obrigatório
+        self.fields['acessorio'].required = True
+        self.fields['quantidade'].required = True
+
+    def clean_quantidade(self):
+        quantidade = self.cleaned_data.get('quantidade')
+        if quantidade is not None and quantidade <= 0:
+            raise forms.ValidationError('A quantidade deve ser maior que zero.')
+        return quantidade
+
+    def clean_observacoes(self):
+        observacoes = self.cleaned_data.get('observacoes')
+        if observacoes and len(observacoes) > 1000:
+            raise forms.ValidationError('As observações não podem exceder 1000 caracteres.')
+        return observacoes
+
+
+class BaseSofaAcessorioFormSet(BaseInlineFormSet):
+    """FormSet personalizado para acessórios do sofá"""
+    
+    def clean(self):
+        """Validação global do formset"""
+        if any(self.errors):
+            return
+        
+        acessorios = []
+        for form in self.forms:
+            if self.can_delete and self._should_delete_form(form):
+                continue
+            
+            acessorio = form.cleaned_data.get('acessorio')
+            if acessorio:
+                if acessorio in acessorios:
+                    raise forms.ValidationError('Não é possível vincular o mesmo acessório duas vezes.')
+                acessorios.append(acessorio)
+
+
+# Factory para criar formsets de acessórios do sofá
+SofaAcessorioFormSet = inlineformset_factory(
+    Produto,
+    SofaAcessorio,
+    form=SofaAcessorioForm,
+    formset=BaseSofaAcessorioFormSet,
+    extra=0,  # Não criar campos extras por padrão
+    can_delete=True,
+    can_order=False,
+    fk_name='sofa'  # Especificar o campo FK correto
+)

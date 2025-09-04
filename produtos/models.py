@@ -986,3 +986,60 @@ class Almofada(BaseModel):
             raise ValidationError("O peso deve ser maior que zero.")
         if self.preco and self.preco <= 0:
             raise ValidationError("O preço deve ser maior que zero.")
+
+
+class SofaAcessorio(BaseModel):
+    """Relação Many-to-Many entre Sofás e Acessórios com campos adicionais"""
+    sofa = models.ForeignKey(
+        Produto,
+        on_delete=models.CASCADE,
+        verbose_name="Sofá",
+        help_text="Sofá ao qual o acessório está vinculado"
+    )
+    acessorio = models.ForeignKey(
+        Acessorio,
+        on_delete=models.CASCADE,
+        verbose_name="Acessório",
+        help_text="Acessório vinculado ao sofá"
+    )
+    quantidade = models.PositiveIntegerField(
+        default=1,
+        verbose_name="Quantidade",
+        help_text="Quantidade do acessório para este sofá"
+    )
+    observacoes = models.TextField(
+        blank=True,
+        null=True,
+        max_length=1000,
+        verbose_name="Observações",
+        help_text="Observações específicas sobre este acessório para este sofá"
+    )
+
+    class Meta:
+        verbose_name = "Sofá - Acessório"
+        verbose_name_plural = "Sofás - Acessórios"
+        unique_together = ('sofa', 'acessorio')  # Evitar duplicação
+        ordering = ['sofa__ref_produto', 'acessorio__ref_acessorio']
+
+    def __str__(self):
+        return f"{self.sofa.ref_produto} + {self.acessorio.ref_acessorio} (Qtd: {self.quantidade})"
+
+    def clean(self):
+        """Validações customizadas"""
+        super().clean()
+        
+        # Validar se o produto é realmente um sofá
+        if self.sofa and not self.sofa.eh_sofa():
+            raise ValidationError("O produto selecionado não é um sofá.")
+        
+        # Validar se o acessório está ativo
+        if self.acessorio and not self.acessorio.ativo:
+            raise ValidationError("Não é possível vincular um acessório inativo.")
+        
+        # Validar quantidade
+        if self.quantidade and self.quantidade <= 0:
+            raise ValidationError("A quantidade deve ser maior que zero.")
+        
+        # Validar tamanho das observações
+        if self.observacoes and len(self.observacoes) > 1000:
+            raise ValidationError("As observações não podem exceder 1000 caracteres.")

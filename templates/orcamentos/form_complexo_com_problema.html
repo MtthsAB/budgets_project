@@ -1,0 +1,3849 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load math_filters %}
+
+{% block title %}{{ titulo }} - Sistema de Produtos{% endblock %}
+
+{% block extra_css %}
+<style>
+    .item-orcamento {
+        border: 1px solid #dee2e6;
+        border-radius: 0.375rem;
+        padding: 1rem;
+        margin-bottom: 1rem;
+        background-color: #f8f9fa;
+    }
+    
+    .totais-orcamento {
+        position: sticky;
+        top: 20px;
+    }
+    
+    .cliente-expandido .form-control {
+        min-height: 48px;
+        font-size: 16px;
+    }
+    
+    .cliente-busca {
+        border-radius: 0.375rem !important;
+    }
+    
+    .cliente-resultados {
+        border-top: none !important;
+        border-top-left-radius: 0 !important;
+        border-top-right-radius: 0 !important;
+    }
+    
+    .cliente-item {
+        padding: 12px 16px;
+        cursor: pointer;
+        border-bottom: 1px solid #f0f0f0;
+        transition: background-color 0.2s ease;
+    }
+    
+    .cliente-item:hover {
+        background-color: #f8f9fa;
+    }
+    
+    .cliente-item:last-child {
+        border-bottom: none;
+    }
+    
+    .cliente-item .empresa {
+        font-weight: 600;
+        color: #333;
+        margin-bottom: 2px;
+    }
+    
+    .cliente-item .detalhes {
+        font-size: 0.875rem;
+        color: #666;
+        margin-top: 2px;
+    }
+    
+    /* Melhorias responsivas */
+    @media (max-width: 768px) {
+        .cliente-expandido {
+            margin-bottom: 1rem;
+        }
+        
+        .cliente-resultados {
+            max-height: 250px;
+        }
+        
+        .cliente-item {
+            padding: 10px 12px;
+        }
+    }
+    
+    /* Estados de foco e ativo */
+    .cliente-busca:focus {
+        border-color: #007bff;
+        box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
+    }
+    
+    .cliente-expandido .border-success {
+        border-color: #28a745 !important;
+        box-shadow: 0 0 0 0.2rem rgba(40, 167, 69, 0.25) !important;
+    }
+    
+    .busca-cliente, .busca-produto {
+        position: relative;
+    }
+    
+    .resultados-busca {
+        position: absolute;
+        top: 100%;
+        left: 0;
+        right: 0;
+        z-index: 1000;
+        background: white;
+        border: 1px solid #dee2e6;
+    }
+    
+    /* Estilos para busca de produtos */
+    .produto-busca {
+        border-radius: 0.375rem !important;
+    }
+    
+    .produto-resultados {
+        border-top: none !important;
+        border-top-left-radius: 0 !important;
+        border-top-right-radius: 0 !important;
+    }
+    
+    .produto-item {
+        padding: 12px 16px;
+        cursor: pointer;
+        border-bottom: 1px solid #f0f0f0;
+        transition: background-color 0.2s ease;
+    }
+    
+    .produto-item:hover {
+        background-color: #f8f9fa;
+    }
+    
+    .produto-item:last-child {
+        border-bottom: none;
+    }
+    
+    .produto-item .nome {
+        font-weight: 600;
+        color: #333;
+        margin-bottom: 2px;
+    }
+    
+    .produto-item .detalhes {
+        font-size: 0.875rem;
+        color: #666;
+        margin-top: 2px;
+    }
+    
+    .produto-busca:focus {
+        border-color: #007bff;
+        box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
+    }
+    
+    .resultados-busca {
+        border-radius: 0.375rem;
+        max-height: 200px;
+        overflow-y: auto;
+        display: none;
+    }
+    
+    .resultado-item {
+        padding: 0.5rem;
+        cursor: pointer;
+        border-bottom: 1px solid #f8f9fa;
+    }
+    
+    .resultado-item:hover {
+        background-color: #f8f9fa;
+    }
+    
+    .resultado-item:last-child {
+        border-bottom: none;
+    }
+    
+    /* Esconder campos originais de desconto e acréscimo */
+    #id_desconto_valor,
+    #id_desconto_percentual,
+    #id_acrescimo_valor,
+    #id_acrescimo_percentual {
+        display: none !important;
+    }
+    
+    /* Estilos para campos unificados */
+    .input-group .form-select {
+        flex: 0 0 auto;
+    }
+    
+    /* Estilos para os botões de tipo de desconto/acréscimo */
+    .tipo-desconto-btn {
+        min-width: 60px;
+        font-weight: 600;
+        border-color: #dee2e6;
+        background-color: #f8f9fa;
+        transition: all 0.2s ease-in-out;
+        position: relative;
+        border-radius: 0.5rem !important;
+        border-top-left-radius: 0 !important;
+        border-bottom-left-radius: 0 !important;
+    }
+    
+    .tipo-desconto-btn:hover {
+        background-color: #e9ecef;
+        border-color: #adb5bd;
+        transform: translateY(-1px);
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+    
+    .tipo-desconto-btn:active {
+        transform: translateY(0);
+        box-shadow: 0 1px 2px rgba(0,0,0,0.1);
+    }
+    
+    .tipo-desconto-btn[data-tipo="valor"] {
+        color: #198754;
+        border-color: #198754;
+        background-color: #d1e7dd;
+    }
+    
+    .tipo-desconto-btn[data-tipo="percentual"] {
+        color: #0d6efd;
+        border-color: #0d6efd;
+        background-color: #cfe2ff;
+    }
+    
+    .tipo-desconto-btn[data-tipo="valor"]:hover {
+        background-color: #a3cfbb;
+        border-color: #146c43;
+    }
+    
+    .tipo-desconto-btn[data-tipo="percentual"]:hover {
+        background-color: #9ec5fe;
+        border-color: #0a58ca;
+    }
+    
+    .tipo-texto {
+        font-size: 0.9rem;
+        letter-spacing: 0.5px;
+    }
+    
+    /* Animação suave na troca de tipo */
+    .tipo-texto {
+        transition: all 0.15s ease-in-out;
+    }
+    
+    /* Estilos para campos de desconto e acréscimo - menor largura */
+    #desconto_valor_unificado,
+    #acrescimo_valor_unificado {
+        max-width: 120px !important;
+        text-align: right;
+        border-top-right-radius: 0 !important;
+        border-bottom-right-radius: 0 !important;
+    }
+    
+    /* Remover botões de incremento/decremento dos campos numéricos */
+    input[type="number"]::-webkit-outer-spin-button,
+    input[type="number"]::-webkit-inner-spin-button {
+        -webkit-appearance: none;
+        margin: 0;
+    }
+    
+    input[type="number"] {
+        -moz-appearance: textfield;
+        appearance: textfield;
+    }
+    
+    /* Forçar layout correto do campo cliente - versão simplificada */
+    .cliente-expandido {
+        flex: 0 0 66.666667% !important;
+        max-width: 66.666667% !important;
+    }
+    
+    .vendedor-compacto {
+        flex: 0 0 33.333333% !important;
+        max-width: 33.333333% !important;
+    }
+    
+    /* Estilo para seção de dependências do produto */
+    .produto-dependencias {
+        background-color: #f8f9fa;
+        border: 1px solid #dee2e6;
+        border-radius: 0.375rem;
+        padding: 1rem;
+        margin-top: 1rem;
+    }
+    
+    .loading-spinner {
+        text-align: center;
+        padding: 2rem;
+    }
+    
+    /* Campo quantidade compacto - forçar tamanho menor */
+    #quantidade {
+        max-width: 100px !important;
+        min-width: 80px !important;
+    }
+    
+    /* Layout responsivo para campo quantidade */
+    .col-md-2 {
+        flex: 0 0 16.666667% !important;
+        max-width: 16.666667% !important;
+    }
+    
+    @media (max-width: 768px) {
+        .col-4 {
+            flex: 0 0 33.333333% !important;
+            max-width: 33.333333% !important;
+        }
+    }
+    
+    /* ====== ESTILOS ESPECÍFICOS PARA SOFÁS ====== */
+    
+    /* Configuração do sofá */
+    #sofa-configuracao .card-header {
+        background-color: rgba(13, 110, 253, 0.1) !important;
+        border-bottom: 1px solid rgba(13, 110, 253, 0.2);
+    }
+    
+    /* Módulos do sofá */
+    .modulo-item .card {
+        transition: all 0.2s ease;
+        border: 1px solid #dee2e6;
+    }
+    
+    .modulo-item .card:hover {
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        border-color: #0d6efd;
+    }
+    
+    .modulo-item .card-header {
+        background-color: #f8f9fa;
+        border-bottom: 1px solid #dee2e6;
+    }
+    
+    .modulo-item .form-check-input:checked ~ .form-check-label {
+        font-weight: 600;
+        color: #0d6efd;
+    }
+    
+    .modulo-detalhes {
+        background-color: #fdfdfe;
+        border-top: 1px solid #e9ecef;
+    }
+    
+    /* Acessórios do sofá */
+    .acessorio-item .card {
+        transition: all 0.2s ease;
+        border: 1px solid #dee2e6;
+    }
+    
+    .acessorio-item .card:hover {
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        border-color: #198754;
+    }
+    
+    .acessorio-item .form-check-input:checked ~ .form-check-label {
+        font-weight: 600;
+        color: #198754;
+    }
+    
+    .quantidade-acessorio {
+        max-width: 80px;
+    }
+    
+    /* Resumo da seleção */
+    #sofa-resumo {
+        background-color: #f8f9fa;
+        border-radius: 0.375rem;
+        padding: 1rem;
+        margin-top: 1rem;
+    }
+    
+    #preco-total-sofa {
+        font-weight: 700;
+        font-size: 1.5rem;
+    }
+    
+    /* Animações */
+    .modulo-detalhes,
+    .quantidade-acessorio {
+        animation: fadeIn 0.3s ease-in-out;
+    }
+    
+    @keyframes fadeIn {
+        from {
+            opacity: 0;
+            transform: translateY(-10px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+    
+    /* Responsividade para sofás */
+    @media (max-width: 768px) {
+        #sofa-configuracao .row {
+            margin: 0;
+        }
+        
+        #sofa-configuracao .col-md-6 {
+            padding: 0.5rem;
+        }
+        
+        .modulo-item img,
+        .acessorio-item img {
+            max-height: 60px;
+        }
+    }
+    
+    /* ====== NOVOS ESTILOS PARA MÓDULOS MELHORADOS ====== */
+    
+    /* Cards de módulo */
+    .modulo-card {
+        transition: all 0.2s ease-in-out;
+        border: 1px solid #e0e0e0;
+    }
+    
+    .modulo-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(0,0,0,0.15) !important;
+        border-color: #007bff;
+    }
+    
+    /* Formulário de seleção de módulo */
+    .modulo-form {
+        background-color: #f8f9fa;
+        border-radius: 0.375rem;
+        border: 2px dashed #dee2e6;
+        padding: 1rem;
+    }
+    
+    .modulo-form .form-label {
+        color: #495057;
+        margin-bottom: 0.25rem;
+    }
+    
+    .modulo-form .form-control,
+    .modulo-form .form-select {
+        border-radius: 0.25rem;
+        border: 1px solid #ced4da;
+        transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
+    }
+    
+    .modulo-form .form-control:focus,
+    .modulo-form .form-select:focus {
+        border-color: #007bff;
+        box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
+    }
+    
+    /* Contador de caracteres */
+    .form-text .contador-chars {
+        font-weight: 500;
+    }
+    
+    /* Lista de módulos selecionados */
+    #modulos-selecionados {
+        border: 1px solid #e0e0e0;
+        border-radius: 0.5rem;
+        background-color: #ffffff;
+    }
+    
+    #lista-modulos-selecionados .border {
+        border: 1px solid #e9ecef !important;
+        transition: all 0.2s ease;
+    }
+    
+    #lista-modulos-selecionados .border:hover {
+        border-color: #007bff !important;
+        background-color: #f8f9fa !important;
+    }
+    
+    /* Botões de ação nos módulos */
+    .btn-selecionar-modulo {
+        transition: all 0.2s ease;
+    }
+    
+    .btn-selecionar-modulo:hover {
+        transform: scale(1.05);
+    }
+    
+    .btn-confirmar-modulo {
+        background: linear-gradient(45deg, #28a745, #20c997);
+        border: none;
+    }
+    
+    .btn-confirmar-modulo:hover {
+        background: linear-gradient(45deg, #218838, #1ea788);
+        transform: translateY(-1px);
+    }
+    
+    /* Estados de carregamento */
+    .loading-dropdown {
+        background-image: url("data:image/svg+xml,%3csvg width='100' height='100' xmlns='http://www.w3.org/2000/svg'%3e%3cpath d='m6.758 4.03l-.84.84a26.957 26.957 0 0 0 0 38.1l.84.84a28.456 28.456 0 0 1 0-39.78z' fill='%23999'/%3e%3c/svg%3e");
+        background-repeat: no-repeat;
+        background-position: right 0.75rem center;
+        background-size: 16px 12px;
+    }
+    
+    /* Responsividade */
+    @media (max-width: 768px) {
+        .modulo-card {
+            margin-bottom: 1rem;
+        }
+        
+        .modulo-form {
+            padding: 0.75rem;
+        }
+        
+        .btn-confirmar-modulo,
+        .btn-cancelar-modulo {
+            font-size: 0.875rem;
+            padding: 0.375rem 0.75rem;
+        }
+    }
+    
+    /* Animações */
+    @keyframes slideIn {
+        from {
+            opacity: 0;
+            transform: translateY(10px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+    
+    .modulo-form {
+        animation: slideIn 0.3s ease-out;
+    }
+    
+    /* Estilos para tamanhos e observações */
+    .tamanho-select option {
+        padding: 0.5rem;
+    }
+    
+    .observacoes-modulo {
+        resize: vertical;
+        min-height: 2.5rem;
+    }
+    
+    .subtotal-modulo {
+        font-size: 1.1rem;
+        font-weight: 600;
+    }
+    
+    /* ====== FIM DOS NOVOS ESTILOS ====== */
+    
+    /* Preview do sofá */
+    .sofa-imagem-container {
+        position: relative;
+        overflow: hidden;
+    }
+    
+    #sofa-imagem-preview {
+        transition: opacity 0.3s ease-in-out;
+    }
+    
+    /* Seletor de módulo */
+    #seletor-modulo {
+        animation: slideDown 0.3s ease-in-out;
+    }
+    
+    @keyframes slideDown {
+        from {
+            opacity: 0;
+            transform: translateY(-20px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+    
+    /* Preview do módulo no seletor */
+    .preview-modulo-container {
+        transition: all 0.3s ease;
+    }
+    
+    #preview-modulo-imagem {
+        transition: opacity 0.3s ease-in-out;
+    }
+    
+    /* Módulos adicionados */
+    .modulo-adicionado {
+        animation: slideInLeft 0.4s ease-out;
+    }
+    
+    @keyframes slideInLeft {
+        from {
+            opacity: 0;
+            transform: translateX(-30px);
+        }
+        to {
+            opacity: 1;
+            transform: translateX(0);
+        }
+    }
+    
+    .modulo-adicionado .card {
+        transition: all 0.2s ease;
+    }
+    
+    .modulo-adicionado .card:hover {
+        box-shadow: 0 4px 12px rgba(40, 167, 69, 0.15);
+        transform: translateY(-2px);
+    }
+    
+    /* Estado vazio */
+    #modulos-vazio {
+        transition: opacity 0.3s ease;
+    }
+    
+    /* Botão adicionar módulo */
+    #btn-adicionar-modulo {
+        transition: all 0.2s ease;
+    }
+    
+    #btn-adicionar-modulo:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 4px 8px rgba(13, 110, 253, 0.2);
+    }
+    
+    /* Responsividade melhorada */
+    @media (max-width: 768px) {
+        .sofa-imagem-container {
+            min-height: 150px;
+        }
+        
+        #sofa-imagem-preview {
+            max-height: 130px;
+        }
+        
+        .preview-modulo-container {
+            min-height: 60px;
+        }
+        
+        #preview-modulo-imagem {
+            max-height: 50px;
+        }
+        
+        .modulo-adicionado img {
+            max-height: 80px;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h1 class="h3 mb-0">
+                    <i class="bi bi-receipt text-primary"></i> {{ titulo }}
+                </h1>
+                <div>
+                    {% if orcamento %}
+                        <a href="{% url 'orcamentos:visualizar' orcamento.pk %}" class="btn btn-outline-info">
+                            <i class="bi bi-eye"></i> Visualizar
+                        </a>
+                        <a href="{% url 'orcamentos:gerar_pdf' orcamento.pk %}" class="btn btn-outline-success" target="_blank">
+                            <i class="bi bi-file-pdf"></i> Gerar PDF
+                        </a>
+                    {% endif %}
+                    <a href="{% url 'cliente_cadastro' %}" 
+                       class="btn btn-outline-primary" 
+                       target="_blank" 
+                       title="Cadastrar novo cliente">
+                        <i class="bi bi-person-plus"></i> Novo Cliente
+                    </a>
+                    <a href="{% url 'orcamentos:listar' %}" class="btn btn-outline-secondary">
+                        <i class="bi bi-arrow-left"></i> Voltar
+                    </a>
+                </div>
+            </div>
+
+            <div class="row">
+                <div class="col-lg-8">
+                    <!-- Formulário Principal -->
+                    <div class="card mb-4">
+                        <div class="card-header">
+                            <i class="bi bi-info-circle"></i> Dados do Orçamento
+                        </div>
+                        <div class="card-body">
+                            <form method="post" id="orcamento-form">
+                                {% csrf_token %}
+                                <input type="hidden" name="itens_pedido_json" id="itens-pedido-json" value="">
+                                
+                                {% if form.non_field_errors %}
+                                    <div class="alert alert-danger">
+                                        {{ form.non_field_errors }}
+                                    </div>
+                                {% endif %}
+
+                                <div class="row g-3">
+                                    <!-- Cliente - Campo expandido com busca dinâmica -->
+                                    <div class="col-12 col-md-8 cliente-expandido">
+                                        <label for="{{ form.cliente.id_for_label }}" class="form-label">
+                                            {{ form.cliente.label }}
+                                        </label>
+                                        <div class="input-group">
+                                            <div class="position-relative flex-grow-1">
+                                                <!-- Input de busca dinâmica -->
+                                                <input type="text" 
+                                                       class="form-control cliente-busca" 
+                                                       id="cliente-busca" 
+                                                       placeholder="Digite nome da empresa, representante ou CNPJ..." 
+                                                       autocomplete="off">
+                                                <!-- Select original (oculto inicialmente mas com id mantido) -->
+                                                <div style="display: none;">
+                                                    {{ form.cliente }}
+                                                </div>
+                                                <!-- Dropdown de resultados -->
+                                                <div class="cliente-resultados position-absolute w-100 bg-white border rounded-3 shadow-sm" 
+                                                     style="top: 100%; z-index: 1000; max-height: 300px; overflow-y: auto; display: none;">
+                                                </div>
+                                            </div>
+                                        </div>
+                                        {% if form.cliente.errors %}
+                                            <div class="text-danger small">{{ form.cliente.errors }}</div>
+                                        {% endif %}
+                                    </div>
+
+                                    <!-- Vendedor -->
+                                    <div class="col-12 col-md-4 vendedor-compacto">
+                                        <label class="form-label">Vendedor</label>
+                                        <input type="text" class="form-control" value="{{ user.get_full_name }}" readonly>
+                                    </div>
+
+                                    <!-- Faixa de Preço -->
+                                    <div class="col-md-4">
+                                        <label for="{{ form.faixa_preco.id_for_label }}" class="form-label">
+                                            {{ form.faixa_preco.label }}
+                                        </label>
+                                        {{ form.faixa_preco }}
+                                        {% if form.faixa_preco.errors %}
+                                            <div class="text-danger small">{{ form.faixa_preco.errors }}</div>
+                                        {% endif %}
+                                    </div>
+
+                                    <!-- Forma de Pagamento -->
+                                    <div class="col-md-4">
+                                        <label for="{{ form.forma_pagamento.id_for_label }}" class="form-label">
+                                            {{ form.forma_pagamento.label }}
+                                        </label>
+                                        {{ form.forma_pagamento }}
+                                        {% if form.forma_pagamento.errors %}
+                                            <div class="text-danger small">{{ form.forma_pagamento.errors }}</div>
+                                        {% endif %}
+                                    </div>
+
+                                    <!-- Status -->
+                                    <div class="col-md-4">
+                                        <label for="{{ form.status.id_for_label }}" class="form-label">
+                                            {{ form.status.label }}
+                                        </label>
+                                        {{ form.status }}
+                                        {% if form.status.errors %}
+                                            <div class="text-danger small">{{ form.status.errors }}</div>
+                                        {% endif %}
+                                    </div>
+
+                                    <!-- Datas -->
+                                    <div class="col-md-6">
+                                        <label for="{{ form.data_entrega.id_for_label }}" class="form-label">
+                                            {{ form.data_entrega.label }}
+                                        </label>
+                                        {{ form.data_entrega }}
+                                        {% if form.data_entrega.errors %}
+                                            <div class="text-danger small">{{ form.data_entrega.errors }}</div>
+                                        {% endif %}
+                                    </div>
+
+                                    <div class="col-md-6">
+                                        <label for="{{ form.data_validade.id_for_label }}" class="form-label">
+                                            {{ form.data_validade.label }}
+                                        </label>
+                                        {{ form.data_validade }}
+                                        {% if form.data_validade.errors %}
+                                            <div class="text-danger small">{{ form.data_validade.errors }}</div>
+                                        {% endif %}
+                                    </div>
+
+                                    <!-- Descontos e Acréscimos Unificados -->
+                                    <div class="col-md-6">
+                                        <label class="form-label">
+                                            <i class="bi bi-dash-circle"></i> Desconto
+                                        </label>
+                                        <div class="input-group">
+                                            <input type="number" class="form-control" id="desconto_valor_unificado" 
+                                                   step="0.01" min="0" placeholder="0,00" value="0">
+                                            <button type="button" class="btn btn-outline-secondary tipo-desconto-btn" 
+                                                    id="desconto_tipo_btn" data-tipo="valor" title="Clique para alternar entre R$ e %">
+                                                <span class="tipo-texto">R$</span>
+                                            </button>
+                                            <!-- Select oculto para manter funcionalidade -->
+                                            <select class="form-select d-none" id="desconto_tipo">
+                                                <option value="valor">R$</option>
+                                                <option value="percentual">%</option>
+                                            </select>
+                                        </div>
+                                        <!-- Campos originais ocultos -->
+                                        {{ form.desconto_valor }}
+                                        {{ form.desconto_percentual }}
+                                        {% if form.desconto_valor.errors or form.desconto_percentual.errors %}
+                                            <div class="text-danger small">{{ form.desconto_valor.errors }}{{ form.desconto_percentual.errors }}</div>
+                                        {% endif %}
+                                    </div>
+
+                                    <div class="col-md-6">
+                                        <label class="form-label">
+                                            <i class="bi bi-plus-circle"></i> Acréscimo
+                                        </label>
+                                        <div class="input-group">
+                                            <input type="number" class="form-control" id="acrescimo_valor_unificado" 
+                                                   step="0.01" min="0" placeholder="0,00" value="0">
+                                            <button type="button" class="btn btn-outline-secondary tipo-desconto-btn" 
+                                                    id="acrescimo_tipo_btn" data-tipo="valor" title="Clique para alternar entre R$ e %">
+                                                <span class="tipo-texto">R$</span>
+                                            </button>
+                                            <!-- Select oculto para manter funcionalidade -->
+                                            <select class="form-select d-none" id="acrescimo_tipo">
+                                                <option value="valor">R$</option>
+                                                <option value="percentual">%</option>
+                                            </select>
+                                        </div>
+                                        <!-- Campos originais ocultos -->
+                                        {{ form.acrescimo_valor }}
+                                        {{ form.acrescimo_percentual }}
+                                        {% if form.acrescimo_valor.errors or form.acrescimo_percentual.errors %}
+                                            <div class="text-danger small">{{ form.acrescimo_valor.errors }}{{ form.acrescimo_percentual.errors }}</div>
+                                        {% endif %}
+                                    </div>
+
+                                    <!-- Observações -->
+                                    <div class="col-12">
+                                        <label for="{{ form.observacoes.id_for_label }}" class="form-label">
+                                            {{ form.observacoes.label }}
+                                        </label>
+                                        {{ form.observacoes }}
+                                        {% if form.observacoes.errors %}
+                                            <div class="text-danger small">{{ form.observacoes.errors }}</div>
+                                        {% endif %}
+                                    </div>
+                                </div>
+
+                                <div class="mt-3">
+                                    <button type="submit" class="btn btn-primary">
+                                        <i class="bi bi-save"></i> Salvar Orçamento
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+
+                    <!-- Seção de Itens do Pedido -->
+                    <div class="card mt-4">
+                        <div class="card-header d-flex justify-content-between align-items-center">
+                            <h5 class="mb-0">
+                                <i class="bi bi-cart-plus"></i> Itens do Pedido
+                            </h5>
+                            <button type="button" class="btn btn-success btn-sm" id="btnAdicionarItem" data-bs-toggle="modal" data-bs-target="#modalAdicionarItem">
+                                <i class="bi bi-plus-circle"></i> Adicionar Item
+                            </button>
+                        </div>
+                        <div class="card-body">
+                            <!-- Itens Existentes (apenas na edição) -->
+                            {% if orcamento and itens %}
+                            <div id="itens-existentes" class="mb-4">
+                                <h6 class="text-muted mb-3">
+                                    <i class="bi bi-list-check"></i> Itens Já Adicionados ({{ itens.count }})
+                                </h6>
+                                <div class="table-responsive">
+                                    <table class="table table-striped">
+                                        <thead>
+                                            <tr>
+                                                <th>Produto</th>
+                                                <th>Referência</th>
+                                                <th>Quantidade</th>
+                                                <th>Preço Unit.</th>
+                                                <th>Total</th>
+                                                <th width="100">Ações</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            {% for item in itens %}
+                                            <tr id="item-existente-{{ item.id }}">
+                                                <td>
+                                                    <div class="fw-bold">{{ item.produto.nome_produto }}</div>
+                                                    <small class="text-muted">{{ item.produto.id_tipo_produto.nome }}</small>
+                                                    {% if item.produto.eh_sofa and item.dados_produto %}
+                                                        <div class="mt-2 p-2 bg-light rounded border-start border-primary border-3" style="font-size: 0.85rem;">
+                                                            {% if item.dados_produto.modulos %}
+                                                                <div class="mb-2">
+                                                                    <strong class="text-primary"><i class="bi bi-cube"></i> Módulos:</strong>
+                                                                    <div class="ms-3">
+                                                                        {% for modulo in item.dados_produto.modulos %}
+                                                                            <div class="text-secondary">• <strong>{{ modulo.nome|default:"Módulo" }}</strong>
+                                                                                <br>&nbsp;&nbsp;&nbsp;→ {{ modulo.quantidade|default:1 }} unid. (R$ {{ modulo.preco|floatformat:2 }} cada)
+                                                                            </div>
+                                                                        {% endfor %}
+                                                                    </div>
+                                                                </div>
+                                                            {% endif %}
+                                                            {% if item.dados_produto.acessorios %}
+                                                                <div class="mb-1">
+                                                                    <strong class="text-success"><i class="bi bi-plus-circle"></i> Acessórios:</strong>
+                                                                    <div class="ms-3">
+                                                                        {% for acessorio in item.dados_produto.acessorios %}
+                                                                            <div class="text-secondary">• <strong>{{ acessorio.nome }}{% if acessorio.ref %} ({{ acessorio.ref }}){% endif %}</strong>
+                                                                                → {{ acessorio.quantidade|default:1 }} unid. × R$ {{ acessorio.preco|floatformat:2 }} = R$ {{ acessorio.preco|multiply:acessorio.quantidade|default:1|floatformat:2 }}
+                                                                            </div>
+                                                                        {% endfor %}
+                                                                    </div>
+                                                                </div>
+                                                            {% endif %}
+                                                        </div>
+                                                    {% endif %}
+                                                    {% if item.observacoes %}
+                                                        <br><small class="text-info">
+                                                            <i class="bi bi-chat-left-text"></i> {{ item.observacoes }}
+                                                        </small>
+                                                    {% endif %}
+                                                </td>
+                                                <td><small class="text-muted">{{ item.produto.ref_produto }}</small></td>
+                                                <td>{{ item.quantidade }}</td>
+                                                <td>R$ {{ item.preco_unitario|floatformat:2 }}</td>
+                                                <td><strong>R$ {{ item.get_total|floatformat:2 }}</strong></td>
+                                                <td>
+                                                    <button class="btn btn-sm btn-outline-danger" onclick="removerItemExistente({{ item.id }})">
+                                                        <i class="bi bi-trash"></i>
+                                                    </button>
+                                                </td>
+                                            </tr>
+                                            {% endfor %}
+                                        </tbody>
+                                    </table>
+                                </div>
+                                <hr>
+                            </div>
+                            {% endif %}
+                            
+                            <div id="itens-pedido">
+                                <div class="text-muted text-center py-4" id="sem-itens">
+                                    <i class="bi bi-cart-x fs-1"></i>
+                                    <p class="mt-2">Nenhum item adicionado ainda.<br>
+                                    Clique em "Adicionar Item" para começar.</p>
+                                </div>
+                                
+                                <!-- Tabela de itens será inserida aqui via JavaScript -->
+                                <div class="table-responsive" id="tabela-itens" style="display: none;">
+                                    <table class="table table-striped">
+                                        <thead>
+                                            <tr>
+                                                <th>Produto</th>
+                                                <th>Referência</th>
+                                                <th>Quantidade</th>
+                                                <th>Preço Unit.</th>
+                                                <th>Total</th>
+                                                <th width="100">Ações</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="tbody-itens">
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                            
+                            <!-- Resumo dos totais -->
+                            <div class="row mt-4 border-top pt-3" id="resumo-totais" style="display: none;">
+                                <div class="col-12">
+                                    <div class="card">
+                                        <div class="card-header bg-primary text-white">
+                                            <h6 class="mb-0"><i class="bi bi-calculator"></i> Resumo Financeiro do Pedido</h6>
+                                        </div>
+                                        <div class="card-body">
+                                            <div class="row">
+                                                <div class="col-md-6">
+                                                    <table class="table table-sm table-borderless">
+                                                        <tr>
+                                                            <td><strong>Subtotal dos Itens:</strong></td>
+                                                            <td class="text-end"><span id="subtotal">R$ 0,00</span></td>
+                                                        </tr>
+                                                        <tr class="text-danger">
+                                                            <td><strong>Desconto Aplicado:</strong></td>
+                                                            <td class="text-end">- <span id="desconto">R$ 0,00</span></td>
+                                                        </tr>
+                                                        <tr class="text-success">
+                                                            <td><strong>Acréscimo Aplicado:</strong></td>
+                                                            <td class="text-end">+ <span id="acrescimo">R$ 0,00</span></td>
+                                                        </tr>
+                                                    </table>
+                                                </div>
+                                                <div class="col-md-6">
+                                                    <div class="d-flex justify-content-center align-items-center h-100">
+                                                        <div class="text-center">
+                                                            <div class="text-muted">Valor Total do Pedido</div>
+                                                            <h3 class="text-primary mb-0"><span id="total">R$ 0,00</span></h3>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+
+                <!-- Sidebar com Totais -->
+                <div class="col-lg-4">
+                    <div class="card totais-orcamento">
+                        <div class="card-header">
+                            <i class="bi bi-calculator"></i> Totais do Orçamento
+                        </div>
+                        <div class="card-body">
+                            <div class="row g-2">
+                                <div class="col-6">
+                                    <small class="text-muted">Subtotal:</small>
+                                </div>
+                                <div class="col-6 text-end">
+                                    {% if orcamento %}
+                                        <strong id="subtotal-sidebar">R$ {{ orcamento.get_subtotal|floatformat:2 }}</strong>
+                                    {% else %}
+                                        <strong id="subtotal-sidebar">R$ 0,00</strong>
+                                    {% endif %}
+                                </div>
+                                
+                                <div class="col-6">
+                                    <small class="text-muted">Desconto:</small>
+                                </div>
+                                <div class="col-6 text-end">
+                                    {% if orcamento %}
+                                        <span id="desconto-sidebar" class="text-danger">- R$ {{ orcamento.get_total_desconto|floatformat:2 }}</span>
+                                    {% else %}
+                                        <span id="desconto-sidebar" class="text-danger">- R$ 0,00</span>
+                                    {% endif %}
+                                </div>
+                                
+                                <div class="col-6">
+                                    <small class="text-muted">Acréscimo:</small>
+                                </div>
+                                <div class="col-6 text-end">
+                                    {% if orcamento %}
+                                        <span id="acrescimo-sidebar" class="text-success">+ R$ {{ orcamento.get_total_acrescimo|floatformat:2 }}</span>
+                                    {% else %}
+                                        <span id="acrescimo-sidebar" class="text-success">+ R$ 0,00</span>
+                                    {% endif %}
+                                </div>
+                                
+                                <div class="col-12">
+                                    <hr>
+                                </div>
+                                
+                                <div class="col-6">
+                                    <strong>Total Final:</strong>
+                                </div>
+                                <div class="col-6 text-end">
+                                    {% if orcamento %}
+                                        <strong id="total-final-sidebar" class="text-primary fs-5">R$ {{ orcamento.get_total_final|floatformat:2 }}</strong>
+                                    {% else %}
+                                        <strong id="total-final-sidebar" class="text-primary fs-5">R$ 0,00</strong>
+                                    {% endif %}
+                                </div>
+                                
+                                <div class="col-12">
+                                    <hr>
+                                </div>
+                                
+                                <div class="col-6">
+                                    <small class="text-muted">Peso Total:</small>
+                                </div>
+                                <div class="col-6 text-end">
+                                    {% if orcamento %}
+                                        <small id="peso-total-sidebar">{{ orcamento.get_peso_total|floatformat:2 }} kg</small>
+                                    {% else %}
+                                        <small id="peso-total-sidebar">0,00 kg</small>
+                                    {% endif %}
+                                </div>
+                                
+                                <div class="col-6">
+                                    <small class="text-muted">Cubagem Total:</small>
+                                </div>
+                                <div class="col-6 text-end">
+                                    {% if orcamento %}
+                                        <small id="cubagem-total-sidebar">{{ orcamento.get_cubagem_total|floatformat:3 }} m³</small>
+                                    {% else %}
+                                        <small id="cubagem-total-sidebar">0,000 m³</small>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal para Adicionar Item -->
+<div class="modal fade" id="modalAdicionarItem" tabindex="-1">
+    <div class="modal-dialog modal-xl">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">
+                    <i class="bi bi-plus-circle"></i> Adicionar Item ao Pedido
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="form-adicionar-item">
+                    {% csrf_token %}
+                    
+                    <!-- Seleção do Tipo de Produto -->
+                    <div class="mb-3">
+                        <label for="tipo-produto" class="form-label">
+                            <i class="bi bi-tags"></i> Tipo de Produto *
+                        </label>
+                        <select class="form-select" id="tipo-produto" required>
+                            <option value="">Selecione o tipo de produto...</option>
+                            <option value="sofa">Sofás</option>
+                            <option value="banqueta">Banquetas</option>
+                            <option value="cadeira">Cadeiras</option>
+                            <option value="poltrona">Poltronas</option>
+                            <option value="pufe">Pufes</option>
+                            <option value="almofada">Almofadas</option>
+                        </select>
+                    </div>
+                    
+                    <!-- Seleção do Produto -->
+                    <div class="mb-3" id="selecao-produto" style="display: none;">
+                        <label for="produto" class="form-label">
+                            <i class="bi bi-box-seam"></i> Produto *
+                        </label>
+                        <div class="position-relative">
+                            <!-- Input de busca dinâmica -->
+                            <input type="text" 
+                                   class="form-control produto-busca" 
+                                   id="produto-busca" 
+                                   placeholder="Clique aqui para buscar produtos..." 
+                                   autocomplete="off">
+                            <!-- Select original (oculto) -->
+                            <select class="form-select d-none" id="produto" required>
+                                <option value="">Selecione o produto...</option>
+                            </select>
+                            <!-- Dropdown de resultados -->
+                            <div class="produto-resultados position-absolute w-100 bg-white border rounded-3 shadow-sm" 
+                                 style="top: 100%; z-index: 1000; max-height: 300px; overflow-y: auto; display: none;">
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Visualização Prévia do Produto -->
+                    <div class="mb-3" id="produto-preview" style="display: none;">
+                        <div class="card border-primary">
+                            <div class="card-header bg-light py-2">
+                                <h6 class="mb-0 text-primary">
+                                    <i class="bi bi-eye"></i> Produto Selecionado
+                                </h6>
+                            </div>
+                            <div class="card-body py-3">
+                                <div class="row align-items-center">
+                                    <div class="col-md-3">
+                                        <div class="produto-imagem-container" style="min-height: 120px; display: flex; align-items: center; justify-content: center; background-color: #f8f9fa; border: 1px solid #dee2e6; border-radius: 0.375rem;">
+                                            <img id="produto-foto" 
+                                                 src="" 
+                                                 alt="Foto do produto" 
+                                                 class="img-fluid rounded"
+                                                 style="max-height: 120px; max-width: 100%; object-fit: cover; display: none;">
+                                            <div id="produto-sem-foto" class="text-center text-muted">
+                                                <i class="bi bi-image" style="font-size: 2rem;"></i>
+                                                <div class="small">Sem imagem</div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-9">
+                                        <h5 id="produto-nome" class="mb-2 text-dark"></h5>
+                                        <p class="mb-1">
+                                            <strong>Dimensões:</strong> 
+                                            <span id="produto-dimensoes" class="text-muted"></span>
+                                        </p>
+                                        <p class="mb-0">
+                                            <strong>Tipo:</strong> 
+                                            <span id="produto-tipo" class="badge bg-secondary"></span>
+                                        </p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Dependências do Produto -->
+                    <div class="mb-3" id="produto-dependencias" style="display: none;">
+                        <div id="dependencias-conteudo">
+                            <!-- Conteúdo será carregado dinamicamente -->
+                        </div>
+                    </div>
+                    
+                    <!-- Seção específica para Sofás -->
+                    <div class="mb-3" id="sofa-configuracao" style="display: none;">
+                        <div class="card">
+                            <div class="card-header bg-primary bg-opacity-10">
+                                <h6 class="mb-0 text-primary">
+                                    <i class="bi bi-grid-3x3"></i> Configuração do Sofá
+                                </h6>
+                            </div>
+                            <div class="card-body">
+                                <!-- Preview da imagem do sofá -->
+                                <div id="sofa-preview" class="mb-4">
+                                    <div class="text-center mb-3">
+                                        <h5 id="sofa-nome-preview" class="text-primary mb-2"></h5>
+                                        <div id="sofa-info-preview" class="text-muted small mb-3"></div>
+                                        
+                                        <!-- Imagem do sofá centralizada -->
+                                        <div class="sofa-imagem-container d-inline-block" style="background-color: #f8f9fa; border: 2px dashed #dee2e6; border-radius: 0.5rem; padding: 15px; max-width: 300px;">
+                                            <img id="sofa-imagem-preview" 
+                                                 src="" 
+                                                 alt="Preview do sofá" 
+                                                 class="img-fluid rounded shadow-sm"
+                                                 style="max-height: 200px; max-width: 100%; object-fit: cover; display: none;">
+                                            <div id="sofa-sem-imagem" class="text-muted">
+                                                <i class="bi bi-image" style="font-size: 2rem;"></i>
+                                                <div class="mt-2 small">Imagem do sofá aparecerá aqui</div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <!-- Módulos do Sofá -->
+                                <div id="sofa-modulos" class="mb-4">
+                                    <label for="modulo-select" class="form-label">
+                                        <i class="bi bi-cube"></i> Módulos disponíveis:
+                                    </label>
+                                    
+                                    <!-- Lista de módulos melhorada com dropdown de tamanhos -->
+                                    <div id="modulos-lista" class="row">
+                                        <!-- Módulos serão carregados dinamicamente aqui -->
+                                    </div>
+                                    
+                                    <!-- Lista de módulos selecionados -->
+                                    <div id="modulos-selecionados" class="mt-4" style="display: none;">
+                                        <h6 class="fw-bold text-primary">
+                                            <i class="bi bi-check-circle"></i> Módulos Selecionados
+                                        </h6>
+                                        <div id="lista-modulos-selecionados" class="border rounded p-3 bg-light">
+                                            <!-- Lista de módulos selecionados será exibida aqui -->
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <!-- Acessórios Vinculados ao Sofá -->
+                                <div id="sofa-acessorios-vinculados" style="display: none;">
+                                    <hr>
+                                    <h6 class="fw-bold mb-3">
+                                        <i class="bi bi-plus-circle text-success"></i> Acessórios Vinculados
+                                        <small class="text-muted">(Opcionais)</small>
+                                    </h6>
+                                    <div class="alert alert-info mb-3">
+                                        <i class="bi bi-info-circle"></i>
+                                        <small>Selecione os acessórios específicos para este modelo de sofá. Você pode selecionar múltiplos acessórios.</small>
+                                    </div>
+                                    <div id="acessorios-vinculados-lista">
+                                        <!-- Lista de acessórios vinculados será carregada dinamicamente -->
+                                    </div>
+                                </div>
+                                
+                                <!-- Resumo da Seleção -->
+                                <div id="sofa-resumo" style="display: none;">
+                                    <hr>
+                                    <div class="row">
+                                        <div class="col-md-6">
+                                            <h6 class="fw-bold text-success">
+                                                <i class="bi bi-check-circle"></i> Resumo da Seleção
+                                            </h6>
+                                            <div id="resumo-modulos">
+                                                <!-- Módulos selecionados -->
+                                            </div>
+                                            <div id="resumo-acessorios">
+                                                <!-- Acessórios selecionados -->
+                                            </div>
+                                        </div>
+                                        <div class="col-md-6 text-end">
+                                            <div class="card bg-light">
+                                                <div class="card-body">
+                                                    <h6 class="card-title">Preço Total</h6>
+                                                    <h4 class="text-success mb-0" id="preco-total-sofa">R$ 0,00</h4>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Quantidade - Campo Compacto (25% largura) -->
+                    <div class="row">
+                        <div class="col-md-2 col-sm-3 col-4">
+                            <div class="mb-3">
+                                <label for="quantidade" class="form-label">
+                                    <i class="bi bi-123"></i> Quantidade. *
+                                </label>
+                                <input type="number" class="form-control form-control-sm" id="quantidade" value="1" min="1" required>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Observações -->
+                    <div class="mb-3">
+                        <label for="observacoes" class="form-label">
+                            <i class="bi bi-chat-left-text"></i> Observações
+                        </label>
+                        <textarea class="form-control" id="observacoes" rows="3" 
+                                  placeholder="Observações adicionais sobre o item..."></textarea>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                    <i class="bi bi-x-circle"></i> Cancelar
+                </button>
+                <button type="button" class="btn btn-success" id="btn-confirmar-item">
+                    <i class="bi bi-check-circle"></i> Adicionar Item
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Variável global para indicar se estamos editando um orçamento existente
+{% if orcamento %}
+window.orcamentoPk = {{ orcamento.pk }};
+{% else %}
+window.orcamentoPk = null;
+{% endif %}
+
+// Variáveis globais para o modal e itens do pedido
+let itensPedido = [];
+let contadorItens = 0;
+let produtoSelecionado = null;
+
+document.addEventListener('DOMContentLoaded', function() {
+    console.log('🔧 DEBUG: DOM carregado - Inicializando modal Adicionar Item');
+    
+    // Inicializar campos unificados de desconto e acréscimo
+    inicializarCamposUnificados();
+    
+    // Elementos do DOM
+    const tipoSelect = document.getElementById('tipo-produto');
+    const produtoSelect = document.getElementById('produto');
+    const quantidadeInput = document.getElementById('quantidade');
+    const selecaoProduto = document.getElementById('selecao-produto');
+    const produtoDependencias = document.getElementById('produto-dependencias');
+    const dependenciasConteudo = document.getElementById('dependencias-conteudo');
+    const btnConfirmar = document.getElementById('btn-confirmar-item');
+    
+    // DEBUG: Verificar se elementos foram encontrados
+    console.log('🔧 DEBUG: Elementos encontrados:', {
+        tipoSelect: !!tipoSelect,
+        produtoSelect: !!produtoSelect,
+        selecaoProduto: !!selecaoProduto,
+        produtoDependencias: !!produtoDependencias,
+        btnConfirmar: !!btnConfirmar
+    });
+    
+    // Função para inicializar campos unificados
+    function inicializarCamposUnificados() {
+        // Configurar desconto
+        const descontoValorUnif = document.getElementById('desconto_valor_unificado');
+        const descontoTipo = document.getElementById('desconto_tipo');
+        const descontoTipoBtn = document.getElementById('desconto_tipo_btn');
+        const descontoValorOrig = document.getElementById('id_desconto_valor');
+        const descontoPercOrig = document.getElementById('id_desconto_percentual');
+        
+        // Configurar acréscimo
+        const acrescimoValorUnif = document.getElementById('acrescimo_valor_unificado');
+        const acrescimoTipo = document.getElementById('acrescimo_tipo');
+        const acrescimoTipoBtn = document.getElementById('acrescimo_tipo_btn');
+        const acrescimoValorOrig = document.getElementById('id_acrescimo_valor');
+        const acrescimoPercOrig = document.getElementById('id_acrescimo_percentual');
+        
+        // Verificar se os elementos existem antes de continuar
+        if (!descontoValorUnif || !acrescimoValorUnif) {
+            console.log('Campos unificados não encontrados, pulando inicialização');
+            return;
+        }
+        
+        // Carregar valores iniciais e sincronizar botões
+        if (descontoValorOrig && descontoValorOrig.value && parseFloat(descontoValorOrig.value) > 0) {
+            descontoValorUnif.value = descontoValorOrig.value;
+            descontoTipo.value = 'valor';
+            atualizarBotaoTipo(descontoTipoBtn, 'valor');
+        } else if (descontoPercOrig && descontoPercOrig.value && parseFloat(descontoPercOrig.value) > 0) {
+            descontoValorUnif.value = descontoPercOrig.value;
+            descontoTipo.value = 'percentual';
+            atualizarBotaoTipo(descontoTipoBtn, 'percentual');
+        }
+        
+        if (acrescimoValorOrig && acrescimoValorOrig.value && parseFloat(acrescimoValorOrig.value) > 0) {
+            acrescimoValorUnif.value = acrescimoValorOrig.value;
+            acrescimoTipo.value = 'valor';
+            atualizarBotaoTipo(acrescimoTipoBtn, 'valor');
+        } else if (acrescimoPercOrig && acrescimoPercOrig.value && parseFloat(acrescimoPercOrig.value) > 0) {
+            acrescimoValorUnif.value = acrescimoPercOrig.value;
+            acrescimoTipo.value = 'percentual';
+            atualizarBotaoTipo(acrescimoTipoBtn, 'percentual');
+        }
+        
+        // Função para atualizar visual do botão
+        function atualizarBotaoTipo(botao, tipo) {
+            const textoSpan = botao.querySelector('.tipo-texto');
+            botao.setAttribute('data-tipo', tipo);
+            
+            // Definir o tipo correto baseado no ID do botão
+            if (botao.id === 'desconto_tipo_btn') {
+                descontoTipo.value = tipo;
+            } else if (botao.id === 'acrescimo_tipo_btn') {
+                acrescimoTipo.value = tipo;
+            }
+            
+            if (tipo === 'valor') {
+                textoSpan.textContent = 'R$';
+            } else {
+                textoSpan.textContent = '%';
+            }
+        }
+        
+        // Event listeners para os botões de tipo
+        if (descontoTipoBtn) {
+            descontoTipoBtn.addEventListener('click', function() {
+                const tipoAtual = this.getAttribute('data-tipo');
+                const novoTipo = tipoAtual === 'valor' ? 'percentual' : 'valor';
+                
+                atualizarBotaoTipo(this, novoTipo);
+                descontoTipo.value = novoTipo;
+                
+                // Sincronizar com campos originais
+                const valor = parseFloat(descontoValorUnif.value) || 0;
+                if (valor > 0) {
+                    if (novoTipo === 'valor') {
+                        descontoValorOrig.value = valor;
+                        descontoPercOrig.value = '';
+                    } else {
+                        descontoPercOrig.value = valor;
+                        descontoValorOrig.value = '';
+                    }
+                }
+                
+                // Atualizar totais da sidebar
+                if (typeof atualizarTotaisSidebar === 'function') {
+                    atualizarTotaisSidebar();
+                }
+            });
+        }
+        
+        if (acrescimoTipoBtn) {
+            acrescimoTipoBtn.addEventListener('click', function() {
+                const tipoAtual = this.getAttribute('data-tipo');
+                const novoTipo = tipoAtual === 'valor' ? 'percentual' : 'valor';
+                
+                atualizarBotaoTipo(this, novoTipo);
+                acrescimoTipo.value = novoTipo;
+                
+                // Sincronizar com campos originais
+                const valor = parseFloat(acrescimoValorUnif.value) || 0;
+                if (valor > 0) {
+                    if (novoTipo === 'valor') {
+                        acrescimoValorOrig.value = valor;
+                        acrescimoPercOrig.value = '';
+                    } else {
+                        acrescimoPercOrig.value = valor;
+                        acrescimoValorOrig.value = '';
+                    }
+                }
+                
+                // Atualizar totais da sidebar
+                if (typeof atualizarTotaisSidebar === 'function') {
+                    atualizarTotaisSidebar();
+                }
+            });
+        }
+        
+        // Event listeners para sincronizar campos quando valor muda
+        descontoValorUnif.addEventListener('input', function() {
+            const valor = parseFloat(this.value) || 0;
+            const tipo = descontoTipo.value;
+            
+            if (tipo === 'valor') {
+                descontoValorOrig.value = valor;
+                descontoPercOrig.value = '';
+            } else {
+                descontoPercOrig.value = valor;
+                descontoValorOrig.value = '';
+            }
+            
+            // Atualizar totais da sidebar
+            if (typeof atualizarTotaisSidebar === 'function') {
+                atualizarTotaisSidebar();
+            }
+        });
+        
+        acrescimoValorUnif.addEventListener('input', function() {
+            const valor = parseFloat(this.value) || 0;
+            const tipo = acrescimoTipo.value;
+            
+            if (tipo === 'valor') {
+                acrescimoValorOrig.value = valor;
+                acrescimoPercOrig.value = '';
+            } else {
+                acrescimoPercOrig.value = valor;
+                acrescimoValorOrig.value = '';
+            }
+            
+            // Atualizar totais da sidebar
+            if (typeof atualizarTotaisSidebar === 'function') {
+                atualizarTotaisSidebar();
+            }
+        });
+        
+        // Validação personalizada antes do envio do formulário
+        const orcamentoForm = document.getElementById('orcamento-form');
+        if (orcamentoForm) {
+            orcamentoForm.addEventListener('submit', function(e) {
+                // Garantir que os valores dos campos unificados sejam sincronizados
+                // com os campos originais antes do envio
+                const descontoValor = parseFloat(descontoValorUnif.value) || 0;
+                if (descontoValor > 0) {
+                    if (descontoTipo.value === 'valor') {
+                        descontoValorOrig.value = descontoValor;
+                        descontoPercOrig.value = '';
+                    } else {
+                        descontoPercOrig.value = descontoValor;
+                        descontoValorOrig.value = '';
+                    }
+                } else {
+                    // Definir como vazio para ser tratado como None no backend
+                    descontoValorOrig.value = '';
+                    descontoPercOrig.value = '';
+                }
+                
+                const acrescimoValor = parseFloat(acrescimoValorUnif.value) || 0;
+                if (acrescimoValor > 0) {
+                    if (acrescimoTipo.value === 'valor') {
+                        acrescimoValorOrig.value = acrescimoValor;
+                        acrescimoPercOrig.value = '';
+                    } else {
+                        acrescimoPercOrig.value = acrescimoValor;
+                        acrescimoValorOrig.value = '';
+                    }
+                } else {
+                    // Definir como vazio para ser tratado como None no backend
+                    acrescimoValorOrig.value = '';
+                    acrescimoPercOrig.value = '';
+                }
+                
+                // Serializar itens do pedido
+                const itensPedidoInput = document.getElementById('itens-pedido-json');
+                if (itensPedidoInput) {
+                    itensPedidoInput.value = JSON.stringify(itensPedido);
+                }
+            });
+        }
+    }
+    
+    // Event listeners para o modal
+    if (tipoSelect) {
+        console.log('🔧 DEBUG: tipoSelect encontrado, adicionando listener');
+        tipoSelect.addEventListener('change', function() {
+            const tipo = this.value;
+            console.log('🔧 DEBUG: Tipo selecionado:', tipo);
+            if (tipo) {
+                carregarProdutosPorTipo(tipo);
+            } else {
+                if (selecaoProduto) selecaoProduto.style.display = 'none';
+                if (produtoDependencias) produtoDependencias.style.display = 'none';
+            }
+            // Ocultar preview quando trocar tipo de produto
+            ocultarPreviewProduto();
+        });
+    } else {
+        console.log('🔧 DEBUG: tipoSelect NÃO encontrado!');
+    }
+    
+    if (produtoSelect) {
+        produtoSelect.addEventListener('change', function() {
+            const produtoId = this.value;
+            if (produtoId) {
+                carregarDetalhesProduto(produtoId);
+                
+                // Para sofás, o preview é feito pela carregarConfiguracaoSofa
+                // Para outros produtos, usar carregarPreviewProduto
+                if (!produtoId.startsWith('produto_')) {
+                    carregarPreviewProduto(produtoId);
+                }
+            } else {
+                if (produtoDependencias) produtoDependencias.style.display = 'none';
+                ocultarPreviewProduto();
+            }
+        });
+    }
+    
+    // Função para carregar produtos por tipo
+    function carregarProdutosPorTipo(tipo) {
+        console.log('🔧 DEBUG: carregarProdutosPorTipo chamada com tipo:', tipo);
+        console.log('🔧 DEBUG: produtoSelect existe?', !!produtoSelect);
+        console.log('🔧 DEBUG: selecaoProduto existe?', !!selecaoProduto);
+        
+        if (!produtoSelect) return;
+        
+        // Limpar produto selecionado ao trocar tipo
+        produtoSelecionado = null;
+        
+        // Ocultar preview ao trocar tipo de produto
+        ocultarPreviewProduto();
+        
+        // Limpar o campo de busca de produtos
+        const produtoBusca = document.getElementById('produto-busca');
+        const produtoResultados = document.querySelector('.produto-resultados');
+        
+        if (produtoBusca) {
+            produtoBusca.value = '';
+            produtoBusca.placeholder = 'Clique aqui para buscar produtos...';
+        }
+        
+        if (produtoResultados) {
+            produtoResultados.style.display = 'none';
+        }
+        
+        // Para tipos não suportados na melhoria (sofás), manter comportamento original
+        if (tipo === 'sofa') {
+            fetch(`/orcamentos/produtos-por-tipo/?tipo=${tipo}`)
+                .then(response => response.json())
+                .then(data => {
+                    produtoSelect.innerHTML = '<option value="">Selecione o produto...</option>';
+                    
+                    if (data.produtos && data.produtos.length > 0) {
+                        data.produtos.forEach(produto => {
+                            const option = document.createElement('option');
+                            option.value = produto.id;
+                            option.textContent = `${produto.nome_produto} - ${produto.ref_produto}`;
+                            produtoSelect.appendChild(option);
+                        });
+                    }
+                    
+                    // Mostrar select original para sofás
+                    produtoSelect.classList.remove('d-none');
+                    if (produtoBusca) produtoBusca.style.display = 'none';
+                    
+                    console.log('🔧 DEBUG: Tentando mostrar selecaoProduto para sofás');
+                    if (selecaoProduto) {
+                        selecaoProduto.style.display = 'block';
+                        console.log('🔧 DEBUG: selecaoProduto mostrado para sofás');
+                    } else {
+                        console.log('🔧 DEBUG: selecaoProduto NÃO encontrado para sofás!');
+                    }
+                })
+                .catch(error => {
+                    console.error('Erro ao carregar produtos:', error);
+                    alert('Erro ao carregar produtos');
+                });
+        } else {
+            // Para produtos padronizados, mostrar campo de busca
+            produtoSelect.classList.add('d-none');
+            if (produtoBusca) produtoBusca.style.display = 'block';
+            
+            console.log('🔧 DEBUG: Tentando mostrar selecaoProduto para outros produtos');
+            if (selecaoProduto) {
+                selecaoProduto.style.display = 'block';
+                console.log('🔧 DEBUG: selecaoProduto mostrado para outros produtos');
+            } else {
+                console.log('🔧 DEBUG: selecaoProduto NÃO encontrado para outros produtos!');
+            }
+            
+            // NÃO carregar produtos automaticamente - aguardar clique do usuário
+        }
+    }
+    
+    // Função para carregar detalhes do produto
+    function carregarDetalhesProduto(produtoId) {
+        console.log('🔸 carregarDetalhesProduto chamada para:', produtoId);
+        
+        // Verificar se é um sofá para mostrar configuração específica
+        if (produtoId.startsWith('produto_')) {
+            console.log('🛋️ Produto de sofá detectado no carregarDetalhesProduto:', produtoId);
+            carregarConfiguracaoSofa(produtoId);
+        } else {
+            console.log('📦 Produto padrão detectado no carregarDetalhesProduto:', produtoId);
+            // Para outros produtos, manter comportamento original
+            fetch(`/orcamentos/detalhes-produto/?produto_id=${produtoId}`)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.erro) {
+                        alert('Erro ao carregar detalhes do produto');
+                        return;
+                    }
+                    
+                    const produto = data.produto;
+                    
+                    // Mostrar dependências se necessário para produtos não-sofás
+                    if (produto.tem_modulos && produto.modulos) {
+                        mostrarModulosSofa(produto.modulos);
+                    } else {
+                        if (produtoDependencias) produtoDependencias.style.display = 'none';
+                    }
+                })
+                .catch(error => {
+                    console.error('Erro ao carregar detalhes do produto:', error);
+                    alert('Erro ao carregar detalhes do produto');
+                });
+            
+            // Ocultar configuração de sofá para produtos não-sofás
+            const sofaConfiguracao = document.getElementById('sofa-configuracao');
+            if (sofaConfiguracao) sofaConfiguracao.style.display = 'none';
+        }
+    }
+    
+    // Adicionar item ao pedido
+    if (btnConfirmar) {
+        btnConfirmar.addEventListener('click', function() {
+            const tipoProduto = tipoSelect ? tipoSelect.value : '';
+            const produtoId = produtoSelect ? produtoSelect.value : '';
+            const produtoTexto = produtoSelect && produtoSelect.selectedOptions[0] ? 
+                                produtoSelect.selectedOptions[0].textContent : '';
+            const quantidade = quantidadeInput ? parseInt(quantidadeInput.value) : 1;
+            const observacoes = document.getElementById('observacoes') ? 
+                               document.getElementById('observacoes').value : '';
+            
+            // Validações básicas
+            if (!tipoProduto || !produtoId || !quantidade) {
+                alert('Por favor, preencha todos os campos obrigatórios (marcados com *).');
+                return;
+            }
+            
+            try {
+                let precoUnitario = 0;
+                let dadosEspecificos = {};
+                
+                // Tratar sofás de forma especial
+                if (tipoProduto === 'sofa' && produtoId.startsWith('produto_')) {
+                    const dadosSofa = obterDadosSofaConfigurado();
+                    if (!dadosSofa) {
+                        return; // obterDadosSofaConfigurado() já mostra o alert de erro
+                    }
+                    precoUnitario = dadosSofa.preco_unitario;
+                    dadosEspecificos = dadosSofa.dados_especificos;
+                } else {
+                    // Para outros tipos de produto, usar preço do produto selecionado
+                    if (produtoSelecionado && produtoSelecionado.preco) {
+                        precoUnitario = produtoSelecionado.preco;
+                    } else {
+                        alert('Erro: Preço do produto não encontrado. Tente selecionar o produto novamente.');
+                        return;
+                    }
+                    dadosEspecificos = coletarDadosEspecificos(tipoProduto);
+                }
+                
+                // Criar objeto do item
+                const item = {
+                    id: ++contadorItens,
+                    produto_id: produtoId,
+                    produto_nome: produtoTexto.split(' - ')[0],
+                    produto_ref: produtoTexto.split(' - ')[1] || '',
+                    tipo_produto: tipoProduto,
+                    quantidade: quantidade,
+                    preco_unitario: precoUnitario,
+                    preco_total: quantidade * precoUnitario,
+                    observacoes: observacoes,
+                    dados_especificos: dadosEspecificos
+                };
+                
+                // Adicionar à lista
+                itensPedido.push(item);
+                
+                // Se estamos editando um orçamento, enviar item via AJAX
+                if (window.orcamentoPk) {
+                    enviarItemViaAjax(item);
+                }
+                
+                // Atualizar interface
+                atualizarTabelaItens();
+                calcularTotaisGerais();
+                
+                // Limpar e fechar modal
+                limparFormulario();
+                const modal = document.getElementById('modalAdicionarItem');
+                if (modal) {
+                    const bootstrapModal = bootstrap.Modal.getInstance(modal);
+                    if (bootstrapModal) {
+                        bootstrapModal.hide();
+                    }
+                }
+                
+                console.log('Item adicionado com sucesso:', item);
+                
+            } catch (error) {
+                console.error('Erro ao adicionar item:', error);
+                alert('Erro ao adicionar item: ' + error.message);
+            }
+        });
+    }
+    
+    // Função para coletar dados específicos do produto
+    function coletarDadosEspecificos(tipo) {
+        const dados = { tipo: tipo };
+        
+        switch(tipo) {
+            case 'sofa':
+                // Para sofás, usar o novo sistema de configuração
+                const dadosSofa = obterDadosSofaConfigurado();
+                if (!dadosSofa) {
+                    throw new Error('Configuração do sofá incompleta');
+                }
+                return dadosSofa.dados_especificos;
+                
+            default:
+                // Para outros tipos, não há dados específicos adicionais
+                break;
+        }
+        
+        return dados;
+    }
+    
+    // Função para gerar detalhamento visual dos sofás na tabela de itens
+    function gerarDetalhamentoSofa(dadosEspecificos) {
+        if (!dadosEspecificos) return '';
+        
+        let detalhamento = '<div class="mt-2 p-2 bg-light rounded border-start border-primary border-3" style="font-size: 0.85rem;">';
+        
+        // Detalhamento dos módulos
+        if (dadosEspecificos.modulos && dadosEspecificos.modulos.length > 0) {
+            detalhamento += '<div class="mb-2">';
+            detalhamento += '<strong class="text-primary"><i class="bi bi-cube"></i> Módulos:</strong>';
+            detalhamento += '<div class="ms-3">';
+            
+            // Agrupar módulos por nome para melhor visualização
+            const modulosAgrupados = {};
+            dadosEspecificos.modulos.forEach(modulo => {
+                const chave = modulo.nome || `Módulo ${modulo.modulo_id}`;
+                if (!modulosAgrupados[chave]) {
+                    modulosAgrupados[chave] = [];
+                }
+                modulosAgrupados[chave].push(modulo);
+            });
+            
+            Object.keys(modulosAgrupados).forEach(nomeModulo => {
+                const modulos = modulosAgrupados[nomeModulo];
+                detalhamento += `<div class="text-secondary">• <strong>${nomeModulo}</strong>`;
+                
+                // Mostrar tamanhos e quantidades para cada módulo
+                modulos.forEach(modulo => {
+                    const largura = modulo.largura_total || 'N/A';
+                    const quantidade = modulo.quantidade || 1;
+                    const preco = modulo.preco || 0;
+                    
+                    detalhamento += `<br>&nbsp;&nbsp;&nbsp;→ ${largura}cm × ${quantidade} unid. (R$ ${preco.toFixed(2)} cada)`;
+                });
+                
+                detalhamento += '</div>';
+            });
+            
+            detalhamento += '</div></div>';
+        }
+        
+        // Detalhamento dos acessórios
+        if (dadosEspecificos.acessorios && dadosEspecificos.acessorios.length > 0) {
+            detalhamento += '<div class="mb-1">';
+            detalhamento += '<strong class="text-success"><i class="bi bi-plus-circle"></i> Acessórios:</strong>';
+            detalhamento += '<div class="ms-3">';
+            
+            dadosEspecificos.acessorios.forEach(acessorio => {
+                const nome = acessorio.nome || 'Acessório';
+                const ref = acessorio.ref ? ` (${acessorio.ref})` : '';
+                const quantidade = acessorio.quantidade || 1;
+                const preco = acessorio.preco || 0;
+                
+                detalhamento += `<div class="text-secondary">• <strong>${nome}${ref}</strong>`;
+                detalhamento += ` → ${quantidade} unid. × R$ ${preco.toFixed(2)} = R$ ${(quantidade * preco).toFixed(2)}`;
+                detalhamento += '</div>';
+            });
+            
+            detalhamento += '</div></div>';
+        }
+        
+        detalhamento += '</div>';
+        
+        return detalhamento;
+    }
+    
+    // Função para atualizar tabela de itens
+    function atualizarTabelaItens() {
+        const tabelaItens = document.getElementById('tabela-itens');
+        const semItens = document.getElementById('sem-itens');
+        
+        if (itensPedido.length === 0) {
+            if (tabelaItens) tabelaItens.style.display = 'none';
+            if (semItens) semItens.style.display = 'block';
+            return;
+        }
+        
+        if (semItens) semItens.style.display = 'none';
+        if (tabelaItens) tabelaItens.style.display = 'block';
+        
+        if (!tabelaItens) return;
+        
+        let html = `
+            <table class="table table-striped">
+                <thead>
+                    <tr>
+                        <th>Produto</th>
+                        <th>Quantidade</th>
+                        <th>Preço Unit.</th>
+                        <th>Total</th>
+                        <th>Ações</th>
+                    </tr>
+                </thead>
+                <tbody>
+        `;
+        
+        itensPedido.forEach(item => {
+            // Gerar detalhamento específico para sofás
+            let detalhamentoSofa = '';
+            if (item.tipo_produto === 'sofa' && item.dados_especificos) {
+                detalhamentoSofa = gerarDetalhamentoSofa(item.dados_especificos);
+            }
+            
+            html += `
+                <tr>
+                    <td>
+                        <div class="fw-bold">${item.produto_nome}</div>
+                        <small class="text-muted">Ref: ${item.produto_ref}</small>
+                        ${detalhamentoSofa}
+                        ${item.observacoes ? `<br><small class="text-info"><i class="bi bi-chat-left-text"></i> ${item.observacoes}</small>` : ''}
+                    </td>
+                    <td>${item.quantidade}</td>
+                    <td>R$ ${item.preco_unitario.toFixed(2)}</td>
+                    <td>R$ ${item.preco_total.toFixed(2)}</td>
+                    <td>
+                        <button class="btn btn-sm btn-outline-danger" onclick="removerItem(${item.id})">
+                            <i class="bi bi-trash"></i>
+                        </button>
+                    </td>
+                </tr>
+            `;
+        });
+        
+        html += '</tbody></table>';
+        
+        tabelaItens.innerHTML = html;
+    }
+    
+    // Função para remover item
+    window.removerItem = function(itemId) {
+        const index = itensPedido.findIndex(item => item.id === itemId);
+        if (index !== -1) {
+            itensPedido.splice(index, 1);
+            atualizarTabelaItens();
+            calcularTotaisGerais();
+        }
+    };
+    
+    // Função para remover item existente (salvos no banco)
+    window.removerItemExistente = function(itemId) {
+        if (!window.orcamentoPk) {
+            alert('Erro: Orçamento não identificado');
+            return;
+        }
+        
+        if (!confirm('Tem certeza que deseja remover este item?')) {
+            return;
+        }
+        
+        // Fazer requisição AJAX para remover item
+        fetch(`/orcamentos/${window.orcamentoPk}/item/${itemId}/remover/`, {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value,
+                'Content-Type': 'application/json',
+            },
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                // Remover linha da tabela
+                const row = document.getElementById(`item-existente-${itemId}`);
+                if (row) {
+                    row.remove();
+                }
+                
+                // Atualizar totais da sidebar
+                if (typeof atualizarTotaisSidebar === 'function') {
+                    atualizarTotaisSidebar();
+                }
+                
+                // Verificar se ainda há itens
+                const tabelaItens = document.querySelector('#itens-existentes tbody');
+                if (tabelaItens && tabelaItens.children.length === 0) {
+                    document.getElementById('itens-existentes').style.display = 'none';
+                }
+                
+                console.log('Item removido com sucesso');
+            } else {
+                alert('Erro ao remover item: ' + (data.message || 'Erro desconhecido'));
+            }
+        })
+        .catch(error => {
+            console.error('Erro:', error);
+            alert('Erro ao remover item');
+        });
+    };
+    
+    // Função para calcular totais gerais
+    function calcularTotaisGerais() {
+        const subtotal = itensPedido.reduce((total, item) => total + item.preco_total, 0);
+        
+        // Atualizar campo subtotal se existir
+        const subtotalElement = document.getElementById('subtotal-itens');
+        if (subtotalElement) {
+            subtotalElement.textContent = `R$ ${subtotal.toFixed(2)}`;
+        }
+        
+        console.log('Subtotal calculado:', subtotal);
+        
+        // Atualizar sidebar com totais em tempo real
+        atualizarTotaisSidebar();
+    }
+    
+    // Função para limpar formulário
+    function limparFormulario() {
+        if (tipoSelect) tipoSelect.value = '';
+        if (produtoSelect) produtoSelect.innerHTML = '<option value="">Selecione o produto...</option>';
+        if (quantidadeInput) quantidadeInput.value = '1';
+        const observacoes = document.getElementById('observacoes');
+        if (observacoes) observacoes.value = '';
+        if (selecaoProduto) selecaoProduto.style.display = 'none';
+        if (produtoDependencias) produtoDependencias.style.display = 'none';
+        if (dependenciasConteudo) dependenciasConteudo.innerHTML = '';
+        
+        // Limpar campo de busca de produtos se existir
+        const produtoBusca = document.getElementById('produto-busca');
+        if (produtoBusca) produtoBusca.value = '';
+        const produtoResultados = document.querySelector('.produto-resultados');
+        if (produtoResultados) produtoResultados.style.display = 'none';
+        
+        // Limpar configuração de sofá
+        const sofaConfiguracao = document.getElementById('sofa-configuracao');
+        if (sofaConfiguracao) sofaConfiguracao.style.display = 'none';
+        
+        // Resetar configuração do sofá usando a função específica
+        resetarConfiguracaoSofa();
+        
+        // Ocultar preview do produto
+        ocultarPreviewProduto();
+    }
+    
+    // Função para calcular totais (compatibilidade)
+    function calcularTotais() {
+        // Função removida para evitar loop infinito com calcularTotaisGerais
+        // Esta função estava chamando calcularTotaisGerais() que por sua vez chamava calcularTotais()
+        console.log('calcularTotais() chamada - função desabilitada para evitar loop infinito');
+    }
+    
+    // Função para carregar itens existentes no array JavaScript (apenas em edição)
+    function carregarItensExistentes() {
+        {% if orcamento and itens %}
+        console.log('Carregando itens existentes do orçamento...');
+        
+        // Limpar array de itens
+        itensPedido = [];
+        
+        // Adicionar itens existentes ao array JavaScript
+        {% for item in itens %}
+        const item{{ item.id }} = {
+            id: {{ item.id }},
+            produto_id: {{ item.produto.id }},
+            nome_produto: '{{ item.produto.nome_produto|escapejs }}',
+            ref_produto: '{{ item.produto.ref_produto|escapejs }}',
+            tipo_produto: '{{ item.produto.id_tipo_produto.nome|escapejs }}',
+            quantidade: {{ item.quantidade }},
+            preco_unitario: {{ item.preco_unitario }},
+            preco_total: {{ item.get_total }},
+            observacoes: '{{ item.observacoes|escapejs }}',
+            dados_especificos: {{ item.dados_produto|safe }},
+            existente: true // Flag para identificar itens já salvos
+        };
+        itensPedido.push(item{{ item.id }});
+        {% endfor %}
+        
+        console.log('Itens carregados:', itensPedido.length);
+        {% else %}
+        console.log('Nenhum item existente para carregar (novo orçamento)');
+        {% endif %}
+    }
+    
+    // Carregar itens existentes se for edição
+    carregarItensExistentes();
+    
+    // Inicializar totais se existirem itens
+    calcularTotaisGerais();
+    
+    // Inicializar datas padrão se estiverem vazias - versão otimizada
+    function preencherDatasAutomaticamente() {
+        console.log('Verificando preenchimento automático de datas...');
+        
+        const dataValidadeInput = document.getElementById('id_data_validade');
+        const dataEntregaInput = document.getElementById('id_data_entrega');
+        
+        // Função auxiliar para formatar data no padrão YYYY-MM-DD
+        function formatarDataParaInput(data) {
+            const ano = data.getFullYear();
+            const mes = String(data.getMonth() + 1).padStart(2, '0');
+            const dia = String(data.getDate()).padStart(2, '0');
+            return `${ano}-${mes}-${dia}`;
+        }
+        
+        const hoje = new Date();
+        
+        // Configurar data de validade (hoje + 15 dias) apenas se estiver vazia
+        if (dataValidadeInput && (!dataValidadeInput.value || dataValidadeInput.value === '')) {
+            const dataValidade = new Date(hoje);
+            dataValidade.setDate(hoje.getDate() + 15);
+            
+            const dataFormatada = formatarDataParaInput(dataValidade);
+            dataValidadeInput.value = dataFormatada;
+            console.log('Data de validade preenchida:', dataFormatada);
+            
+            // Disparar evento change
+            dataValidadeInput.dispatchEvent(new Event('change', { bubbles: true }));
+        }
+        
+        // Configurar data de entrega (hoje + 30 dias) apenas se estiver vazia
+        if (dataEntregaInput && (!dataEntregaInput.value || dataEntregaInput.value === '')) {
+            const dataEntrega = new Date(hoje);
+            dataEntrega.setDate(hoje.getDate() + 30);
+            
+            const dataFormatada = formatarDataParaInput(dataEntrega);
+            dataEntregaInput.value = dataFormatada;
+            console.log('Data de entrega preenchida:', dataFormatada);
+            
+            // Disparar evento change
+            dataEntregaInput.dispatchEvent(new Event('change', { bubbles: true }));
+        }
+    }
+    
+    // Executar quando a página carregar
+    window.addEventListener('load', preencherDatasAutomaticamente);
+    document.addEventListener('DOMContentLoaded', preencherDatasAutomaticamente);
+    
+    console.log('Inicialização completa do modal Adicionar Item');
+    
+    // Fallback com timeout para garantir que as datas sejam preenchidas
+    setTimeout(function() {
+        preencherDatasAutomaticamente();
+        
+        // Forçar layout do campo cliente
+        const clienteCol = document.querySelector('.cliente-expandido');
+        const vendedorCol = document.querySelector('.vendedor-compacto');
+        
+        if (clienteCol) {
+            clienteCol.style.flex = '0 0 66.666667%';
+            clienteCol.style.maxWidth = '66.666667%';
+        }
+        
+        if (vendedorCol) {
+            vendedorCol.style.flex = '0 0 33.333333%';
+            vendedorCol.style.maxWidth = '33.333333%';
+        }
+    }, 500);
+    
+    // Event listeners para os novos botões de módulos
+    const btnAdicionarModulo = document.getElementById('btn-adicionar-modulo');
+    const btnConfirmarModulo = document.getElementById('btn-confirmar-modulo');
+    const btnCancelarModulo = document.getElementById('btn-cancelar-modulo');
+    
+    if (btnAdicionarModulo) {
+        btnAdicionarModulo.addEventListener('click', mostrarSeletorModulo);
+    }
+    
+    if (btnConfirmarModulo) {
+        btnConfirmarModulo.addEventListener('click', adicionarModuloAoSofa);
+    }
+    
+    if (btnCancelarModulo) {
+        btnCancelarModulo.addEventListener('click', ocultarSeletorModulo);
+    }
+    
+    // Função para enviar item via AJAX quando editando orçamento
+    function enviarItemViaAjax(item) {
+        console.log('📤 Enviando item via AJAX:', item);
+        
+        const url = `/orcamentos/${window.orcamentoPk}/item/adicionar/`;
+        const data = {
+            produto_id: item.produto_id,
+            quantidade: item.quantidade,
+            preco_unitario: item.preco_unitario,
+            observacoes: item.observacoes,
+            dados_especificos: item.dados_especificos
+        };
+        
+        fetch(url, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+            },
+            body: JSON.stringify(data)
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                console.log('✅ Item adicionado com sucesso via AJAX:', data);
+                // Recarregar a página para atualizar a lista de itens
+                window.location.reload();
+            } else {
+                console.error('❌ Erro ao adicionar item via AJAX:', data.message);
+                alert('Erro ao adicionar item: ' + data.message);
+            }
+        })
+        .catch(error => {
+            console.error('❌ Erro na requisição AJAX:', error);
+            alert('Erro ao conectar com o servidor');
+        });
+    }
+});
+
+// Forçar atualização do cache - versão 4.0 - Busca dinâmica de clientes
+
+// Debug adicional - verificar carregamento da página
+document.addEventListener('DOMContentLoaded', function() {
+    // Aplicar estilo forçado novamente
+    const clienteCol = document.querySelector('.cliente-expandido');
+    const vendedorCol = document.querySelector('.vendedor-compacto');
+    
+    if (clienteCol) {
+        clienteCol.style.cssText = 'flex: 0 0 66.666667% !important; max-width: 66.666667% !important;';
+    }
+    
+    if (vendedorCol) {
+        vendedorCol.style.cssText = 'flex: 0 0 33.333333% !important; max-width: 33.333333% !important;';
+    }
+});
+
+// Sistema de busca dinâmica de clientes
+document.addEventListener('DOMContentLoaded', function() {
+    const clienteBusca = document.getElementById('cliente-busca');
+    const clienteSelect = document.getElementById('id_cliente');
+    const clienteResultados = document.querySelector('.cliente-resultados');
+    let timeoutBusca;
+    let clienteSelecionado = null;
+
+    // Função para buscar clientes
+    function buscarClientes(termo) {
+        if (termo.length < 2) {
+            clienteResultados.style.display = 'none';
+            return;
+        }
+
+        fetch(`{% url 'orcamentos:buscar_cliente' %}?termo=${encodeURIComponent(termo)}`)
+            .then(response => response.json())
+            .then(data => {
+                mostrarResultados(data.clientes);
+            })
+            .catch(error => {
+                console.error('Erro na busca de clientes:', error);
+                clienteResultados.style.display = 'none';
+            });
+    }
+
+    // Função para carregar clientes iniciais (10 primeiros)
+    function carregarClientesIniciais() {
+        fetch(`{% url 'orcamentos:buscar_cliente' %}?iniciais=10`)
+            .then(response => response.json())
+            .then(data => {
+                mostrarResultados(data.clientes);
+            })
+            .catch(error => {
+                console.error('Erro ao carregar clientes iniciais:', error);
+                clienteResultados.style.display = 'none';
+            });
+    }
+
+    // Função para mostrar resultados
+    function mostrarResultados(clientes) {
+        clienteResultados.innerHTML = '';
+        
+        if (clientes.length === 0) {
+            clienteResultados.innerHTML = '<div class="cliente-item text-muted">Nenhum cliente encontrado</div>';
+        } else {
+            clientes.forEach(cliente => {
+                const item = document.createElement('div');
+                item.className = 'cliente-item';
+                item.setAttribute('data-cliente-id', cliente.id);
+                item.innerHTML = `
+                    <div class="empresa">${cliente.nome_empresa}</div>
+                    <div class="detalhes">
+                        <strong>Rep.:</strong> ${cliente.representante} | 
+                        <strong>CNPJ:</strong> ${cliente.cnpj}
+                    </div>
+                `;
+                
+                item.addEventListener('click', function() {
+                    selecionarCliente(cliente);
+                });
+                
+                clienteResultados.appendChild(item);
+            });
+        }
+        
+        clienteResultados.style.display = 'block';
+    }
+
+    // Função para selecionar cliente
+    function selecionarCliente(cliente) {
+        clienteSelecionado = cliente;
+        clienteBusca.value = cliente.nome_empresa;
+        clienteSelect.value = cliente.id;
+        clienteResultados.style.display = 'none';
+        
+        // Trigger change event no select original
+        clienteSelect.dispatchEvent(new Event('change'));
+        
+        // Feedback visual
+        clienteBusca.classList.add('border-success');
+        setTimeout(() => {
+            clienteBusca.classList.remove('border-success');
+        }, 2000);
+    }
+
+    // Event listeners
+    // Evento focus - carrega clientes iniciais se campo estiver vazio
+    clienteBusca.addEventListener('focus', function() {
+        if (!this.value.trim()) {
+            carregarClientesIniciais();
+        } else if (this.value.trim().length >= 2) {
+            buscarClientes(this.value.trim());
+        }
+    });
+
+    // Evento click - carrega clientes iniciais se campo estiver vazio
+    clienteBusca.addEventListener('click', function() {
+        if (!this.value.trim()) {
+            carregarClientesIniciais();
+        }
+    });
+
+    clienteBusca.addEventListener('input', function() {
+        const termo = this.value.trim();
+        
+        // Limpar timeout anterior
+        clearTimeout(timeoutBusca);
+        
+        // Se o campo está vazio, limpar seleção mas exibir clientes iniciais
+        if (termo === '') {
+            clienteSelect.value = '';
+            clienteSelecionado = null;
+            carregarClientesIniciais();
+            return;
+        }
+        
+        // Se tem menos de 2 caracteres, esconder resultados
+        if (termo.length < 2) {
+            clienteResultados.style.display = 'none';
+            return;
+        }
+        
+        // Buscar com delay para evitar muitas requisições
+        timeoutBusca = setTimeout(() => {
+            buscarClientes(termo);
+        }, 300);
+    });
+
+    // Fechar resultados ao clicar fora
+    document.addEventListener('click', function(e) {
+        if (!e.target.closest('.position-relative')) {
+            clienteResultados.style.display = 'none';
+        }
+    });
+
+    // Navegação por teclado
+    clienteBusca.addEventListener('keydown', function(e) {
+        const items = clienteResultados.querySelectorAll('.cliente-item');
+        let ativo = clienteResultados.querySelector('.cliente-item.active');
+        
+        if (e.key === 'ArrowDown') {
+            e.preventDefault();
+            if (!ativo) {
+                items[0]?.classList.add('active');
+            } else {
+                ativo.classList.remove('active');
+                const next = ativo.nextElementSibling || items[0];
+                next.classList.add('active');
+            }
+        } else if (e.key === 'ArrowUp') {
+            e.preventDefault();
+            if (!ativo) {
+                items[items.length - 1]?.classList.add('active');
+            } else {
+                ativo.classList.remove('active');
+                const prev = ativo.previousElementSibling || items[items.length - 1];
+                prev.classList.add('active');
+            }
+        } else if (e.key === 'Enter') {
+            e.preventDefault();
+            if (ativo) {
+                ativo.click();
+            }
+        } else if (e.key === 'Escape') {
+            clienteResultados.style.display = 'none';
+        }
+    });
+
+    // Inicializar campo se já existe seleção
+    if (clienteSelect.value) {
+        const option = clienteSelect.options[clienteSelect.selectedIndex];
+        if (option && option.text) {
+            clienteBusca.value = option.text;
+        }
+    }
+
+    // CSS adicional para navegação por teclado
+    const style = document.createElement('style');
+    style.textContent = `
+        .cliente-item.active {
+            background-color: #007bff !important;
+            color: white !important;
+        }
+        .cliente-item.active .detalhes {
+            color: rgba(255,255,255,0.8) !important;
+        }
+        .produto-item.active {
+            background-color: #007bff !important;
+            color: white !important;
+        }
+        .produto-item.active .detalhes {
+            color: rgba(255,255,255,0.8) !important;
+        }
+        .produto-item.active {
+            background-color: #007bff !important;
+            color: white !important;
+        }
+        .produto-item.active .detalhes {
+            color: rgba(255,255,255,0.8) !important;
+        }
+    `;
+    document.head.appendChild(style);
+});
+
+// === FUNCIONALIDADE DE BUSCA DE PRODUTOS ===
+    
+    // Event listeners para busca de produtos
+   
+      
+    const produtoBusca = document.getElementById('produto-busca');
+    const produtoResultados = document.querySelector('.produto-resultados');
+    let timeoutBuscaProduto;
+    let tipoAtual = '';
+    
+    if (produtoBusca) {
+        // Evento de foco - carregar produtos quando usuário clica no campo
+        produtoBusca.addEventListener('focus', function() {
+            const tipoSelect = document.getElementById('tipo-produto');
+            if (tipoSelect && tipoSelect.value) {
+                tipoAtual = tipoSelect.value;
+                // Sempre carregar produtos quando usuário clica/foca no campo
+                carregarProdutosIniciais(tipoAtual);
+            }
+        });
+        
+        // Evento de clique - carregar produtos quando usuário clica no campo
+        produtoBusca.addEventListener('click', function() {
+            const tipoSelect = document.getElementById('tipo-produto');
+            if (tipoSelect && tipoSelect.value) {
+                tipoAtual = tipoSelect.value;
+                // Sempre carregar produtos quando usuário clica no campo
+                carregarProdutosIniciais(tipoAtual);
+            }
+        });
+        
+        // Evento de input com debounce
+        produtoBusca.addEventListener('input', function() {
+            const termo = this.value.trim();
+            
+            clearTimeout(timeoutBuscaProduto);
+            
+            if (termo.length < 2) {
+                if (produtoResultados) {
+                    produtoResultados.style.display = 'none';
+                }
+                return;
+            }
+            
+            timeoutBuscaProduto = setTimeout(() => {
+                buscarProdutos(tipoAtual, termo);
+            }, 300);
+        });
+        
+        // Navegação por teclado
+        produtoBusca.addEventListener('keydown', function(e) {
+            if (!produtoResultados || produtoResultados.style.display === 'none') {
+                return;
+            }
+            
+            const items = produtoResultados.querySelectorAll('.produto-item');
+            const ativo = produtoResultados.querySelector('.produto-item.active');
+            
+            if (e.key === 'ArrowDown') {
+                e.preventDefault();
+                if (ativo) {
+                    ativo.classList.remove('active');
+                    const next = ativo.nextElementSibling || items[0];
+                    next.classList.add('active');
+                } else if (items.length > 0) {
+                    items[0].classList.add('active');
+                }
+            } else if (e.key === 'ArrowUp') {
+                e.preventDefault();
+                if (ativo) {
+                    ativo.classList.remove('active');
+                    const prev = ativo.previousElementSibling || items[items.length - 1];
+                    prev.classList.add('active');
+                }
+            } else if (e.key === 'Enter') {
+                e.preventDefault();
+                if (ativo) {
+                    ativo.click();
+                }
+            } else if (e.key === 'Escape') {
+                produtoResultados.style.display = 'none';
+            }
+        });
+    }
+    
+    // Fechar resultados ao clicar fora
+    document.addEventListener('click', function(e) {
+        if (produtoResultados && !produtoResultados.contains(e.target) && e.target !== produtoBusca) {
+            produtoResultados.style.display = 'none';
+        }
+    });
+
+    // Função para carregar produtos iniciais por tipo
+    function carregarProdutosIniciais(tipo) {
+        const produtoBusca = document.getElementById('produto-busca');
+        
+        fetch(`/orcamentos/buscar-produtos-por-tipo/?tipo=${tipo}`)
+            .then(response => response.json())
+            .then(data => {
+                mostrarResultadosProdutos(data.produtos);
+                // Atualizar placeholder após carregar
+                if (produtoBusca) {
+                    produtoBusca.placeholder = 'Digite nome ou referência do produto...';
+                }
+            })
+            .catch(error => {
+                console.error('Erro ao carregar produtos iniciais:', error);
+            });
+    }
+    
+    // Função para buscar produtos
+    function buscarProdutos(tipo, termo) {
+        if (termo.length < 2) {
+            const produtoResultados = document.querySelector('.produto-resultados');
+            if (produtoResultados) {
+                produtoResultados.style.display = 'none';
+            }
+            return;
+        }
+
+        fetch(`/orcamentos/buscar-produtos-por-tipo/?tipo=${tipo}&busca=${encodeURIComponent(termo)}`)
+            .then(response => response.json())
+            .then(data => {
+                mostrarResultadosProdutos(data.produtos);
+            })
+            .catch(error => {
+                console.error('Erro na busca de produtos:', error);
+                const produtoResultados = document.querySelector('.produto-resultados');
+                if (produtoResultados) {
+                    produtoResultados.style.display = 'none';
+                }
+            });
+    }
+    
+    // Função para mostrar resultados de produtos
+    function mostrarResultadosProdutos(produtos) {
+        const produtoResultados = document.querySelector('.produto-resultados');
+        if (!produtoResultados) return;
+        
+        produtoResultados.innerHTML = '';
+        
+        if (produtos.length === 0) {
+            produtoResultados.innerHTML = '<div class="produto-item text-muted">Nenhum produto encontrado</div>';
+        } else {
+            produtos.forEach(produto => {
+                const item = document.createElement('div');
+                item.className = 'produto-item';
+                item.setAttribute('data-produto-id', produto.id);
+                item.innerHTML = `
+                    <div class="nome">${produto.nome_produto}</div>
+                    <div class="detalhes">
+                        <strong>Ref.:</strong> ${produto.ref_produto} | 
+                        <strong>Preço:</strong> R$ ${produto.preco.toFixed(2)}
+                    </div>
+                `;
+                
+                item.addEventListener('click', function() {
+                    selecionarProduto(produto);
+                });
+                
+                produtoResultados.appendChild(item);
+            });
+        }
+        
+        produtoResultados.style.display = 'block';
+    }
+    
+    // Função para selecionar produto
+    function selecionarProduto(produto) {
+        console.log('🔸 selecionarProduto chamada para:', produto);
+        
+        // Armazenar produto selecionado globalmente
+        produtoSelecionado = produto;
+        
+        const produtoBusca = document.getElementById('produto-busca');
+        const produtoSelect = document.getElementById('produto');
+        const produtoResultados = document.querySelector('.produto-resultados');
+        
+        if (produtoBusca) {
+            produtoBusca.value = produto.display_name;
+        }
+        
+        if (produtoSelect) {
+            // Limpar e adicionar a opção selecionada
+            produtoSelect.innerHTML = `<option value="${produto.id}" selected>${produto.display_name}</option>`;
+            produtoSelect.value = produto.id;
+        }
+        
+        if (produtoResultados) {
+            produtoResultados.style.display = 'none';
+        }
+        
+        console.log('🔸 Carregando preview do produto...');
+        // Carregar informações de preview do produto
+        carregarPreviewProduto(produto.id);
+        
+        console.log('🔸 Verificando se é sofá. ID:', produto.id, 'StartsWith produto_:', produto.id.startsWith('produto_'));
+        // Verificar se é um sofá para mostrar configuração específica
+        if (produto.id.startsWith('produto_')) {
+            console.log('🛋️ Produto de sofá detectado:', produto.id);
+            carregarConfiguracaoSofa(produto.id);
+        } else {
+            console.log('📦 Produto padrão detectado:', produto.id);
+            // Ocultar configuração de sofá e dependências para produtos padronizados
+            const sofaConfiguracao = document.getElementById('sofa-configuracao');
+            const produtoDependencias = document.getElementById('produto-dependencias');
+            if (sofaConfiguracao) sofaConfiguracao.style.display = 'none';
+            if (produtoDependencias) produtoDependencias.style.display = 'none';
+        }
+    }
+    
+    // Função para carregar preview do produto
+    function carregarPreviewProduto(produtoId) {
+        if (!produtoId) {
+            ocultarPreviewProduto();
+            return;
+        }
+        
+        fetch(`/orcamentos/informacoes-produto/?produto_id=${produtoId}`)
+            .then(response => response.json())
+            .then(data => {
+                if (data.erro) {
+                    console.error('Erro ao carregar preview do produto:', data.erro);
+                    ocultarPreviewProduto();
+                    return;
+                }
+                
+                mostrarPreviewProduto(data.produto);
+            })
+            .catch(error => {
+                console.error('Erro ao carregar preview do produto:', error);
+                ocultarPreviewProduto();
+            });
+    }
+    
+    // Função para mostrar preview do produto
+    function mostrarPreviewProduto(produto) {
+        const preview = document.getElementById('produto-preview');
+        const foto = document.getElementById('produto-foto');
+        const semFoto = document.getElementById('produto-sem-foto');
+        const nome = document.getElementById('produto-nome');
+        const dimensoes = document.getElementById('produto-dimensoes');
+        const tipo = document.getElementById('produto-tipo');
+        
+        if (preview && foto && semFoto && nome && dimensoes && tipo) {
+            // Preencher informações
+            nome.textContent = produto.nome;
+            dimensoes.textContent = produto.dimensoes;
+            tipo.textContent = produto.tipo;
+            
+            // Tratar imagem
+            if (produto.foto) {
+                foto.src = produto.foto;
+                foto.style.display = 'block';
+                semFoto.style.display = 'none';
+            } else {
+                foto.style.display = 'none';
+                semFoto.style.display = 'block';
+            }
+            
+            // Mostrar o preview
+            preview.style.display = 'block';
+        }
+    }
+    
+    // Função para ocultar preview do produto
+    function ocultarPreviewProduto() {
+        const preview = document.getElementById('produto-preview');
+        if (preview) {
+            preview.style.display = 'none';
+        }
+    }
+    
+    // ====== FUNÇÕES ESPECÍFICAS PARA SOFÁS ======
+    
+    // Variáveis globais para controle do sofá
+    let sofaData = null;
+    let modulosSelecionados = [];
+    let acessoriosSelecionados = [];
+    
+    // Função para mostrar módulos de sofá com dropdown de tamanhos melhorado
+    function mostrarModulosSofa(modulos) {
+        console.log('🚀 mostrarModulosSofa iniciada com módulos:', modulos);
+        
+        const modulosContainer = document.getElementById('modulos-lista');
+        if (!modulosContainer) {
+            console.error('Container modulos-lista não encontrado');
+            return;
+        }
+        
+        let html = '';
+        
+        modulos.forEach(modulo => {
+            html += `
+                <div class="col-md-6 mb-3" data-modulo-id="${modulo.id}">
+                    <div class="card h-100 border-0 shadow-sm modulo-card">
+                        <div class="card-body">
+                            <!-- Header do módulo -->
+                            <div class="d-flex justify-content-between align-items-center mb-3">
+                                <h6 class="card-title mb-0 text-primary fw-bold">
+                                    <i class="bi bi-cube"></i> ${modulo.nome}
+                                </h6>
+                                <button type="button" class="btn btn-sm btn-outline-primary btn-selecionar-modulo" 
+                                        data-modulo-id="${modulo.id}" data-modulo-nome="${modulo.nome}">
+                                    <i class="bi bi-plus-circle"></i> Selecionar
+                                </button>
+                            </div>
+                            
+                            <!-- Imagem do módulo -->
+                            <div class="text-center mb-3">
+                                ${modulo.imagem_principal ? 
+                                    `<img src="${modulo.imagem_principal}" alt="${modulo.nome}" 
+                                          class="img-fluid rounded shadow-sm" style="max-height: 120px; object-fit: cover;">` : 
+                                    `<div class="bg-light rounded d-flex align-items-center justify-content-center" 
+                                          style="height: 120px;">
+                                        <i class="bi bi-image text-muted" style="font-size: 2rem;"></i>
+                                     </div>`
+                                }
+                            </div>
+                            
+                            <!-- Descrição do módulo -->
+                            ${modulo.descricao ? `<p class="text-muted small mb-3">${modulo.descricao}</p>` : ''}
+                            
+                            <!-- Formulário de seleção (inicialmente oculto) -->
+                            <div class="modulo-form" data-modulo-id="${modulo.id}" style="display: none;">
+                                <hr class="my-3">
+                                
+                                <!-- Dropdown de tamanhos -->
+                                <div class="mb-3">
+                                    <label class="form-label small fw-bold">
+                                        <i class="bi bi-rulers"></i> Tamanho *
+                                    </label>
+                                    <select class="form-select form-select-sm tamanho-select" 
+                                            data-modulo-id="${modulo.id}" required>
+                                        <option value="">Selecione o tamanho...</option>
+                                        ${modulo.tamanhos && modulo.tamanhos.length > 0 ? 
+                                            modulo.tamanhos.map(tamanho => 
+                                                `<option value="${tamanho.id}" data-preco="${tamanho.preco}" 
+                                                         data-largura="${tamanho.largura_total}">
+                                                    ${tamanho.largura_total}cm - R$ ${parseFloat(tamanho.preco).toFixed(2)}
+                                                 </option>`
+                                            ).join('') : 
+                                            '<option value="">Nenhum tamanho disponível</option>'
+                                        }
+                                    </select>
+                                </div>
+                                
+                                <!-- Quantidade -->
+                                <div class="mb-3">
+                                    <label class="form-label small fw-bold">
+                                        <i class="bi bi-123"></i> Quantidade *
+                                    </label>
+                                    <input type="number" class="form-control form-control-sm quantidade-modulo" 
+                                           data-modulo-id="${modulo.id}" min="1" value="1" required>
+                                </div>
+                                
+                                <!-- Observações do módulo -->
+                                <div class="mb-3">
+                                    <label class="form-label small fw-bold">
+                                        <i class="bi bi-chat-left-text"></i> Observações
+                                    </label>
+                                    <textarea class="form-control form-control-sm observacoes-modulo" 
+                                              data-modulo-id="${modulo.id}" rows="2" maxlength="500"
+                                              placeholder="Observações específicas para este módulo..."></textarea>
+                                    <div class="form-text">
+                                        <span class="contador-chars" data-modulo-id="${modulo.id}">0</span>/500 caracteres
+                                    </div>
+                                </div>
+                                
+                                <!-- Preview do preço -->
+                                <div class="d-flex justify-content-between align-items-center mb-3">
+                                    <small class="text-muted">Subtotal:</small>
+                                    <strong class="text-success subtotal-modulo" data-modulo-id="${modulo.id}">
+                                        R$ 0,00
+                                    </strong>
+                                </div>
+                                
+                                <!-- Botões de ação -->
+                                <div class="d-flex gap-2">
+                                    <button type="button" class="btn btn-sm btn-success flex-fill btn-confirmar-modulo" 
+                                            data-modulo-id="${modulo.id}">
+                                        <i class="bi bi-check-circle"></i> Confirmar
+                                    </button>
+                                    <button type="button" class="btn btn-sm btn-outline-secondary btn-cancelar-modulo" 
+                                            data-modulo-id="${modulo.id}">
+                                        <i class="bi bi-x-circle"></i> Cancelar
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+        });
+        
+        modulosContainer.innerHTML = html;
+        document.getElementById('sofa-modulos').style.display = 'block';
+        
+        // Configurar event listeners
+        configurarEventListenersModulos();
+        
+        console.log('✅ Módulos renderizados com event listeners configurados');
+    }
+    
+    // Função para configurar event listeners dos módulos
+    function configurarEventListenersModulos() {
+        // Botões de selecionar módulo
+        document.querySelectorAll('.btn-selecionar-modulo').forEach(btn => {
+            btn.addEventListener('click', function() {
+                const moduloId = this.dataset.moduloId;
+                const moduloForm = document.querySelector(`.modulo-form[data-modulo-id="${moduloId}"]`);
+                
+                // Mostrar formulário
+                moduloForm.style.display = 'block';
+                
+                // Ocultar botão selecionar
+                this.style.display = 'none';
+                
+                // Focar no select de tamanho
+                const tamanhoSelect = moduloForm.querySelector('.tamanho-select');
+                if (tamanhoSelect) tamanhoSelect.focus();
+            });
+        });
+        
+        // Botões de cancelar
+        document.querySelectorAll('.btn-cancelar-modulo').forEach(btn => {
+            btn.addEventListener('click', function() {
+                const moduloId = this.dataset.moduloId;
+                cancelarSelecaoModulo(moduloId);
+            });
+        });
+        
+        // Botões de confirmar
+        document.querySelectorAll('.btn-confirmar-modulo').forEach(btn => {
+            btn.addEventListener('click', function() {
+                const moduloId = this.dataset.moduloId;
+                confirmarSelecaoModulo(moduloId);
+            });
+        });
+        
+        // Selects de tamanho
+        document.querySelectorAll('.tamanho-select').forEach(select => {
+            select.addEventListener('change', function() {
+                const moduloId = this.dataset.moduloId;
+                atualizarSubtotalModulo(moduloId);
+            });
+        });
+        
+        // Inputs de quantidade
+        document.querySelectorAll('.quantidade-modulo').forEach(input => {
+            input.addEventListener('input', function() {
+                const moduloId = this.dataset.moduloId;
+                atualizarSubtotalModulo(moduloId);
+            });
+        });
+        
+        // Textareas de observações (contador de caracteres)
+        document.querySelectorAll('.observacoes-modulo').forEach(textarea => {
+            textarea.addEventListener('input', function() {
+                const moduloId = this.dataset.moduloId;
+                const contador = document.querySelector(`.contador-chars[data-modulo-id="${moduloId}"]`);
+                if (contador) {
+                    contador.textContent = this.value.length;
+                    
+                    // Alterar cor conforme limite
+                    if (this.value.length > 450) {
+                        contador.style.color = '#dc3545'; // Vermelho
+                    } else if (this.value.length > 400) {
+                        contador.style.color = '#fd7e14'; // Laranja
+                    } else {
+                        contador.style.color = '#6c757d'; // Cinza padrão
+                    }
+                }
+            });
+        });
+    }
+    
+    // Função para cancelar seleção de módulo
+    function cancelarSelecaoModulo(moduloId) {
+        const moduloForm = document.querySelector(`.modulo-form[data-modulo-id="${moduloId}"]`);
+        const btnSelecionar = document.querySelector(`.btn-selecionar-modulo[data-modulo-id="${moduloId}"]`);
+        
+        // Limpar formulário
+        const tamanhoSelect = moduloForm.querySelector('.tamanho-select');
+        const quantidadeInput = moduloForm.querySelector('.quantidade-modulo');
+        const observacoesTextarea = moduloForm.querySelector('.observacoes-modulo');
+        const contadorChars = document.querySelector(`.contador-chars[data-modulo-id="${moduloId}"]`);
+        
+        if (tamanhoSelect) tamanhoSelect.value = '';
+        if (quantidadeInput) quantidadeInput.value = '1';
+        if (observacoesTextarea) observacoesTextarea.value = '';
+        if (contadorChars) contadorChars.textContent = '0';
+        
+        // Resetar subtotal
+        atualizarSubtotalModulo(moduloId);
+        
+        // Ocultar formulário e mostrar botão
+        moduloForm.style.display = 'none';
+        btnSelecionar.style.display = 'block';
+    }
+    
+    // Função para confirmar seleção de módulo
+    function confirmarSelecaoModulo(moduloId) {
+        const moduloForm = document.querySelector(`.modulo-form[data-modulo-id="${moduloId}"]`);
+        const tamanhoSelect = moduloForm.querySelector('.tamanho-select');
+        const quantidadeInput = moduloForm.querySelector('.quantidade-modulo');
+        const observacoesTextarea = moduloForm.querySelector('.observacoes-modulo');
+        
+        // Validações
+        if (!tamanhoSelect.value) {
+            alert('Por favor, selecione um tamanho para o módulo.');
+            tamanhoSelect.focus();
+            return;
+        }
+        
+        const quantidade = parseInt(quantidadeInput.value);
+        if (!quantidade || quantidade < 1) {
+            alert('Por favor, informe uma quantidade válida (mínimo 1).');
+            quantidadeInput.focus();
+            return;
+        }
+        
+        // Obter dados do tamanho selecionado
+        const selectedOption = tamanhoSelect.selectedOptions[0];
+        const preco = parseFloat(selectedOption.dataset.preco);
+        const largura = selectedOption.dataset.largura;
+        const moduloNome = document.querySelector(`.btn-selecionar-modulo[data-modulo-id="${moduloId}"]`).dataset.moduloNome;
+        
+        // Criar objeto do módulo selecionado
+        const moduloSelecionado = {
+            moduloId: moduloId,
+            nome: moduloNome,
+            tamanhoId: tamanhoSelect.value,
+            tamanhoNome: `${largura}cm`,
+            quantidade: quantidade,
+            preco: preco,
+            subtotal: preco * quantidade,
+            observacoes: observacoesTextarea.value.trim()
+        };
+        
+        // Adicionar à lista de módulos selecionados
+        adicionarModuloAListaSelecionados(moduloSelecionado);
+        
+        // Resetar o formulário
+        cancelarSelecaoModulo(moduloId);
+        
+        console.log('✅ Módulo confirmado:', moduloSelecionado);
+    }
+    
+    // Função para atualizar subtotal do módulo
+    function atualizarSubtotalModulo(moduloId) {
+        const moduloForm = document.querySelector(`.modulo-form[data-modulo-id="${moduloId}"]`);
+        const tamanhoSelect = moduloForm.querySelector('.tamanho-select');
+        const quantidadeInput = moduloForm.querySelector('.quantidade-modulo');
+        const subtotalElement = document.querySelector(`.subtotal-modulo[data-modulo-id="${moduloId}"]`);
+        
+        let subtotal = 0;
+        
+        if (tamanhoSelect.value && quantidadeInput.value) {
+            const selectedOption = tamanhoSelect.selectedOptions[0];
+            const preco = parseFloat(selectedOption.dataset.preco) || 0;
+            const quantidade = parseInt(quantidadeInput.value) || 0;
+            subtotal = preco * quantidade;
+        }
+        
+        if (subtotalElement) {
+            subtotalElement.textContent = `R$ ${subtotal.toFixed(2).replace('.', ',')}`;
+        }
+    }
+    
+    // Funções auxiliares de compatibilidade
+    let contadorModulos = 0;
+    
+    // Função para adicionar módulo à lista de selecionados
+    function adicionarModuloAListaSelecionados(modulo) {
+        // Verificar se já existe módulo com mesmo ID e tamanho
+        const index = modulosSelecionados.findIndex(m => 
+            m.moduloId === modulo.moduloId && m.tamanhoId === modulo.tamanhoId
+        );
+        
+        if (index !== -1) {
+            // Atualizar módulo existente
+            modulosSelecionados[index] = modulo;
+        } else {
+            // Adicionar novo módulo
+            modulosSelecionados.push(modulo);
+        }
+        
+        // Atualizar interface
+        atualizarListaModulosSelecionados();
+        atualizarResumoSofa();
+    }
+    
+    // Função para atualizar a lista visual de módulos selecionados
+    function atualizarListaModulosSelecionados() {
+        const container = document.getElementById('modulos-selecionados');
+        const lista = document.getElementById('lista-modulos-selecionados');
+        
+        if (modulosSelecionados.length === 0) {
+            container.style.display = 'none';
+            return;
+        }
+        
+        container.style.display = 'block';
+        
+        let html = '';
+        modulosSelecionados.forEach((modulo, index) => {
+            html += `
+                <div class="d-flex justify-content-between align-items-start p-2 mb-2 bg-white rounded border">
+                    <div class="flex-grow-1">
+                        <div class="fw-bold text-primary">${modulo.nome}</div>
+                        <div class="small text-muted">
+                            Tamanho: ${modulo.tamanhoNome} | Qtd: ${modulo.quantidade} | 
+                            R$ ${modulo.preco.toFixed(2)} cada
+                        </div>
+                        ${modulo.observacoes ? `<div class="small text-info mt-1">
+                            <i class="bi bi-chat-left-text"></i> ${modulo.observacoes}
+                        </div>` : ''}
+                    </div>
+                    <div class="text-end ms-2">
+                        <div class="fw-bold text-success">R$ ${modulo.subtotal.toFixed(2)}</div>
+                        <button type="button" class="btn btn-sm btn-outline-danger mt-1" 
+                                onclick="removerModuloSelecionado(${index})">
+                            <i class="bi bi-trash"></i>
+                        </button>
+                    </div>
+                </div>
+            `;
+        });
+        
+        lista.innerHTML = html;
+    }
+    
+    // Função para remover módulo selecionado
+    function removerModuloSelecionado(index) {
+        if (confirm('Tem certeza que deseja remover este módulo?')) {
+            modulosSelecionados.splice(index, 1);
+            atualizarListaModulosSelecionados();
+            atualizarResumoSofa();
+        }
+    }
+    
+    // Função para atualizar subtotal de tamanho específico (compatibilidade)
+                const preco = parseFloat(this.dataset.preco) || 0;
+                const quantidadeRow = this.closest('.tamanho-item').querySelector('.quantidade-row');
+                const quantidadeInput = quantidadeRow.querySelector('.quantidade-tamanho');
+                
+                if (this.checked) {
+                    quantidadeRow.style.display = 'block';
+                    // Atualizar subtotal inicial
+                    atualizarSubtotalTamanho(moduloId, tamanhoId);
+                } else {
+                    quantidadeRow.style.display = 'none';
+                    quantidadeInput.value = 1;
+                    
+                    // Remover este tamanho específico da lista de selecionados
+                    if (typeof modulosSelecionados !== 'undefined') {
+                        const moduloIndex = modulosSelecionados.findIndex(m => m.moduloId == moduloId);
+                        if (moduloIndex !== -1) {
+                            const modulo = modulosSelecionados[moduloIndex];
+                            if (modulo.tamanhos) {
+                                modulo.tamanhos = modulo.tamanhos.filter(t => t.tamanhoId != tamanhoId);
+                                if (modulo.tamanhos.length === 0) {
+                                    modulosSelecionados.splice(moduloIndex, 1);
+                                }
+                            }
+                        }
+                        if (typeof atualizarListaModulosAdicionados === 'function') {
+                            atualizarListaModulosAdicionados();
+                        }
+                    }
+                }
+                
+                // Atualizar dados do módulo selecionado
+                atualizarModuloSelecionado(moduloId, tamanhoId, this.checked);
+            });
+        });
+        
+        // Event listeners para campos de quantidade
+        document.querySelectorAll('.quantidade-tamanho').forEach(input => {
+            input.addEventListener('input', function() {
+                const moduloId = this.dataset.moduloId;
+                const tamanhoId = this.dataset.tamanhoId;
+                
+                // Atualizar subtotal
+                atualizarSubtotalTamanho(moduloId, tamanhoId);
+                
+                // Atualizar dados do módulo selecionado
+                atualizarModuloSelecionado(moduloId, tamanhoId, true);
+            });
+        });
+    }
+    
+    // Função para atualizar subtotal de um tamanho específico
+    function atualizarSubtotalTamanho(moduloId, tamanhoId) {
+        const quantidadeInput = document.querySelector(`input[data-modulo-id="${moduloId}"][data-tamanho-id="${tamanhoId}"].quantidade-tamanho`);
+        const tamanhoCheck = document.querySelector(`input[data-modulo-id="${moduloId}"][data-tamanho-id="${tamanhoId}"].tamanho-check`);
+        const subtotalElement = tamanhoCheck.closest('.tamanho-item').querySelector('.subtotal-tamanho');
+        
+        if (quantidadeInput && tamanhoCheck && subtotalElement) {
+            const quantidade = parseInt(quantidadeInput.value) || 1;
+            const preco = parseFloat(tamanhoCheck.dataset.preco) || 0;
+            const subtotal = quantidade * preco;
+            
+            subtotalElement.textContent = `Subtotal: R$ ${subtotal.toFixed(2)}`;
+        }
+    }
+    
+    // Função para atualizar dados do módulo selecionado
+    function atualizarModuloSelecionado(moduloId, tamanhoId, isSelected) {
+        if (typeof modulosSelecionados === 'undefined') return;
+        
+        // Buscar dados do módulo
+        const moduloCheckbox = document.querySelector(`input[data-modulo-id="${moduloId}"].modulo-check`);
+        const tamanhoCheck = document.querySelector(`input[data-modulo-id="${moduloId}"][data-tamanho-id="${tamanhoId}"].tamanho-check`);
+        const quantidadeInput = document.querySelector(`input[data-modulo-id="${moduloId}"][data-tamanho-id="${tamanhoId}"].quantidade-tamanho`);
+        
+        if (!moduloCheckbox || !tamanhoCheck) return;
+        
+        const moduloNome = moduloCheckbox.nextElementSibling.textContent.trim();
+        const preco = parseFloat(tamanhoCheck.dataset.preco) || 0;
+        const quantidade = parseInt(quantidadeInput?.value || 1);
+        const tamanhoLabel = tamanhoCheck.nextElementSibling.textContent.trim();
+        
+        // Encontrar ou criar módulo na lista
+        let moduloIndex = modulosSelecionados.findIndex(m => m.moduloId == moduloId);
+        
+        if (isSelected && tamanhoCheck.checked) {
+            if (moduloIndex === -1) {
+                // Criar novo módulo
+                modulosSelecionados.push({
+                    moduloId: moduloId,
+                    nome: moduloNome,
+                    tamanhos: []
+                });
+                moduloIndex = modulosSelecionados.length - 1;
+            }
+            
+            const modulo = modulosSelecionados[moduloIndex];
+            
+            // Remover tamanho existente (se houver) e adicionar atualizado
+            modulo.tamanhos = modulo.tamanhos.filter(t => t.tamanhoId != tamanhoId);
+            modulo.tamanhos.push({
+                tamanhoId: tamanhoId,
+                nome: tamanhoLabel,
+                preco: preco,
+                quantidade: quantidade,
+                subtotal: preco * quantidade
+            });
+            
+        } else {
+            // Remover tamanho
+            if (moduloIndex !== -1) {
+                const modulo = modulosSelecionados[moduloIndex];
+                modulo.tamanhos = modulo.tamanhos.filter(t => t.tamanhoId != tamanhoId);
+                
+                // Se não há mais tamanhos, remover o módulo
+                if (modulo.tamanhos.length === 0) {
+                    modulosSelecionados.splice(moduloIndex, 1);
+                }
+            }
+        }
+        
+        // Atualizar lista visual
+        if (typeof atualizarListaModulosAdicionados === 'function') {
+            atualizarListaModulosAdicionados();
+        }
+    }
+    
+    // Função para carregar seletor de módulos do sofá
+    function carregarSeletorModulos(sofaData) {
+        console.log('🚀 carregarSeletorModulos iniciada para:', sofaData);
+        
+        if (!sofaData || !sofaData.modulos) {
+            console.log('⚠️ Nenhum módulo disponível para este sofá');
+            return;
+        }
+        
+        // Usar a função existente mostrarModulosSofa
+        mostrarModulosSofa(sofaData.modulos);
+        console.log('✅ Módulos carregados com sucesso');
+    }
+    
+    // Função para atualizar lista de módulos adicionados
+    function atualizarListaModulosAdicionados() {
+        console.log('🚀 atualizarListaModulosAdicionados iniciada');
+        
+        const resumoModulos = document.getElementById('resumo-modulos');
+        if (!resumoModulos) {
+            console.log('⚠️ Container resumo-modulos não encontrado');
+            return;
+        }
+        
+        if (modulosSelecionados.length === 0) {
+            resumoModulos.innerHTML = '<p class="text-muted">Nenhum módulo selecionado</p>';
+            return;
+        }
+        
+        let html = '';
+        modulosSelecionados.forEach(modulo => {
+            html += `
+                <div class="mb-3 p-2 bg-light rounded">
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                        <strong>${modulo.nome}</strong>
+                        <button type="button" class="btn btn-sm btn-outline-danger" 
+                                onclick="removerModuloCompleto('${modulo.moduloId}')">
+                            <i class="bi bi-trash"></i>
+                        </button>
+                    </div>
+            `;
+            
+            if (modulo.tamanhos && modulo.tamanhos.length > 0) {
+                modulo.tamanhos.forEach(tamanho => {
+                    html += `
+                        <div class="d-flex justify-content-between align-items-center ms-3 mb-1">
+                            <div>
+                                <small class="text-muted">${tamanho.nome}</small>
+                                <br>
+                                <small class="text-info">Qtd: ${tamanho.quantidade}</small>
+                            </div>
+                            <div>
+                                <span class="badge bg-primary">R$ ${tamanho.subtotal.toFixed(2)}</span>
+                                <button type="button" class="btn btn-sm btn-outline-warning ms-1" 
+                                        onclick="removerTamanhoModulo('${modulo.moduloId}', '${tamanho.tamanhoId}')">
+                                    <i class="bi bi-x"></i>
+                                </button>
+                            </div>
+                        </div>
+                    `;
+                });
+            }
+            
+            html += '</div>';
+        });
+        
+        resumoModulos.innerHTML = html;
+        console.log('✅ Lista de módulos atualizada');
+        
+        // Atualizar resumo geral
+        atualizarResumoSofa();
+    }
+    
+    // Função para atualizar resumo do sofá
+    function atualizarResumoSofa() {
+        console.log('📊 Atualizando resumo do sofá');
+        
+        const resumoContainer = document.getElementById('sofa-resumo');
+        const resumoModulos = document.getElementById('resumo-modulos');
+        const resumoAcessorios = document.getElementById('resumo-acessorios');
+        const precoTotal = document.getElementById('preco-total-sofa');
+        
+        if (!resumoContainer || !resumoModulos || !resumoAcessorios || !precoTotal) {
+            console.error('Elementos de resumo não encontrados');
+            return;
+        }
+        
+        let total = 0;
+        let temSelecao = false;
+        
+        // Atualizar resumo dos módulos
+        const modulosValidosSelecionados = modulosSelecionados.filter(m => m.tamanhoSelecionada);
+        if (modulosValidosSelecionados.length > 0) {
+            temSelecao = true;
+            
+            let modulosHtml = '<div class="mb-2"><strong>Módulos:</strong></div>';
+            modulosValidosSelecionados.forEach(m => {
+                const subtotal = m.tamanhoSelecionada.preco * m.quantidade;
+                total += subtotal;
+                
+                modulosHtml += `
+                    <div class="d-flex justify-content-between small mb-1">
+                        <span>${m.nome} (${m.tamanhoSelecionada.largura_total}cm) x${m.quantidade}</span>
+                        <span>R$ ${subtotal.toFixed(2)}</span>
+                    </div>
+                `;
+            });
+            
+            resumoModulos.innerHTML = modulosHtml;
+        } else {
+            resumoModulos.innerHTML = '';
+        }
+        
+        // Atualizar resumo dos acessórios
+        if (acessoriosSelecionados.length > 0) {
+            temSelecao = true;
+            
+            let acessoriosHtml = '<div class="mb-2"><strong>Acessórios:</strong></div>';
+            acessoriosSelecionados.forEach(a => {
+                const subtotal = a.preco * a.quantidade;
+                total += subtotal;
+                
+                acessoriosHtml += `
+                    <div class="d-flex justify-content-between small mb-1">
+                        <span>${a.nome} x${a.quantidade}</span>
+                        <span>R$ ${subtotal.toFixed(2)}</span>
+                    </div>
+                `;
+            });
+            
+            resumoAcessorios.innerHTML = acessoriosHtml;
+        } else {
+            resumoAcessorios.innerHTML = '';
+        }
+        
+        // Atualizar preço total
+        precoTotal.textContent = `R$ ${total.toFixed(2)}`;
+        
+        // Mostrar/ocultar resumo
+        resumoContainer.style.display = temSelecao ? 'block' : 'none';
+        
+        console.log('✅ Resumo atualizado. Total:', total, 'Tem seleção:', temSelecao);
+    }
+    
+    // Função para renderizar acessórios do sofá
+    function renderizarAcessoriosSofa(sofaData) {
+        console.log('🚀 renderizarAcessoriosSofa iniciada para:', sofaData);
+        
+        const acessoriosContainer = document.getElementById('acessorios-vinculados-lista');
+        if (!acessoriosContainer) {
+            console.log('⚠️ Container de acessórios vinculados não encontrado');
+            return;
+        }
+        
+        // Verificar se há acessórios vinculados especificamente a este sofá
+        const acessoriosVinculados = sofaData && sofaData.acessorios_vinculados ? sofaData.acessorios_vinculados : [];
+        
+        if (!acessoriosVinculados || acessoriosVinculados.length === 0) {
+            console.log('⚠️ Nenhum acessório vinculado a este sofá');
+            document.getElementById('sofa-acessorios-vinculados').style.display = 'none';
+            return;
+        }
+        
+        console.log(`📋 Renderizando ${acessoriosVinculados.length} acessórios vinculados ao sofá`);
+        
+        let html = '<div class="row">';
+        acessoriosVinculados.forEach(acessorio => {
+            const precoFormatado = acessorio.preco ? parseFloat(acessorio.preco).toFixed(2) : '0.00';
+            html += `
+                <div class="col-md-6 mb-3">
+                    <div class="card h-100 border-0 shadow-sm">
+                        <div class="card-body">
+                            <div class="form-check">
+                                <input class="form-check-input acessorio-vinculado-check" type="checkbox" 
+                                       id="acessorio_vinculado_${acessorio.id}" 
+                                       data-acessorio-id="${acessorio.id}" 
+                                       data-preco="${acessorio.preco || 0}"
+                                       data-nome="${acessorio.nome}"
+                                       data-ref="${acessorio.ref || ''}">
+                                <label class="form-check-label w-100" for="acessorio_vinculado_${acessorio.id}">
+                                    <div class="d-flex justify-content-between align-items-start">
+                                        <div class="flex-grow-1">
+                                            <strong class="text-primary">${acessorio.nome}</strong>
+                                            ${acessorio.ref ? `<br><small class="text-muted">${acessorio.ref}</small>` : ''}
+                                            ${acessorio.descricao ? `<br><small class="text-secondary">${acessorio.descricao}</small>` : ''}
+                                        </div>
+                                        <div class="text-end">
+                                            <span class="badge bg-success fs-6">R$ ${precoFormatado}</span>
+                                        </div>
+                                    </div>
+                                    ${acessorio.imagem_principal ? `
+                                        <div class="mt-2">
+                                            <img src="${acessorio.imagem_principal}" 
+                                                 alt="${acessorio.nome}" 
+                                                 class="img-thumbnail" 
+                                                 style="max-height: 60px; max-width: 80px; object-fit: cover;">
+                                        </div>
+                                    ` : ''}
+                                </label>
+                            </div>
+                            <div class="mt-2" id="quantidade-acessorio-${acessorio.id}" style="display: none;">
+                                <label class="form-label small">Quantidade:</label>
+                                <input type="number" class="form-control form-control-sm quantidade-acessorio" 
+                                       data-acessorio-id="${acessorio.id}"
+                                       value="1" min="1" max="10" style="width: 80px;">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+        });
+        html += '</div>';
+        
+        acessoriosContainer.innerHTML = html;
+        document.getElementById('sofa-acessorios-vinculados').style.display = 'block';
+        
+        // Event listeners para acessórios vinculados
+        document.querySelectorAll('.acessorio-vinculado-check').forEach(checkbox => {
+            checkbox.addEventListener('change', function() {
+                const acessorioId = this.dataset.acessorioId;
+                const preco = parseFloat(this.dataset.preco) || 0;
+                const nome = this.dataset.nome;
+                const ref = this.dataset.ref;
+                const quantidadeContainer = document.getElementById(`quantidade-acessorio-${acessorioId}`);
+                
+                if (this.checked) {
+                    // Mostrar campo de quantidade
+                    if (quantidadeContainer) {
+                        quantidadeContainer.style.display = 'block';
+                    }
+                    
+                    // Adicionar acessório à lista de selecionados
+                    if (!acessoriosSelecionados.find(a => a.id == acessorioId)) {
+                        acessoriosSelecionados.push({
+                            id: acessorioId,
+                            nome: nome,
+                            ref: ref,
+                            preco: preco,
+                            quantidade: 1
+                        });
+                    }
+                } else {
+                    // Ocultar campo de quantidade
+                    if (quantidadeContainer) {
+                        quantidadeContainer.style.display = 'none';
+                    }
+                    
+                    // Remover acessório da lista de selecionados
+                    acessoriosSelecionados = acessoriosSelecionados.filter(a => a.id != acessorioId);
+                }
+                
+                // Atualizar resumo
+                atualizarResumoSofa();
+            });
+        });
+        
+        // Event listeners para campos de quantidade
+        document.querySelectorAll('.quantidade-acessorio').forEach(input => {
+            input.addEventListener('change', function() {
+                const acessorioId = this.dataset.acessorioId;
+                const novaQuantidade = parseInt(this.value) || 1;
+                
+                // Atualizar quantidade no array de selecionados
+                const acessorio = acessoriosSelecionados.find(a => a.id == acessorioId);
+                if (acessorio) {
+                    acessorio.quantidade = novaQuantidade;
+                    atualizarResumoSofa();
+                }
+            });
+        });
+        
+        console.log('✅ Acessórios vinculados renderizados com sucesso');
+    }
+    
+    // Função para obter dados do sofá configurado para envio (versão melhorada)
+    function obterDadosSofaConfigurado() {
+        if (!sofaData) {
+            alert('Dados do sofá não carregados. Tente selecionar o sofá novamente.');
+            return null;
+        }
+        
+        if (modulosSelecionados.length === 0) {
+            alert('Por favor, selecione pelo menos um módulo para o sofá.');
+            return null;
+        }
+        
+        let precoTotal = 0;
+        let modulosParaEnvio = [];
+        
+        // Processar módulos selecionados
+        modulosSelecionados.forEach(modulo => {
+            precoTotal += modulo.subtotal;
+            
+            // Criar dados do módulo para envio incluindo observações
+            modulosParaEnvio.push({
+                modulo_id: modulo.moduloId,
+                modulo_nome: modulo.nome,
+                tamanho_id: modulo.tamanhoId,
+                tamanho_nome: modulo.tamanhoNome,
+                quantidade: modulo.quantidade,
+                preco: modulo.preco,
+                subtotal: modulo.subtotal,
+                observacoes: modulo.observacoes || ''
+            });
+        });
+        
+        // Processar acessórios se houver
+        let acessoriosParaEnvio = [];
+        if (typeof acessoriosSelecionados !== 'undefined' && acessoriosSelecionados.length > 0) {
+            acessoriosSelecionados.forEach(acessorio => {
+                const subtotal = acessorio.preco * acessorio.quantidade;
+                precoTotal += subtotal;
+                
+                acessoriosParaEnvio.push({
+                    acessorio_id: acessorio.id,
+                    nome: acessorio.nome,
+                    ref: acessorio.ref,
+                    quantidade: acessorio.quantidade,
+                    preco: acessorio.preco,
+                    subtotal: subtotal
+                });
+            });
+        }
+        
+        console.log('📊 Dados do sofá configurado:', {
+            modulos: modulosParaEnvio,
+            acessorios: acessoriosParaEnvio,
+            precoTotal: precoTotal
+        });
+        
+        return {
+            produto_id: sofaData.id,
+            tipo: 'sofa',
+            preco_unitario: precoTotal,
+            dados_especificos: {
+                modulos: modulosParaEnvio,
+                acessorios: acessoriosParaEnvio,
+                preco_total: precoTotal
+            }
+        };
+    }
+    
+    // Função para carregar configuração do sofá
+    function carregarConfiguracaoSofa(produtoId) {
+        console.log('🚀 carregarConfiguracaoSofa iniciada para:', produtoId);
+        
+        const sofaConfiguracao = document.getElementById('sofa-configuracao');
+        const produtoDependencias = document.getElementById('produto-dependencias');
+        
+        console.log('📍 Elementos encontrados:', {
+            sofaConfiguracao: !!sofaConfiguracao,
+            produtoDependencias: !!produtoDependencias
+        });
+        
+        // Ocultar dependências normais e mostrar configuração de sofá
+        if (produtoDependencias) produtoDependencias.style.display = 'none';
+        
+        fetch(`/orcamentos/detalhes-produto/?produto_id=${produtoId}`)
+            .then(response => {
+                console.log('📡 Resposta do servidor:', response.status);
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                return response.json();
+            })
+            .then(data => {
+                console.log('📦 Dados recebidos:', data);
+                
+                if (data.erro) {
+                    console.error('Erro ao carregar detalhes do sofá:', data.erro);
+                    return;
+                }
+                
+                sofaData = data.produto;
+                console.log('💾 sofaData definido:', sofaData);
+                
+                // Mostrar preview instantâneo da imagem do sofá
+                mostrarPreviewSofa(sofaData);
+                
+                // Carregar seletor de módulos
+                carregarSeletorModulos(sofaData);
+                renderizarAcessoriosSofa(sofaData);
+                
+                // Resetar lista de módulos adicionados
+                modulosSelecionados = [];
+                atualizarListaModulosAdicionados();
+                
+                if (sofaConfiguracao) {
+                    console.log('✅ Exibindo sofa-configuracao');
+                    sofaConfiguracao.style.display = 'block';
+                } else {
+                    console.log('❌ Elemento sofa-configuracao não encontrado!');
+                }
+            })
+            .catch(error => {
+                console.error('Erro ao carregar configuração do sofá:', error);
+            });
+    }
+    
+    // Função para mostrar preview do sofá selecionado
+    function mostrarPreviewSofa(sofaData) {
+        const sofaImagemPreview = document.getElementById('sofa-imagem-preview');
+        const sofaSemImagem = document.getElementById('sofa-sem-imagem');
+        const sofaNomePreview = document.getElementById('sofa-nome-preview');
+        const sofaInfoPreview = document.getElementById('sofa-info-preview');
+        
+        // Verificar se os elementos existem
+        if (!sofaImagemPreview || !sofaSemImagem) {
+            console.error('Elementos de imagem não encontrados no DOM');
+            return;
+        }
+        
+        // Atualizar nome
+        if (sofaNomePreview) {
+            sofaNomePreview.textContent = sofaData.nome || 'Sofá Selecionado';
+        }
+        
+        // Atualizar informações
+        if (sofaInfoPreview) {
+            let info = [];
+            if (sofaData.ref) info.push(`Ref: ${sofaData.ref}`);
+            if (sofaData.modulos && sofaData.modulos.length > 0) {
+                info.push(`${sofaData.modulos.length} módulos disponíveis`);
+            }
+            sofaInfoPreview.innerHTML = info.join(' • ');
+        }
+        
+        // Verificar e mostrar imagem do sofá
+        if (sofaData.imagem_principal) {
+            // Criar uma nova imagem para verificar se carrega
+            const tempImg = new Image();
+            
+            tempImg.onload = function() {
+                // Imagem carregou com sucesso
+                sofaImagemPreview.src = sofaData.imagem_principal;
+                sofaImagemPreview.style.display = 'block';
+                sofaSemImagem.style.display = 'none';
+                
+                // Adicionar efeito de fade-in
+                sofaImagemPreview.style.opacity = '0';
+                setTimeout(() => {
+                    sofaImagemPreview.style.transition = 'opacity 0.3s ease-in-out';
+                    sofaImagemPreview.style.opacity = '1';
+                }, 50);
+            };
+            
+            tempImg.onerror = function() {
+                // Erro ao carregar imagem
+                console.error('Erro ao carregar imagem:', sofaData.imagem_principal);
+                sofaImagemPreview.style.display = 'none';
+                sofaSemImagem.style.display = 'block';
+            };
+            
+            // Iniciar carregamento da imagem
+            tempImg.src = sofaData.imagem_principal;
+        } else {
+            // Sem imagem disponível
+            sofaImagemPreview.style.display = 'none';
+            sofaSemImagem.style.display = 'block';
+        }
+    }
+    
+    // Função para resetar configuração do sofá
+    function resetarConfiguracaoSofa() {
+        sofaData = null;
+        modulosSelecionados = [];
+        acessoriosSelecionados = [];
+        contadorModulos = 0;
+        
+        // Limpar preview do sofá
+        const sofaImagemPreview = document.getElementById('sofa-imagem-preview');
+        const sofaSemImagem = document.getElementById('sofa-sem-imagem');
+        const sofaNomePreview = document.getElementById('sofa-nome-preview');
+        const sofaInfoPreview = document.getElementById('sofa-info-preview');
+        
+        if (sofaImagemPreview) sofaImagemPreview.style.display = 'none';
+        if (sofaSemImagem) sofaSemImagem.style.display = 'block';
+        if (sofaNomePreview) sofaNomePreview.textContent = '';
+        if (sofaInfoPreview) sofaInfoPreview.innerHTML = '';
+        
+        // Limpar seletor de módulo
+        const selectModulo = document.getElementById('select-modulo-adicionar');
+        if (selectModulo) selectModulo.value = '';
+        
+        // Limpar lista de módulos adicionados
+        atualizarListaModulosAdicionados();
+        
+        // Limpar resumo
+        atualizarResumoSofa();
+    }
+    
+    // Função para remover módulo
+    function removerModulo(moduloId) {
+        modulosSelecionados = modulosSelecionados.filter(m => m.id != moduloId);
+        
+        // Desmarcar checkbox correspondente
+        const checkbox = document.querySelector(`input[data-modulo-id="${moduloId}"]`);
+        if (checkbox) {
+            checkbox.checked = false;
+            // Ocultar seletor de tamanho
+            const tamanhoSelect = document.querySelector(`.tamanho-modulo[data-modulo-id="${moduloId}"]`);
+            if (tamanhoSelect) {
+                tamanhoSelect.style.display = 'none';
+                tamanhoSelect.value = '';
+            }
+        }
+        
+        atualizarListaModulosAdicionados();
+    }
+    
+    // Função para remover módulo completo
+    function removerModuloCompleto(moduloId) {
+        // Desmarcar checkbox do módulo
+        const moduloCheckbox = document.querySelector(`input[data-modulo-id="${moduloId}"].modulo-check`);
+        if (moduloCheckbox) {
+            moduloCheckbox.checked = false;
+            moduloCheckbox.dispatchEvent(new Event('change'));
+        }
+    }
+    
+    // Função para remover um tamanho específico de um módulo
+    function removerTamanhoModulo(moduloId, tamanhoId) {
+        // Desmarcar checkbox do tamanho
+        const tamanhoCheckbox = document.querySelector(`input[data-modulo-id="${moduloId}"][data-tamanho-id="${tamanhoId}"].tamanho-check`);
+        if (tamanhoCheckbox) {
+            tamanhoCheckbox.checked = false;
+            tamanhoCheckbox.dispatchEvent(new Event('change'));
+        }
+    }
+
+    // Função para atualizar totais em tempo real na sidebar
+    function atualizarTotaisSidebar() {
+        // Calcular subtotal dos itens
+        const subtotal = itensPedido.reduce((total, item) => total + item.preco_total, 0);
+        
+        // Obter valores de desconto e acréscimo
+        const descontoValor = parseFloat(document.getElementById('id_desconto_valor')?.value || 0);
+        const descontoPercentual = parseFloat(document.getElementById('id_desconto_percentual')?.value || 0);
+        const acrescimoValor = parseFloat(document.getElementById('id_acrescimo_valor')?.value || 0);
+        const acrescimoPercentual = parseFloat(document.getElementById('id_acrescimo_percentual')?.value || 0);
+        
+        // Calcular desconto total
+        const descontoTotal = descontoValor + (subtotal * descontoPercentual / 100);
+        
+        // Calcular acréscimo total
+        const acrescimoTotal = acrescimoValor + (subtotal * acrescimoPercentual / 100);
+        
+        // Calcular total final
+        const totalFinal = subtotal - descontoTotal + acrescimoTotal;
+        
+        // Atualizar elementos da sidebar
+        const subtotalEl = document.getElementById('subtotal-sidebar');
+        const descontoEl = document.getElementById('desconto-sidebar');
+        const acrescimoEl = document.getElementById('acrescimo-sidebar');
+        const totalFinalEl = document.getElementById('total-final-sidebar');
+        
+        if (subtotalEl) {
+            subtotalEl.textContent = `R$ ${subtotal.toFixed(2).replace('.', ',')}`;
+        }
+        
+        if (descontoEl) {
+            descontoEl.textContent = `- R$ ${descontoTotal.toFixed(2).replace('.', ',')}`;
+        }
+        
+        if (acrescimoEl) {
+            acrescimoEl.textContent = `+ R$ ${acrescimoTotal.toFixed(2).replace('.', ',')}`;
+        }
+        
+        if (totalFinalEl) {
+            totalFinalEl.textContent = `R$ ${totalFinal.toFixed(2).replace('.', ',')}`;
+        }
+        
+        console.log('Totais atualizados - Subtotal:', subtotal, 'Desconto:', descontoTotal, 'Acréscimo:', acrescimoTotal, 'Total:', totalFinal);
+    }
+
+    // Modificar a função calcularTotaisGerais para incluir a atualização da sidebar
+    function calcularTotaisGeraisOriginal() {
+        const subtotal = itensPedido.reduce((total, item) => total + item.preco_total, 0);
+        
+        // Atualizar campo subtotal se existir
+        const subtotalElement = document.getElementById('subtotal-itens');
+        if (subtotalElement) {
+            subtotalElement.textContent = `R$ ${subtotal.toFixed(2)}`;
+        }
+        
+        console.log('Subtotal calculado:', subtotal);
+        
+        // Atualizar sidebar com totais em tempo real
+        atualizarTotaisSidebar();
+    }
+
+    // Substituir a função original
+    calcularTotaisGerais = calcularTotaisGeraisOriginal;
+
+    // Adicionar listeners para campos de desconto e acréscimo
+    function adicionarListenersDesconto() {
+        const campos = [
+            'desconto_valor_unificado',
+            'acrescimo_valor_unificado',
+            'id_desconto_valor',
+            'id_desconto_percentual', 
+            'id_acrescimo_valor',
+            'id_acrescimo_percentual'
+        ];
+        
+        campos.forEach(campoId => {
+            const campo = document.getElementById(campoId);
+            if (campo) {
+                campo.addEventListener('input', atualizarTotaisSidebar);
+                campo.addEventListener('change', atualizarTotaisSidebar);
+            }
+        });
+        
+        // Adicionar listener para faixa de preço que afeta os preços
+        const faixaPreco = document.getElementById('id_faixa_preco');
+        if (faixaPreco) {
+            faixaPreco.addEventListener('change', function() {
+                // Recalcular preços dos itens com nova faixa
+                setTimeout(atualizarTotaisSidebar, 100);
+            });
+        }
+    }
+
+    // Inicializar listeners quando o DOM estiver pronto
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', adicionarListenersDesconto);
+    } else {
+        adicionarListenersDesconto();
+    }
+
+    // Atualizar totais inicialmente
+    setTimeout(atualizarTotaisSidebar, 500);
+</script>
+{% endblock %}

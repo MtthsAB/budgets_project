@@ -1,476 +1,461 @@
 {% extends 'base.html' %}
 
-{% block title %}{{ sofa.ref_produto }} - Detalhes do Sofá{% endblock %}
+{% block title %}{{ sofa.ref_produto }} - {{ sofa.nome_produto }} - Sistema de Produtos{% endblock %}
 
 {% block extra_css %}
 <style>
-    .tamanho-card {
+    /* Estilo principal da página */
+    .sofa-detalhes {
         background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
-        border: 1px solid #dee2e6 !important;
+        min-height: 100vh;
+        padding: 2rem 0;
+    }
+    
+    /* Cards com estilo melhorado */
+    .card {
+        border: none;
+        border-radius: 15px;
+        box-shadow: 0 4px 20px rgba(0,0,0,0.08);
         transition: all 0.3s ease;
-        position: relative;
         overflow: hidden;
+        margin-bottom: 2rem;
     }
-    .tamanho-card:hover {
-        box-shadow: 0 6px 20px rgba(0,0,0,0.15);
-        transform: translateY(-3px);
-        border-color: #007bff !important;
+    
+    .card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 8px 30px rgba(0,0,0,0.15);
     }
-    .tamanho-card::before {
+    
+    .card-header {
+        background: linear-gradient(135deg, #0056b3 0%, #004085 100%);
+        color: white;
+        border: none;
+        padding: 1.5rem;
+        position: relative;
+    }
+    
+    .card-header::before {
         content: '';
         position: absolute;
         top: 0;
         left: 0;
         right: 0;
-        height: 3px;
-        background: linear-gradient(90deg, #007bff, #28a745);
-        opacity: 0;
-        transition: opacity 0.3s ease;
+        bottom: 0;
+        background: linear-gradient(45deg, rgba(255,255,255,0.1) 0%, transparent 100%);
+        pointer-events: none;
     }
-    .tamanho-card:hover::before {
-        opacity: 1;
-    }
-    .tamanho-details small {
-        display: block;
-        line-height: 1.4;
-    }
-    .badge.bg-success {
-        font-size: 0.85rem;
-        padding: 0.4rem 0.6rem;
-    }
-    .card-header {
-        border-bottom: 2px solid #007bff;
-    }
+    
     .card-header h5 {
-        color: #495057;
+        color: white;
         font-weight: 600;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        margin: 0;
+        position: relative;
+        z-index: 1;
     }
-    .tipo-sofas {
-        background: linear-gradient(135deg, #4f46e5, #7c3aed);
+    
+    .card-body {
+        padding: 2rem;
+        background: white;
+    }
+    
+    /* Badges melhorados */
+    .badge {
+        border-radius: 25px;
+        padding: 0.5rem 1rem;
+        font-weight: 500;
+        letter-spacing: 0.5px;
+        transition: all 0.3s ease;
+    }
+    
+    .badge.bg-success {
+        background: linear-gradient(135deg, #28a745 0%, #20c997 100%) !important;
+        border: none;
+        box-shadow: 0 2px 10px rgba(40,167,69,0.3);
+    }
+    
+    .badge.bg-danger {
+        background: linear-gradient(135deg, #dc3545 0%, #c82333 100%) !important;
+        border: none;
+        box-shadow: 0 2px 10px rgba(220,53,69,0.3);
+    }
+    
+    .badge.bg-secondary {
+        background: linear-gradient(135deg, #6c757d 0%, #5a6268 100%) !important;
+        border: none;
+        box-shadow: 0 2px 10px rgba(108,117,125,0.3);
+    }
+    
+    .badge.bg-primary {
+        background: linear-gradient(135deg, #007bff 0%, #0056b3 100%) !important;
+        border: none;
+        box-shadow: 0 2px 10px rgba(0,123,255,0.3);
+    }
+    
+    .badge.bg-info {
+        background: linear-gradient(135deg, #17a2b8 0%, #138496 100%) !important;
+        border: none;
+        box-shadow: 0 2px 10px rgba(23,162,184,0.3);
+    }
+    
+    .badge.tipo-sofas {
+        background: linear-gradient(135deg, #0056b3 0%, #004085 100%) !important;
+        color: white;
+        border: none;
+        box-shadow: 0 2px 10px rgba(0,86,179,0.3);
+    }
+    
+    /* Título da página */
+    .page-title {
+        background: linear-gradient(135deg, #0056b3 0%, #004085 100%);
+        color: white;
+        padding: 2rem;
+        border-radius: 15px;
+        margin-bottom: 2rem;
+        position: relative;
+        overflow: hidden;
+    }
+    
+    .page-title::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: linear-gradient(45deg, rgba(255,255,255,0.1) 0%, transparent 100%);
+        pointer-events: none;
+    }
+    
+    .page-title h1 {
+        margin: 0;
+        font-weight: 700;
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+    }
+    
+    .page-title .actions {
+        margin-top: 1rem;
+    }
+    
+    /* Botões melhorados */
+    .btn {
+        border-radius: 25px;
+        padding: 0.6rem 1.5rem;
+        font-weight: 500;
+        letter-spacing: 0.5px;
+        transition: all 0.3s ease;
+        position: relative;
+        overflow: hidden;
+    }
+    
+    .btn:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 20px rgba(0,0,0,0.15);
+    }
+    
+    .btn-warning {
+        background: linear-gradient(135deg, #ffc107 0%, #e0a800 100%);
+        border: none;
+        color: #000;
+    }
+    
+    .btn-danger {
+        background: linear-gradient(135deg, #dc3545 0%, #c82333 100%);
+        border: none;
+    }
+    
+    .btn-outline-secondary {
+        border: 2px solid #6c757d;
+        color: #6c757d;
+        background: transparent;
+    }
+    
+    .btn-outline-secondary:hover {
+        background: #6c757d;
         color: white;
     }
     
-    /* Melhorias para módulos */
-    .modulo-card {
-        border: 1px solid #e0e0e0;
-        border-radius: 12px;
-        transition: all 0.3s ease;
-        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    .btn-outline-light {
+        border: 2px solid rgba(255,255,255,0.5);
+        color: white;
+        background: transparent;
     }
-    .modulo-card:hover {
-        box-shadow: 0 8px 25px rgba(0,0,0,0.15);
-        transform: translateY(-2px);
+    
+    .btn-outline-light:hover {
+        background: rgba(255,255,255,0.2);
+        color: white;
+        border-color: white;
     }
-    .modulo-header {
-        background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
-        border-bottom: 2px solid #007bff;
-        border-radius: 12px 12px 0 0;
-    }
-    .modulo-image {
-        border-radius: 8px;
-        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-        transition: all 0.3s ease;
-    }
-    .modulo-image:hover {
-        box-shadow: 0 4px 15px rgba(0,0,0,0.2);
-        transform: scale(1.05);
-    }
-    .modulo-info {
-        padding: 1rem;
-    }
-    .modulo-nome {
-        color: #2c3e50;
-        font-weight: 600;
-        margin-bottom: 0.5rem;
-    }
-    .modulo-dimensoes {
-        color: #6c757d;
-        font-size: 0.9rem;
-        margin-bottom: 0.5rem;
-    }
-    .modulo-descricao {
-        color: #495057;
-        font-size: 0.9rem;
+    
+    /* Seção de imagens melhorada */
+    .image-container {
+        position: relative;
+        overflow: hidden;
+        border-radius: 15px;
         background: #f8f9fa;
-        padding: 0.5rem;
-        border-radius: 6px;
-        border-left: 3px solid #007bff;
+        padding: 1rem;
+        transition: all 0.3s ease;
+    }
+    
+    .image-container:hover {
+        transform: scale(1.02);
+        box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+    }
+    
+    .image-container img {
+        width: 100%;
+        height: auto;
+        border-radius: 10px;
+        transition: all 0.3s ease;
+    }
+    
+    .no-image-placeholder {
+        background: linear-gradient(135deg, #e9ecef 0%, #f8f9fa 100%);
+        border: 2px dashed #dee2e6;
+        border-radius: 15px;
+        padding: 3rem;
+        text-align: center;
+        transition: all 0.3s ease;
+    }
+    
+    .no-image-placeholder:hover {
+        border-color: #0056b3;
+        background: linear-gradient(135deg, #f8f9fa 0%, #ffffff 100%);
+    }
+    
+    .no-image-placeholder i {
+        font-size: 4rem;
+        color: #dee2e6;
+        margin-bottom: 1rem;
+        transition: all 0.3s ease;
+    }
+    
+    .no-image-placeholder:hover i {
+        color: #0056b3;
+        transform: scale(1.1);
     }
 </style>
 {% endblock %}
 
 {% block content %}
-<div class="container-fluid">
-    <div class="row mb-4">
-        <div class="col-12">
-            <div class="d-flex justify-content-between align-items-center">
-                <div>
-                    <nav aria-label="breadcrumb">
-                        <ol class="breadcrumb">
-                            <li class="breadcrumb-item"><a href="{% url 'home' %}">Início</a></li>
-                            <li class="breadcrumb-item"><a href="{% url 'produtos_lista' %}">Produtos</a></li>
-                            <li class="breadcrumb-item"><a href="{% url 'sofas_lista' %}">Sofás</a></li>
-                            <li class="breadcrumb-item active">{{ sofa.ref_produto }}</li>
-                        </ol>
-                    </nav>
-                    <h1 class="h2 mb-0">
-                        <i class="bi bi-couch"></i> {{ sofa.ref_produto }} - {{ sofa.nome_produto }}
-                    </h1>
-                    <p class="text-muted mb-0">
-                        <span class="badge tipo-sofas">{{ sofa.id_tipo_produto.nome }}</span>
-                        {% if sofa.ativo %}
-                            <span class="badge bg-success ms-2">Ativo</span>
-                        {% else %}
-                            <span class="badge bg-danger ms-2">Inativo</span>
-                        {% endif %}
-                    </p>
-                </div>
+<div class="sofa-detalhes">
+    <div class="container">
+        <!-- Título da página -->
+        <div class="page-title">
+            <h1>
+                <i class="fas fa-couch"></i>
+                {{ sofa.nome_produto }}
+                <small class="fs-6 opacity-75">{{ sofa.ref_produto }}</small>
+            </h1>
+            <div class="actions">
                 <div class="btn-group" role="group">
-                    <a href="{% url 'sofa_editar' sofa.id %}" class="btn btn-warning">
-                        <i class="bi bi-pencil"></i> Editar
-                    </a>
-                    <a href="{% url 'produtos_lista' %}" class="btn btn-outline-secondary">
-                        <i class="bi bi-arrow-left"></i> Voltar
+                    <a href="{% url 'produtos_lista' %}" 
+                       class="btn btn-outline-light">
+                        <i class="fas fa-arrow-left me-2"></i>Voltar à Lista
                     </a>
                 </div>
             </div>
         </div>
-    </div>
 
-    <div class="row">
-        <!-- Informações Básicas -->
-        <div class="col-lg-8">
-            <div class="card mb-4">
-                <div class="card-header">
-                    <h5 class="mb-0">
-                        <i class="bi bi-info-circle"></i> Informações do Sofá
-                    </h5>
-                </div>
-                <div class="card-body">
-                    <div class="row">
-                        <div class="col-md-6">
-                            <h6 class="text-muted">Referência</h6>
-                            <p class="fs-5 fw-bold text-primary">{{ sofa.ref_produto }}</p>
-                        </div>
-                        <div class="col-md-6">
-                            <h6 class="text-muted">Nome do Produto</h6>
-                            <p class="fs-5">{{ sofa.nome_produto }}</p>
-                        </div>
+        <div class="row">
+            <!-- Conteúdo Principal -->
+            <div class="col-lg-8">
+                
+                <!-- Informações Básicas -->
+                <div class="card">
+                    <div class="card-header">
+                        <h5><i class="fas fa-info-circle"></i> Informações Básicas</h5>
                     </div>
-                    <div class="row">
-                        <div class="col-md-6">
-                            <h6 class="text-muted">Tipo</h6>
-                            <p><span class="badge tipo-sofas">{{ sofa.id_tipo_produto.nome }}</span></p>
-                        </div>
-                        <div class="col-md-6">
-                            <h6 class="text-muted">Status</h6>
-                            <p>
-                                {% if sofa.ativo %}
-                                    <span class="badge bg-success">Ativo</span>
-                                {% else %}
-                                    <span class="badge bg-danger">Inativo</span>
-                                {% endif %}
-                            </p>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Características do Sofá -->
-            <div class="card mb-4">
-                <div class="card-header">
-                    <h5 class="mb-0">
-                        <i class="bi bi-gear"></i> Características
-                    </h5>
-                </div>
-                <div class="card-body">
-                    <div class="row">
-                        <div class="col-md-4">
-                            <div class="text-center p-3 border rounded">
-                                <i class="bi bi-palette fs-3 text-info mb-2"></i>
-                                <h6>Cor de Tecido</h6>
-                                <span class="badge {% if sofa.tem_cor_tecido %}bg-success{% else %}bg-secondary{% endif %}">
-                                    {% if sofa.tem_cor_tecido %}Sim{% else %}Não{% endif %}
-                                </span>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <h6 class="text-muted">Nome do Produto</h6>
+                                <p class="fs-5">{{ sofa.nome_produto }}</p>
+                                
+                                <h6 class="text-muted">Referência</h6>
+                                <p><code>{{ sofa.ref_produto }}</code></p>
                             </div>
-                        </div>
-                        <div class="col-md-4">
-                            <div class="text-center p-3 border rounded">
-                                <i class="bi bi-arrow-left-right fs-3 text-warning mb-2"></i>
-                                <h6>Diferença Lado Dir./Esq.</h6>
-                                <span class="badge {% if sofa.tem_difer_desenho_lado_dir_esq %}bg-success{% else %}bg-secondary{% endif %}">
-                                    {% if sofa.tem_difer_desenho_lado_dir_esq %}Sim{% else %}Não{% endif %}
-                                </span>
-                            </div>
-                        </div>
-                        <div class="col-md-4">
-                            <div class="text-center p-3 border rounded">
-                                <i class="bi bi-arrows-expand fs-3 text-primary mb-2"></i>
-                                <h6>Diferença por Tamanho</h6>
-                                <span class="badge {% if sofa.tem_difer_desenho_tamanho %}bg-success{% else %}bg-secondary{% endif %}">
-                                    {% if sofa.tem_difer_desenho_tamanho %}Sim{% else %}Não{% endif %}
-                                </span>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Módulos do Sofá -->
-            {% if modulos %}
-            <div class="card mb-4">
-                <div class="card-header">
-                    <h5 class="mb-0">
-                        <i class="bi bi-grid-3x3-gap"></i> Módulos ({{ modulos.count }})
-                    </h5>
-                </div>
-                <div class="card-body">
-                    {% for modulo in modulos %}
-                    <div class="card mb-4 modulo-card">
-                        <div class="card-header modulo-header">
-                            <div class="row align-items-center">
-                                <div class="col-auto">
-                                    {% if modulo.imagem_principal %}
-                                        <img src="{{ modulo.imagem_principal.url }}" 
-                                             alt="Imagem - {{ modulo.nome }}" 
-                                             class="img-thumbnail modulo-image"
-                                             style="width: 100px; height: 100px; object-fit: cover; border-radius: 8px;">
+                            <div class="col-md-6">
+                                <h6 class="text-muted">Tipo</h6>
+                                <p><span class="badge tipo-sofas">{{ sofa.id_tipo_produto.nome }}</span></p>
+                                
+                                <h6 class="text-muted">Status</h6>
+                                <p>
+                                    {% if sofa.ativo %}
+                                        <span class="badge bg-success">
+                                            <i class="fas fa-check-circle"></i> Ativo
+                                        </span>
                                     {% else %}
-                                        <div class="bg-secondary rounded d-flex align-items-center justify-content-center modulo-image" 
-                                             style="width: 100px; height: 100px; border-radius: 8px;">
-                                            <i class="bi bi-image text-white fs-3"></i>
-                                        </div>
+                                        <span class="badge bg-danger">
+                                            <i class="fas fa-times-circle"></i> Inativo
+                                        </span>
                                     {% endif %}
-                                </div>
-                                <div class="col modulo-info">
-                                    <h5 class="modulo-nome">
-                                        <i class="bi bi-puzzle"></i> {{ modulo.nome }}
-                                    </h5>
-                                    <div class="modulo-dimensoes">
-                                        {% if modulo.profundidade %}
-                                            <span class="badge bg-info me-2">
-                                                <i class="bi bi-arrows-vertical"></i> Prof: {{ modulo.profundidade }}cm
-                                            </span>
-                                        {% endif %}
-                                        {% if modulo.altura %}
-                                            <span class="badge bg-info me-2">
-                                                <i class="bi bi-arrows-vertical"></i> Alt: {{ modulo.altura }}cm
-                                            </span>
-                                        {% endif %}
-                                        {% if modulo.braco %}
-                                            <span class="badge bg-info me-2">
-                                                <i class="bi bi-arrows-horizontal"></i> Braço: {{ modulo.braco }}cm
-                                            </span>
-                                        {% endif %}
-                                    </div>
-                                    {% if modulo.descricao %}
-                                        <div class="modulo-descricao mt-2">
-                                            <small><i class="bi bi-info-circle"></i> {{ modulo.descricao }}</small>
-                                        </div>
-                                    {% endif %}
-                                </div>
-                                {% if modulo.imagem_secundaria %}
-                                <div class="col-auto">
-                                    <img src="{{ modulo.imagem_secundaria.url }}" 
-                                         alt="Imagem Secundária - {{ modulo.nome }}" 
-                                         class="img-thumbnail modulo-image"
-                                         style="width: 80px; height: 80px; object-fit: cover; border-radius: 8px;">
-                                    <div class="text-center mt-1">
-                                        <small class="text-muted">Imagem Secundária</small>
-                                    </div>
-                                </div>
-                                {% endif %}
+                                </p>
                             </div>
                         </div>
-                        <div class="card-body">
-                            {% if modulo.tamanhos_detalhados.all %}
-                                <h6 class="mb-3">
-                                    <i class="bi bi-rulers"></i> Tamanhos Disponíveis
-                                    <span class="badge bg-primary ms-2">{{ modulo.tamanhos_detalhados.all|length }}</span>
-                                </h6>
-                                <div class="row">
-                                    {% for tamanho in modulo.tamanhos_detalhados.all %}
-                                    <div class="col-md-6 col-lg-4 mb-3">
-                                        <div class="border rounded p-3 h-100 tamanho-card">
-                                            <div class="d-flex justify-content-between align-items-start mb-2">
-                                                <h6 class="mb-0 text-primary">Tamanho #{{ forloop.counter }}</h6>
-                                                {% if tamanho.preco %}
-                                                    <span class="badge bg-success">
-                                                        <i class="bi bi-currency-dollar"></i> R$ {{ tamanho.preco|floatformat:2 }}
-                                                    </span>
-                                                {% else %}
-                                                    <span class="badge bg-secondary">
-                                                        <i class="bi bi-dash-circle"></i> Sem preço
-                                                    </span>
-                                                {% endif %}
-                                            </div>
-                                            <div class="tamanho-details">
-                                                {% if tamanho.largura_total %}
-                                                    <div class="mb-1">
-                                                        <small><i class="bi bi-arrows-horizontal text-primary"></i> <strong>Largura Total:</strong> {{ tamanho.largura_total }}cm</small>
-                                                    </div>
-                                                {% endif %}
-                                                {% if tamanho.largura_assento %}
-                                                    <div class="mb-1">
-                                                        <small><i class="bi bi-arrows-horizontal text-info"></i> <strong>Largura Assento:</strong> {{ tamanho.largura_assento }}cm</small>
-                                                    </div>
-                                                {% endif %}
-                                                {% if tamanho.tecido_metros %}
-                                                    <div class="mb-1">
-                                                        <small><i class="bi bi-rulers text-warning"></i> <strong>Tecido:</strong> {{ tamanho.tecido_metros }}m</small>
-                                                    </div>
-                                                {% endif %}
-                                                {% if tamanho.volume_m3 %}
-                                                    <div class="mb-1">
-                                                        <small><i class="bi bi-box text-success"></i> <strong>Volume:</strong> {{ tamanho.volume_m3 }}m³</small>
-                                                    </div>
-                                                {% endif %}
-                                                {% if tamanho.peso_kg %}
-                                                    <div class="mb-1">
-                                                        <small><i class="bi bi-speedometer2 text-danger"></i> <strong>Peso:</strong> {{ tamanho.peso_kg }}kg</small>
-                                                    </div>
-                                                {% endif %}
-                                            </div>
-                                            {% if tamanho.descricao %}
-                                                <div class="mt-2 pt-2 border-top">
-                                                    <small class="text-muted">
-                                                        <i class="bi bi-info-circle"></i> {{ tamanho.descricao }}
-                                                    </small>
-                                                </div>
-                                            {% endif %}
-                                        </div>
+                        
+                        {% if sofa.descricao %}
+                        <div class="row mt-3">
+                            <div class="col-12">
+                                <h6 class="text-muted">Descrição</h6>
+                                <p class="lh-base">{{ sofa.descricao }}</p>
+                            </div>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <!-- Características do Sofá -->
+                <div class="card">
+                    <div class="card-header">
+                        <h5><i class="fas fa-cogs"></i> Características</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row g-3">
+                            <div class="col-md-4">
+                                <div class="border rounded p-3 text-center h-100">
+                                    <i class="fas fa-palette fs-3 text-info mb-2"></i>
+                                    <h6>Cor de Tecido</h6>
+                                    <span class="badge {% if sofa.tem_cor_tecido %}bg-success{% else %}bg-secondary{% endif %}">
+                                        {% if sofa.tem_cor_tecido %}
+                                            <i class="fas fa-check"></i> Sim
+                                        {% else %}
+                                            <i class="fas fa-times"></i> Não
+                                        {% endif %}
+                                    </span>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="border rounded p-3 text-center h-100">
+                                    <i class="fas fa-exchange-alt fs-3 text-warning mb-2"></i>
+                                    <h6>Diferença Lado Dir./Esq.</h6>
+                                    <span class="badge {% if sofa.tem_difer_desenho_lado_dir_esq %}bg-success{% else %}bg-secondary{% endif %}">
+                                        {% if sofa.tem_difer_desenho_lado_dir_esq %}
+                                            <i class="fas fa-check"></i> Sim
+                                        {% else %}
+                                            <i class="fas fa-times"></i> Não
+                                        {% endif %}
+                                    </span>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="border rounded p-3 text-center h-100">
+                                    <i class="fas fa-expand-arrows-alt fs-3 text-primary mb-2"></i>
+                                    <h6>Diferença por Tamanho</h6>
+                                    <span class="badge {% if sofa.tem_difer_desenho_tamanho %}bg-success{% else %}bg-secondary{% endif %}">
+                                        {% if sofa.tem_difer_desenho_tamanho %}
+                                            <i class="fas fa-check"></i> Sim
+                                        {% else %}
+                                            <i class="fas fa-times"></i> Não
+                                        {% endif %}
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Módulos do Sofá -->
+                {% if modulos %}
+                <div class="card">
+                    <div class="card-header">
+                        <h5><i class="fas fa-th-large"></i> Módulos do Sofá 
+                            <span class="badge bg-light text-dark ms-2">{{ modulos.count }}</span>
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        {% for modulo in modulos %}
+                        <div class="card mb-3">
+                            <div class="card-body">
+                                <div class="d-flex justify-content-between align-items-start">
+                                    <div>
+                                        <h6 class="text-primary">
+                                            <i class="fas fa-puzzle-piece"></i> {{ modulo.nome }}
+                                        </h6>
+                                        {% if modulo.descricao %}
+                                            <p class="text-muted small">{{ modulo.descricao }}</p>
+                                        {% endif %}
                                     </div>
-                                    {% endfor %}
+                                    <span class="badge bg-primary">
+                                        <i class="fas fa-eye"></i> Módulo
+                                    </span>
                                 </div>
-                            {% else %}
-                                <div class="text-center text-muted py-4">
-                                    <i class="bi bi-exclamation-triangle fs-2"></i>
-                                    <h6 class="mt-2">Nenhum tamanho cadastrado</h6>
-                                    <p class="small">Este módulo ainda não possui tamanhos definidos.</p>
-                                </div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+                {% endif %}
+
+                <!-- Informações do Sistema -->
+                <div class="card">
+                    <div class="card-header">
+                        <h5><i class="fas fa-clock"></i> Informações do Sistema</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <small class="text-muted d-block">
+                                    <strong><i class="fas fa-calendar-plus"></i> Criado em:</strong><br>
+                                    {{ sofa.created_at|date:"d/m/Y H:i" }}
+                                </small>
+                            </div>
+                            <div class="col-md-6">
+                                <small class="text-muted d-block">
+                                    <strong><i class="fas fa-user"></i> Criado por:</strong><br>
+                                    {% if sofa.created_by %}
+                                        {{ sofa.created_by.get_full_name|default:sofa.created_by.email }}
+                                    {% else %}
+                                        Sistema
+                                    {% endif %}
+                                </small>
+                            </div>
+                            {% if sofa.updated_at %}
+                            <div class="col-md-6">
+                                <small class="text-muted d-block">
+                                    <strong><i class="fas fa-calendar-check"></i> Última atualização:</strong><br>
+                                    {{ sofa.updated_at|date:"d/m/Y H:i" }}
+                                </small>
+                            </div>
+                            {% endif %}
+                            {% if sofa.updated_by %}
+                            <div class="col-md-6">
+                                <small class="text-muted d-block">
+                                    <strong><i class="fas fa-user-edit"></i> Atualizado por:</strong><br>
+                                    {{ sofa.updated_by.get_full_name|default:sofa.updated_by.email }}
+                                </small>
+                            </div>
                             {% endif %}
                         </div>
                     </div>
-                    {% endfor %}
-                    
-                    <!-- Resumo dos Módulos -->
-                    <div class="row mt-3">
-                        <div class="col-md-12">
-                            <div class="alert alert-info">
-                                <h6><i class="bi bi-calculator"></i> Resumo dos Módulos</h6>
-                                <div class="row">
-                                    <div class="col-md-3">
-                                        <strong>Total de Módulos:</strong> {{ modulos|length }}
-                                    </div>
-                                    <div class="col-md-6">
-                                        <small class="text-muted">
-                                            <i class="bi bi-info-circle"></i> 
-                                            Os preços mostrados são por tamanho individual de cada módulo
-                                        </small>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
+                </div>
+            </div>
+
+            <!-- Sidebar -->
+            <div class="col-lg-4">
+                <!-- Imagem Principal -->
+                <div class="card">
+                    <div class="card-header">
+                        <h5><i class="fas fa-image"></i> Imagem Principal</h5>
                     </div>
-                </div>
-            </div>
-            {% endif %}
-        </div>
-
-        <!-- Sidebar -->
-        <div class="col-lg-4">
-            <!-- Imagens -->
-            <div class="card mb-4">
-                <div class="card-header">
-                    <h5 class="mb-0">
-                        <i class="bi bi-images"></i> Imagens
-                    </h5>
-                </div>
-                <div class="card-body">
-                    {% if sofa.imagem_principal %}
-                        <div class="mb-3">
-                            <h6 class="text-muted">Imagem Principal</h6>
-                            <img src="{{ sofa.imagem_principal.url }}" 
-                                 alt="Imagem principal de {{ sofa.nome_produto }}" 
-                                 class="img-fluid rounded border">
-                        </div>
-                    {% endif %}
-                    
-                    {% if sofa.imagem_secundaria %}
-                        <div class="mb-3">
-                            <h6 class="text-muted">Imagem Secundária</h6>
-                            <img src="{{ sofa.imagem_secundaria.url }}" 
-                                 alt="Imagem secundária de {{ sofa.nome_produto }}" 
-                                 class="img-fluid rounded border">
-                        </div>
-                    {% endif %}
-                    
-                    {% if not sofa.imagem_principal and not sofa.imagem_secundaria %}
-                        <div class="text-center py-4">
-                            <i class="bi bi-image text-muted" style="font-size: 3rem;"></i>
-                            <p class="text-muted mt-2">Nenhuma imagem disponível</p>
-                        </div>
-                    {% endif %}
-                </div>
-            </div>
-
-            <!-- Acessórios Vinculados -->
-            {% if acessorios_vinculados %}
-            <div class="card mb-4">
-                <div class="card-header">
-                    <h5 class="mb-0">
-                        <i class="bi bi-plus-circle"></i> Acessórios Vinculados
-                    </h5>
-                </div>
-                <div class="card-body">
-                    {% for acessorio in acessorios_vinculados %}
-                        <div class="d-flex justify-content-between align-items-center border-bottom py-2">
-                            <div>
-                                <strong>{{ acessorio.ref_acessorio }}</strong><br>
-                                <small class="text-muted">{{ acessorio.nome }}</small>
+                    <div class="card-body text-center">
+                        {% if sofa.imagem_principal %}
+                            <div class="image-container">
+                                <img src="{{ sofa.imagem_principal.url }}" 
+                                     alt="Imagem de {{ sofa.nome_produto }}" 
+                                     class="img-fluid">
                             </div>
-                            <a href="{% url 'acessorio_detalhes' acessorio.id %}" 
-                               class="btn btn-sm btn-outline-primary">
-                                <i class="bi bi-eye"></i>
-                            </a>
-                        </div>
-                    {% endfor %}
-                </div>
-            </div>
-            {% endif %}
-
-            <!-- Informações do Sistema -->
-            <div class="card">
-                <div class="card-header">
-                    <h5 class="mb-0">
-                        <i class="bi bi-clock-history"></i> Informações do Sistema
-                    </h5>
-                </div>
-                <div class="card-body">
-                    <small class="text-muted d-block mb-2">
-                        <strong>Criado em:</strong><br>
-                        {{ sofa.created_at|date:"d/m/Y H:i" }}
-                    </small>
-                    <small class="text-muted d-block mb-2">
-                        <strong>Criado por:</strong><br>
-                        {% if sofa.created_by %}
-                            {{ sofa.created_by.get_full_name|default:sofa.created_by.email }}
                         {% else %}
-                            Sistema
+                            <div class="no-image-placeholder">
+                                <i class="fas fa-image"></i>
+                                <p class="mb-0">Nenhuma imagem disponível</p>
+                            </div>
                         {% endif %}
-                    </small>
-                    {% if sofa.updated_at %}
-                    <small class="text-muted d-block mb-2">
-                        <strong>Última atualização:</strong><br>
-                        {{ sofa.updated_at|date:"d/m/Y H:i" }}
-                    </small>
-                    {% endif %}
-                    {% if sofa.updated_by %}
-                    <small class="text-muted d-block">
-                        <strong>Atualizado por:</strong><br>
-                        {{ sofa.updated_by.get_full_name|default:sofa.updated_by.email }}
-                    </small>
-                    {% endif %}
+                    </div>
                 </div>
             </div>
         </div>

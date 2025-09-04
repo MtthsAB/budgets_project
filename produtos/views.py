@@ -16,9 +16,9 @@ from authentication.decorators import admin_or_master_required, produtos_access_
 from .models import (
     Produto, TipoItem, Linha, Modulo, Acessorio, 
     TamanhosModulos, TamanhosModulosDetalhado, FaixaTecido, PrecosBase,
-    Banqueta, Cadeira, Poltrona, Pufe, Almofada
+    Banqueta, Cadeira, Poltrona, Pufe, Almofada, SofaAcessorio
 )
-from .forms import AcessorioForm, BanquetaForm, CadeiraForm, PoltronaForm, PufeForm, AlmofadaForm
+from .forms import AcessorioForm, BanquetaForm, CadeiraForm, PoltronaForm, PufeForm, AlmofadaForm, SofaAcessorioFormSet
 
 logger = logging.getLogger(__name__)
 
@@ -603,6 +603,25 @@ def produto_cadastro_view(request):
                             logger.info(f"⚠️ Nenhum tamanho encontrado para módulo {modulo_id}")
                             logger.info(f"Chaves POST disponíveis: {list(request.POST.keys())[:10]}...")  # Mostrar apenas primeiras 10
                 
+                # Processar acessórios (apenas para sofás)
+                if produto.eh_sofa():
+                    logger.info("Processando acessórios para sofá...")
+                    
+                    # Criar formset de acessórios
+                    acessorios_formset = SofaAcessorioFormSet(request.POST, instance=produto, prefix='acessorios')
+                    
+                    if acessorios_formset.is_valid():
+                        logger.info(f"Formset de acessórios válido. Total de forms: {len(acessorios_formset.forms)}")
+                        acessorios_salvos = acessorios_formset.save()
+                        
+                        # Log dos acessórios salvos
+                        for acessorio_rel in acessorios_salvos:
+                            logger.info(f"✅ Acessório vinculado: {acessorio_rel.acessorio.nome} (Qtd: {acessorio_rel.quantidade})")
+                    else:
+                        logger.error(f"Erro na validação do formset de acessórios: {acessorios_formset.errors}")
+                        # Não interromper o cadastro por erro nos acessórios, apenas logar
+                        messages.warning(request, 'Produto salvo, mas houve problemas com alguns acessórios.')
+                
                 messages.success(request, f'Produto "{produto.nome_produto}" cadastrado com sucesso!')
                 return redirect('produtos_lista')
                 
@@ -616,6 +635,9 @@ def produto_cadastro_view(request):
     context = {
         'tipos': TipoItem.objects.all(),
         'produtos_disponiveis': Produto.objects.filter(ativo=True).order_by('ref_produto'),
+        'acessorios_disponiveis': list(Acessorio.objects.filter(ativo=True).values(
+            'id', 'ref_acessorio', 'nome', 'preco', 'imagem_principal'
+        ).order_by('ref_acessorio')),
     }
     return render(request, 'produtos/cadastro_unificado.html', context)
 
@@ -714,7 +736,7 @@ def produto_editar_view(request, produto_id):
                     
                     # Limpar módulos e vinculações
                     produto.modulos.all().delete()
-                    produto.produtos_vinculados.clear()
+                    # produto.produtos_vinculados.clear()  # Produto não tem produtos_vinculados
                     
                     track_user_changes(produto, request.user)
                     produto.save()
@@ -744,21 +766,22 @@ def produto_editar_view(request, produto_id):
                     track_user_changes(produto, request.user)
                     produto.save()
                     
-                    # Atualizar vinculações
+                    # Atualizar vinculações (não aplicável para modelo Produto)
                     produtos_vinculados = request.POST.getlist('produtos_vinculados')
                     logger.info(f"Produtos vinculados recebidos: {produtos_vinculados}")
-                    produto.produtos_vinculados.clear()
+                    # produto.produtos_vinculados.clear()  # Produto não tem produtos_vinculados
                     if produtos_vinculados:
-                        for produto_id_vinc in produtos_vinculados:
-                            if produto_id_vinc:
-                                try:
-                                    produto_vinculado = Produto.objects.get(id=produto_id_vinc)
-                                    produto.produtos_vinculados.add(produto_vinculado)
-                                    logger.info(f"Produto {produto_vinculado.ref_produto} vinculado com sucesso")
-                                except Produto.DoesNotExist:
-                                    logger.warning(f"Produto com ID {produto_id_vinc} não encontrado")
-                                    continue
-                    logger.info(f"Total de produtos vinculados após atualização: {produto.produtos_vinculados.count()}")
+                        logger.warning("Tentativa de vincular produtos ignorada - modelo Produto não suporta vinculações")
+                        # for produto_id_vinc in produtos_vinculados:
+                        #     if produto_id_vinc:
+                        #         try:
+                        #             produto_vinculado = Produto.objects.get(id=produto_id_vinc)
+                        #             produto.produtos_vinculados.add(produto_vinculado)
+                        #             logger.info(f"Produto {produto_vinculado.ref_produto} vinculado com sucesso")
+                        #         except Produto.DoesNotExist:
+                        #             logger.warning(f"Produto com ID {produto_id_vinc} não encontrado")
+                        #             continue
+                    # logger.info(f"Total de produtos vinculados após atualização: {produto.produtos_vinculados.count()}")
                     
                     # Remover módulos se produto foi convertido para acessório
                     produto.modulos.all().delete()
@@ -791,7 +814,7 @@ def produto_editar_view(request, produto_id):
                     logger.info(f"Produto básico atualizado: {produto.ref_produto}")
                     
                     # Limpar vinculações de produtos se foi convertido de acessório
-                    produto.produtos_vinculados.clear()
+                    # produto.produtos_vinculados.clear()  # Produto não tem produtos_vinculados
                     
                     # Salvar imagens dos módulos antigos antes de deletar
                     modulos_anteriores = {m.nome: m.imagem_principal for m in produto.modulos.all()}
@@ -897,7 +920,7 @@ def produto_editar_view(request, produto_id):
         'modulos': produto.modulos.prefetch_related('tamanhos_detalhados').all(),
         'tipos': TipoItem.objects.all(),
         'produtos_disponiveis': Produto.objects.filter(ativo=True).exclude(id=produto.id).order_by('ref_produto'),
-        'produtos_vinculados_ids': list(produto.produtos_vinculados.values_list('id', flat=True)),
+        'produtos_vinculados_ids': [],  # O modelo Produto não tem produtos_vinculados
     }
     return render(request, 'produtos/sofas/editar_unificado.html', context)
 
@@ -1982,3 +2005,10 @@ def sofa_excluir_view(request, sofa_id):
         'sofa': sofa,
     }
     return render(request, 'produtos/sofas/confirmar_exclusao.html', context)
+
+
+# =====================================================
+# NOVA VIEW DE EDIÇÃO COM FORMSETS (IMPORTADA)
+# =====================================================
+
+from .views_sofas_formsets import sofa_editar_formset_view
