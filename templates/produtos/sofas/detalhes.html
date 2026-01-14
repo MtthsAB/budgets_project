@@ -6,7 +6,7 @@
 <style>
     /* Estilo principal da página */
     .sofa-detalhes {
-        background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+        background: linear-gradient(135deg, var(--color-bg-secondary) 0%, #e9ecef 100%);
         min-height: 100vh;
         padding: 2rem 0;
     }
@@ -58,7 +58,7 @@
     
     .card-body {
         padding: 2rem;
-        background: white;
+        background: var(--color-card-bg);
     }
     
     /* Badges melhorados */
@@ -224,7 +224,7 @@
     
     .no-image-placeholder:hover {
         border-color: #0056b3;
-        background: linear-gradient(135deg, #f8f9fa 0%, #ffffff 100%);
+        background: linear-gradient(135deg, var(--color-bg-secondary) 0%, var(--color-card-bg) 100%);
     }
     
     .no-image-placeholder i {

@@ -1,0 +1,54 @@
+{
+  "ref_produto": "SF939",
+  "nome": "SOFÁ SF939",
+  "tem_cor_tecido": true,
+  "tem_difer_desenho_lado_dir_esq": true,
+  "tem_difer_desenho_tamanho": false,
+  "ativo": true,
+  "modulos": [
+    {
+      "nome": "Assento",
+      "profundidade": 90.0,
+      "altura": 75.0,
+      "braco": 25.0,
+      "descricao": "Assento principal do sofá",
+      "tamanhos": [
+        {
+          "largura_total": 180.0,
+          "largura_assento": 150.0,
+          "tecido_metros": 8.5,
+          "volume_m3": 0.85,
+          "peso_kg": 45.0,
+          "preco": 2500.00,
+          "descricao": "Tamanho 180cm"
+        },
+        {
+          "largura_total": 200.0,
+          "largura_assento": 170.0,
+          "tecido_metros": 9.5,
+          "volume_m3": 0.95,
+          "peso_kg": 50.0,
+          "preco": 2800.00,
+          "descricao": "Tamanho 200cm"
+        }
+      ]
+    },
+    {
+      "nome": "Braço Esquerdo",
+      "profundidade": 90.0,
+      "altura": 75.0,
+      "braco": 25.0,
+      "descricao": "Braço do lado esquerdo",
+      "tamanhos": [
+        {
+          "largura_total": 25.0,
+          "largura_assento": 25.0,
+          "tecido_metros": 2.0,
+          "volume_m3": 0.15,
+          "peso_kg": 8.0,
+          "preco": 400.00
+        }
+      ]
+    }
+  ]
+}

@@ -1,15 +1,18 @@
 from django.contrib import admin
 from .models import (
-    TipoItem, Item, Produto, Acessorio, Banqueta, Cadeira, Poltrona, Pufe, Almofada,
+    TipoItem, Produto, Acessorio, Banqueta, Cadeira, Poltrona, Pufe, Almofada,
     Modulo, TamanhosModulos, TamanhosModulosDetalhado, FaixaTecido, PrecosBase
 )
-from .forms import TamanhosModulosDetalhadoForm, ModuloForm, ItemForm
+from .forms import TamanhosModulosDetalhadoForm, ModuloForm
 
 @admin.register(TipoItem)
 class TipoItemAdmin(admin.ModelAdmin):
-    list_display = ('nome', 'created_at', 'updated_at', 'created_by', 'updated_by')
+    list_display = ('nome', 'created_at')
     search_fields = ('nome',)
     readonly_fields = ('created_at', 'updated_at', 'created_by', 'updated_by')
+    
+    def has_delete_permission(self, request):
+        return False  # Não permitir deletar tipos
 
 class ModuloInline(admin.TabularInline):
     model = Modulo
@@ -18,11 +21,16 @@ class ModuloInline(admin.TabularInline):
 
 @admin.register(Produto)
 class ProdutoAdmin(admin.ModelAdmin):
-    list_display = ('ref_produto', 'nome_produto', 'id_tipo_produto', 'ativo', 'created_at', 'created_by')
+    list_display = ('get_tipo_display', 'ref_produto', 'nome_produto', 'ativo', 'created_at')
     list_filter = ('ativo', 'id_tipo_produto', 'created_by')
-    search_fields = ('ref_produto', 'nome_produto')
+    search_fields = ('ref_produto', 'nome_produto', 'id_tipo_produto__nome')
     readonly_fields = ('created_at', 'updated_at', 'created_by', 'updated_by')
     inlines = [ModuloInline]
+    
+    def get_tipo_display(self, obj):
+        """Exibir tipo com formatação"""
+        return obj.id_tipo_produto.nome
+    get_tipo_display.short_description = 'Tipo'
     
     fieldsets = (
         ('Informações Básicas', {
@@ -37,27 +45,22 @@ class ProdutoAdmin(admin.ModelAdmin):
         }),
     )
 
-# Item - DEPRECATED - Manter apenas para referência/migração
-class ItemAdmin(admin.ModelAdmin):
-    """DEPRECATED: Use ProdutoAdmin"""
-    form = ItemForm
-    list_display = ('ref_produto', 'nome_produto', 'id_tipo_produto', 'ativo', 'created_at', 'created_by')
-    list_filter = ('ativo', 'id_tipo_produto', 'tem_cor_tecido', 'created_by')
-    search_fields = ('ref_produto', 'nome_produto')
+
+# Removido admin de Item (Deprecated)
+
+@admin.register(Acessorio)
+class AcessorioAdmin(admin.ModelAdmin):
+    list_display = ('ref_acessorio', 'nome', 'ativo', 'preco', 'created_at')
+    list_filter = ('ativo', 'created_by')
+    search_fields = ('nome', 'ref_acessorio')
     readonly_fields = ('created_at', 'updated_at', 'created_by', 'updated_by')
     
-    def has_add_permission(self, request):
-        return False  # Não permitir adicionar novos itens
-    
     fieldsets = (
-        ('⚠️ DEPRECATED - Use Produto', {
-            'fields': ('ref_produto', 'nome_produto', 'id_tipo_produto', 'ativo')
+        ('Informações Básicas', {
+            'fields': ('ref_acessorio', 'nome', 'ativo', 'descricao')
         }),
-        ('Imagens', {
-            'fields': ('imagem_principal', 'imagem_secundaria')
-        }),
-        ('Características (Legacy)', {
-            'fields': ('tem_cor_tecido', 'tem_difer_desenho_lado_dir_esq', 'tem_difer_desenho_tamanho')
+        ('Preço e Imagens', {
+            'fields': ('preco', 'imagem_principal', 'imagem_secundaria')
         }),
         ('Auditoria', {
             'fields': ('created_at', 'updated_at', 'created_by', 'updated_by'),
@@ -65,23 +68,17 @@ class ItemAdmin(admin.ModelAdmin):
         }),
     )
 
-# Registrar apenas se ainda houver dados em Item
-admin.site.register(Item, ItemAdmin)
-
-@admin.register(Acessorio)
-class AcessorioAdmin(admin.ModelAdmin):
-    list_display = ('nome', 'ref_acessorio', 'ativo', 'created_at', 'created_by')
-    list_filter = ('ativo', 'created_by')
-    search_fields = ('nome', 'ref_acessorio')
-    readonly_fields = ('created_at', 'updated_at', 'created_by', 'updated_by')
-
 @admin.register(Modulo)
 class ModuloAdmin(admin.ModelAdmin):
     form = ModuloForm
-    list_display = ('nome', 'produto', 'profundidade', 'altura', 'braco', 'created_at', 'created_by')
+    list_display = ('get_produto_display', 'nome', 'altura', 'profundidade', 'braco', 'created_at')
     list_filter = ('produto__id_tipo_produto', 'created_by')
     search_fields = ('nome', 'produto__ref_produto', 'produto__nome_produto')
     readonly_fields = ('created_at', 'updated_at', 'created_by', 'updated_by')
+    
+    def get_produto_display(self, obj):
+        return f"{obj.produto.ref_produto} - {obj.produto.nome_produto}"
+    get_produto_display.short_description = 'Produto'
     
     fieldsets = (
         ('Informações Básicas', {
@@ -101,30 +98,44 @@ class ModuloAdmin(admin.ModelAdmin):
 
 @admin.register(TamanhosModulos)
 class TamanhosModulosAdmin(admin.ModelAdmin):
-    list_display = ('id_modulo', 'tamanho', 'created_at', 'created_by')
+    list_display = ('get_modulo_display', 'tamanho', 'created_at')
     list_filter = ('id_modulo__produto__id_tipo_produto', 'created_by')
+    search_fields = ('id_modulo__nome', 'tamanho')
     readonly_fields = ('created_at', 'updated_at', 'created_by', 'updated_by')
+    
+    def get_modulo_display(self, obj):
+        return f"{obj.id_modulo.produto.ref_produto} - {obj.id_modulo.nome}"
+    get_modulo_display.short_description = 'Módulo'
 
 @admin.register(FaixaTecido)
 class FaixaTecidoAdmin(admin.ModelAdmin):
-    list_display = ('nome', 'valor_minimo', 'valor_maximo', 'created_at', 'created_by')
+    list_display = ('nome', 'valor_minimo', 'valor_maximo', 'created_at')
     list_filter = ('created_by',)
+    search_fields = ('nome',)
     readonly_fields = ('created_at', 'updated_at', 'created_by', 'updated_by')
 
 @admin.register(PrecosBase)
 class PrecosBaseAdmin(admin.ModelAdmin):
-    list_display = ('id_item', 'id_faixa_tecido', 'data_inic_vigencia', 'preco_base', 'created_at', 'created_by')
+    list_display = ('get_item_display', 'id_faixa_tecido', 'data_inic_vigencia', 'preco_base', 'created_at')
     list_filter = ('id_faixa_tecido', 'data_inic_vigencia', 'created_by')
     search_fields = ('id_item__ref_produto', 'id_item__nome_produto')
     readonly_fields = ('created_at', 'updated_at', 'created_by', 'updated_by')
+    
+    def get_item_display(self, obj):
+        return f"{obj.id_item.ref_produto} - {obj.id_item.nome_produto}"
+    get_item_display.short_description = 'Item'
 
 @admin.register(TamanhosModulosDetalhado)
 class TamanhosModulosDetalhadoAdmin(admin.ModelAdmin):
     form = TamanhosModulosDetalhadoForm
-    list_display = ('id_modulo', 'id', 'largura_total', 'largura_assento', 'peso_kg', 'preco', 'created_at', 'created_by')
+    list_display = ('get_modulo_display', 'largura_total', 'peso_kg', 'preco', 'created_at')
     list_filter = ('id_modulo__produto__id_tipo_produto', 'created_by')
     search_fields = ('id_modulo__nome', 'descricao')
     readonly_fields = ('created_at', 'updated_at', 'created_by', 'updated_by')
+    
+    def get_modulo_display(self, obj):
+        return f"{obj.id_modulo.produto.ref_produto} - {obj.id_modulo.nome}"
+    get_modulo_display.short_description = 'Módulo'
     
     fieldsets = (
         ('Informações Básicas', {

@@ -5,8 +5,8 @@
 {% block extra_css %}
 <style>
     .tamanho-card {
-        background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
-        border: 1px solid #dee2e6 !important;
+        background: linear-gradient(135deg, var(--color-bg-secondary) 0%, #e9ecef 100%);
+        border: 1px solid var(--color-border-secondary) !important;
         transition: all 0.3s ease;
         position: relative;
         overflow: hidden;
@@ -58,8 +58,8 @@
         transform: translateY(-2px);
     }
     .modulo-header {
-        background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
-        border-bottom: 2px solid #007bff;
+        background: linear-gradient(135deg, var(--color-bg-secondary) 0%, #e9ecef 100%);
+        border-bottom: 2px solid var(--color-link-color);
         border-radius: 12px 12px 0 0;
     }
     .modulo-image {
@@ -85,12 +85,12 @@
         margin-bottom: 0.5rem;
     }
     .modulo-descricao {
-        color: #495057;
+        color: var(--color-text-secondary);
         font-size: 0.9rem;
-        background: #f8f9fa;
+        background: var(--color-bg-secondary);
         padding: 0.5rem;
         border-radius: 6px;
-        border-left: 3px solid #007bff;
+        border-left: 3px solid var(--color-link-color);
     }
 </style>
 {% endblock %}

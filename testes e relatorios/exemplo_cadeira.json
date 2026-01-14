@@ -1,0 +1,14 @@
+{
+  "ref_cadeira": "CD001",
+  "nome": "EVA",
+  "largura": 52.5,
+  "profundidade": 45.0,
+  "altura": 85.0,
+  "tecido_metros": 1.5,
+  "volume_m3": 0.2,
+  "peso_kg": 8.5,
+  "preco": 450.00,
+  "ativo": true,
+  "tem_cor_tecido": false,
+  "descricao": "Cadeira moderna com design contemporâneo"
+}

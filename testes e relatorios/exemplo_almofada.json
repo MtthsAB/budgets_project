@@ -1,0 +1,12 @@
+{
+  "ref_almofada": "AL001",
+  "nome": "DECORATIVA 40x40",
+  "largura": 40.0,
+  "altura": 40.0,
+  "tecido_metros": 0.3,
+  "volume_m3": 0.02,
+  "peso_kg": 0.8,
+  "preco": 89.90,
+  "ativo": true,
+  "descricao": "Almofada decorativa quadrada"
+}

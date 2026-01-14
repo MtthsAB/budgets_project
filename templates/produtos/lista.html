@@ -41,7 +41,7 @@
     
     /* Melhorar aparência da tabela */
     .table-hover tbody tr:hover {
-        background-color: rgba(0, 123, 255, 0.075);
+        background-color: var(--color-hover-bg);
     }
     
     /* Estilos para diferentes tipos de produto */
@@ -62,13 +62,13 @@
     }
     
     .sortable-header:hover {
-        background-color: rgba(0, 123, 255, 0.1);
+        background-color: var(--color-hover-bg);
     }
     
     .sort-btn {
         background: none;
         border: none;
-        color: #6c757d;
+        color: var(--color-text-muted);
         font-size: 0.8rem;
         margin-left: 0.25rem;
         padding: 0.125rem 0.25rem;
@@ -78,13 +78,13 @@
     }
     
     .sort-btn:hover {
-        color: #495057;
-        background-color: rgba(0, 123, 255, 0.1);
+        color: var(--color-text-secondary);
+        background-color: var(--color-hover-bg);
         opacity: 1;
     }
     
     .sort-btn.active {
-        color: #0d6efd;
+        color: var(--color-link-color);
         opacity: 1;
         font-weight: bold;
     }
@@ -186,7 +186,7 @@
                 {% if produtos or banquetas or cadeiras or poltronas or pufes or almofadas %}
                 <div class="table-responsive">
                     <table class="table table-hover mb-0">
-                        <thead class="table-light">
+                        <thead>
                             <tr>
                                 <th width="120" class="sortable-header" data-field="referencia">
                                     <div class="header-content">

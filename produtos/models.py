@@ -7,8 +7,8 @@ class TipoItem(BaseModel):
     nome = models.CharField(max_length=100, verbose_name="Nome do Tipo")
     
     class Meta:
-        verbose_name = "Tipo de Item"
-        verbose_name_plural = "Tipos de Item"
+        verbose_name = "Tipo de Produto"
+        verbose_name_plural = "Tipos de Produtos"
         ordering = ['nome']
     
     def __str__(self):
@@ -70,13 +70,13 @@ class Produto(BaseModel):
     )
     
     class Meta:
-        verbose_name = "Produto"
-        verbose_name_plural = "Produtos"
+        verbose_name = "Sofá"
+        verbose_name_plural = "Sofás"
         ordering = ['ref_produto']
         db_table = 'produtos_produto'  # Define o nome da tabela
     
     def __str__(self):
-        return f"{self.ref_produto} - {self.nome_produto}"
+        return f"[{self.id_tipo_produto.nome}] {self.ref_produto} - {self.nome_produto}"
     
     def eh_sofa(self):
         """Verifica se o produto é um sofá"""
