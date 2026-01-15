@@ -19,6 +19,8 @@ urlpatterns = [
     
     # APIs
     path('api/produtos/', views.api_produtos_disponiveis, name='api_produtos_disponiveis'),
+    path('api/sofas/', views.api_sofas_disponiveis, name='api_sofas_disponiveis'),
+    path('api/acessorios/lookup/', views.api_acessorios_lookup, name='api_acessorios_lookup'),
     
     # URLs para sofás (seguindo o padrão dos novos produtos)
     path('sofas/', views.sofas_list_view, name='sofas_lista'),
@@ -36,6 +38,8 @@ urlpatterns = [
     path('acessorios/<int:acessorio_id>/', views.acessorio_detalhes_view, name='acessorio_detalhes'),
     path('acessorios/<int:acessorio_id>/editar/', views.acessorio_editar_view, name='acessorio_editar'),
     path('acessorios/<int:acessorio_id>/excluir/', views.acessorio_excluir_view, name='acessorio_excluir'),
+    path('acessorios/<int:acessorio_id>/vinculos/', views.acessorio_vinculos_view, name='acessorio_vinculos'),
+    path('acessorios/<int:acessorio_id>/vinculos/<int:sofa_id>/', views.acessorio_vinculo_delete_view, name='acessorio_vinculo_delete'),
     
     # URLs genéricas antigas (manter temporariamente para compatibilidade)
     path('produtos/', views.produtos_list_view, name='produtos_lista'),

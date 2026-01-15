@@ -1,0 +1,3587 @@
+<!DOCTYPE html>
+<html lang="pt-br" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cadastrar Produto - Sistema de Produtos</title>
+    
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.7.2/font/bootstrap-icons.css" rel="stylesheet">
+    
+    
+<style>
+.btn-add-image {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 2px solid #0d6efd;
+    background: #fff;
+    color: #0d6efd;
+    transition: all 0.3s ease;
+    position: relative;
+}
+
+.btn-add-image:hover {
+    background: #0d6efd;
+    color: #fff;
+    transform: scale(1.1);
+}
+
+.btn-add-image .bi-camera-fill {
+    font-size: 14px;
+}
+
+.btn-add-image .bi-plus-circle-fill {
+    position: absolute;
+    top: -2px;
+    right: -2px;
+    background: #fff;
+    border-radius: 50%;
+    color: #28a745;
+}
+
+/* Estilos padronizados para módulos e tamanhos - baseados na página de edição */
+.card-header .btn-outline-secondary {
+    border: 1px solid #dee2e6;
+    color: #6c757d;
+    transition: all 0.2s ease-in-out;
+    width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+}
+
+.card-header .btn-outline-secondary:hover {
+    background-color: #f8f9fa;
+    border-color: #adb5bd;
+    color: #495057;
+    transform: scale(1.05);
+}
+
+.card-header .btn-outline-secondary:focus {
+    box-shadow: 0 0 0 0.2rem rgba(108, 117, 125, 0.25);
+}
+
+.card-header .btn-outline-secondary i {
+    font-size: 14px;
+    font-weight: bold;
+}
+
+/* Indicador visual de status do módulo */
+.modulo-header-container, .tamanho-header-container {
+    position: relative;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.modulo-status-indicator, .tamanho-status-indicator {
+    width: 8px;
+    height: 8px;
+    background-color: #28a745;
+    border-radius: 50%;
+    opacity: 0;
+    transition: opacity 0.2s ease-in-out;
+    flex-shrink: 0;
+}
+
+.modulo-status-indicator.ativo, .tamanho-status-indicator.ativo {
+    opacity: 1;
+}
+
+/* Estilos para módulos recolhidos */
+.card.modulo-recolhido {
+    border-color: #dee2e6;
+    background-color: #f8f9fa;
+}
+
+.card.modulo-expandido {
+    border-color: #0d6efd;
+}
+
+.card.tamanho-recolhido {
+    box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+}
+
+/* Cores de fundo para seções de módulos e tamanhos */
+/* Força a cor azul para TODOS os elementos de módulos */
+#secao-modulos .card-header,
+#secao-modulos > .card > .card-header,
+#modulosContainer .card .card-header,
+.card[id*="modulo"] .card-header,
+[id*="modulo"] .card-header {
+    background-color: #e3f2fd !important;
+    border-bottom: 1px solid #bbdefb !important;
+}
+
+/* Força a cor verde para TODOS os elementos de tamanhos */
+.card-body .d-flex.justify-content-between.align-items-center.mb-3,
+.card-body .d-flex.justify-content-between.align-items-center.mb-2,
+div[id*="tamanhos"] .card .card-header,
+.card[id*="tamanho"] .card-header,
+[id*="tamanho"] .card-header {
+    background-color: #e8f5e8 !important;
+    border-bottom: 1px solid #c8e6c9 !important;
+}
+
+/* Estilos específicos para a seção de tamanhos - apenas o container */
+div[id*="tamanhos"] .d-flex.justify-content-between.align-items-center,
+.card-body .d-flex.justify-content-between.align-items-center:has(h6:contains("Tamanhos")) {
+    background-color: #e8f5e8 !important;
+    padding: 8px 12px !important;
+    border-radius: 4px !important;
+    border: 1px solid #c8e6c9 !important;
+    margin-bottom: 1rem !important;
+}
+
+/* Estilos para cabeçalho de tamanhos */
+.card-header small.fw-medium {
+    color: #495057;
+    font-weight: 500;
+    transition: all 0.2s ease-in-out;
+}
+
+/* Feedback visual nos botões */
+.btn:active {
+    transform: scale(0.98);
+}
+
+/* Melhoria visual das transições */
+.card {
+    transition: all 0.2s ease-in-out;
+}
+
+.card:hover {
+    transform: translateY(-1px);
+}
+
+/* Estilos para os botões de expandir/recolher todos os módulos */
+#toggleModulosBtn {
+    min-width: 140px;
+    border-radius: 4px;
+    font-size: 0.875rem;
+    position: relative;
+    overflow: hidden;
+}
+
+#toggleModulosBtn:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+#toggleModulosBtn .bi {
+    transition: all 0.2s ease-in-out;
+}
+
+/* Agrupamento dos botões na seção de módulos */
+.btn-group .btn {
+    border-radius: 4px;
+    margin-right: 0;
+}
+
+.btn-group .btn:first-child {
+    border-top-right-radius: 0;
+    border-bottom-right-radius: 0;
+}
+
+.btn-group .btn:last-child {
+    border-top-left-radius: 0;
+    border-bottom-left-radius: 0;
+    border-left: none;
+}
+
+/* Animação suave para expandir/recolher */
+.card-body {
+    transition: all 0.3s ease-in-out;
+    overflow: hidden;
+}
+
+/* CSS FORÇADO PARA CORES - APLICADO NO FINAL PARA GARANTIR PRIORIDADE */
+*[id*="modulo"] .card-header,
+*[id*="modulo"] > .card-header,
+#secao-modulos .card-header,
+#modulosContainer .card-header {
+    background-color: #e3f2fd !important;
+    border-bottom: 1px solid #bbdefb !important;
+}
+
+*[id*="tamanho"] .card-header,
+*[id*="tamanho"] > .card-header,
+*[id*="tamanhos"] .card-header {
+    background-color: #e8f5e8 !important;
+    border-bottom: 1px solid #c8e6c9 !important;
+}
+</style>
+
+    
+    <!-- FOUC Prevention: Load theme before paint -->
+    <script>
+        (function() {
+            const savedTheme = localStorage.getItem('theme-preference');
+            const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+            const theme = savedTheme || (prefersDark ? 'dark' : 'light');
+            document.documentElement.setAttribute('data-theme', theme);
+            document.documentElement.classList.toggle('dark-mode', theme === 'dark');
+        })();
+    </script>
+    
+    <style>
+        /* ===== THEME COLOR TOKENS ===== */
+        :root {
+            --color-bg-primary: #ffffff;
+            --color-bg-secondary: #f8f9fa;
+            --color-bg-tertiary: #f5f5f5;
+            --color-text-primary: #212529;
+            --color-text-secondary: #495057;
+            --color-text-muted: #6c757d;
+            --color-border-primary: #dee2e6;
+            --color-border-secondary: #e9ecef;
+            --color-card-bg: #ffffff;
+            --color-input-bg: #ffffff;
+            --color-input-border: #dee2e6;
+            --color-input-focus-border: #86b7fe;
+            --color-input-focus-shadow: rgba(13, 110, 253, 0.25);
+            --color-hover-bg: #e9ecef;
+            --color-active-bg: #0d6efd;
+            --color-active-text: #ffffff;
+            --color-navbar-bg: #0d6efd;
+            --color-navbar-text: #ffffff;
+            --color-link-color: #0d6efd;
+            --color-link-hover: #0d6efd;
+            --color-subtle-bg: #f8f9fa;
+            --color-submenu-bg: #ffffff;
+            --color-dropdown-hover-bg: #f8f9fa;
+            --color-alert-bg-info: #cfe2ff;
+            --color-alert-border-info: #b6d4fe;
+            --color-alert-text-info: #084298;
+        }
+
+        /* Dark mode theme tokens */
+        :root.dark-mode {
+            --color-bg-primary: #1a1a1a;
+            --color-bg-secondary: #2d2d2d;
+            --color-bg-tertiary: #3a3a3a;
+            --color-text-primary: #e4e4e4;
+            --color-text-secondary: #b0b0b0;
+            --color-text-muted: #8a8a8a;
+            --color-border-primary: #404040;
+            --color-border-secondary: #353535;
+            --color-card-bg: #242424;
+            --color-input-bg: #2a2a2a;
+            --color-input-border: #3a3a3a;
+            --color-input-focus-border: #4a9eff;
+            --color-input-focus-shadow: rgba(74, 158, 255, 0.25);
+            --color-hover-bg: #3a3a3a;
+            --color-active-bg: #0d6efd;
+            --color-active-text: #ffffff;
+            --color-navbar-bg: #1a1a1a;
+            --color-navbar-text: #e4e4e4;
+            --color-link-color: #4a9eff;
+            --color-link-hover: #6bb3ff;
+            --color-subtle-bg: #2a2a2a;
+            --color-submenu-bg: #242424;
+            --color-dropdown-hover-bg: #3a3a3a;
+            --color-alert-bg-info: #0c3b66;
+            --color-alert-border-info: #084298;
+            --color-alert-text-info: #84c5ff;
+        }
+
+        html.dark-mode {
+            color-scheme: dark;
+        }
+
+        html.dark-mode body {
+            background-color: var(--color-bg-primary);
+            color: var(--color-text-primary);
+        }
+
+        /* Dark mode: Detail item labels and values */
+        html.dark-mode .detail-label {
+            color: var(--color-text-secondary) !important;
+        }
+
+        html.dark-mode .detail-label::before {
+            color: var(--color-link-color) !important;
+        }
+
+        html.dark-mode .detail-value {
+            color: var(--color-text-primary) !important;
+        }
+
+        /* Dark mode: Detail items with gradients */
+        html.dark-mode .detail-item {
+            background: linear-gradient(135deg, var(--color-bg-secondary) 0%, var(--color-card-bg) 100%) !important;
+            border-left-color: var(--color-link-color) !important;
+        }
+
+        /* ===== END THEME TOKENS ===== */
+
+        .sidebar {
+            background-color: var(--color-bg-secondary);
+            min-height: calc(100vh - 56px);
+            border-right: 1px solid var(--color-border-primary);
+        }
+        .main-content {
+            min-height: calc(100vh - 56px);
+        }
+        
+        /* Estilos para campos de descrição auto-ajustáveis */
+        .auto-resize-textarea {
+            min-height: 80px;
+            resize: none;
+            overflow-y: hidden;
+            transition: height 0.3s ease;
+            background-color: var(--color-input-bg);
+            color: var(--color-text-primary);
+            border-color: var(--color-input-border);
+        }
+        
+        .auto-resize-textarea:focus {
+            outline: none;
+            border-color: var(--color-input-focus-border);
+            box-shadow: 0 0 0 0.25rem var(--color-input-focus-shadow);
+        }
+        
+        /* Estilos para o menu expansível */
+        .menu-section {
+            margin-bottom: 0.25rem;
+        }
+        
+        .menu-toggle {
+            background: none;
+            border: none;
+            width: 100%;
+            text-align: left;
+            padding: 0.75rem 1rem;
+            color: var(--color-text-secondary);
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            border-radius: 0.375rem;
+            font-weight: 500;
+        }
+        
+        .menu-toggle:hover {
+            background-color: var(--color-hover-bg);
+            color: var(--color-link-color);
+        }
+        
+        .menu-toggle.active {
+            background-color: var(--color-active-bg);
+            color: var(--color-active-text);
+        }
+        
+        .menu-toggle .menu-icon {
+            margin-right: 0.75rem;
+            font-size: 1.1rem;
+        }
+        
+        .menu-toggle .arrow-icon {
+            margin-left: auto;
+            transition: transform 0.3s ease;
+            font-size: 0.9rem;
+        }
+        
+        .menu-toggle.collapsed .arrow-icon {
+            transform: rotate(-90deg);
+        }
+        
+        .menu-submenu {
+            background-color: var(--color-submenu-bg);
+            border-radius: 0.375rem;
+            margin: 0.25rem 0 0.5rem 1rem;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        
+        .menu-submenu .list-group-item {
+            border: none;
+            padding: 0.625rem 1rem 0.625rem 2.5rem;
+            font-size: 0.9rem;
+            color: var(--color-text-muted);
+            transition: all 0.2s ease;
+            border-radius: 0.25rem;
+            margin: 0.125rem;
+            background-color: var(--color-submenu-bg);
+        }
+        
+        .menu-submenu .list-group-item:hover {
+            background-color: var(--color-dropdown-hover-bg);
+            color: var(--color-link-color);
+            transform: translateX(2px);
+        }
+        
+        .menu-submenu .list-group-item.active {
+            background-color: #e3f2fd;
+            color: var(--color-link-color);
+            border-left: 3px solid var(--color-link-color);
+            font-weight: 500;
+        }
+        
+        .menu-submenu .list-group-item i {
+            margin-right: 0.5rem;
+            width: 1rem;
+        }
+        
+        /* Responsividade para telas menores */
+        @media (max-width: 768px) {
+            .sidebar {
+                min-height: auto;
+            }
+            
+            .menu-toggle {
+                padding: 0.625rem 0.75rem;
+            }
+            
+            .menu-submenu {
+                margin-left: 0.5rem;
+            }
+            
+            .menu-submenu .list-group-item {
+                padding-left: 2rem;
+                font-size: 0.85rem;
+            }
+        }
+        
+        /* Estilos para dropdown do navbar superior */
+        .navbar-nav .dropdown-menu {
+            border-radius: 0.5rem;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            border: none;
+            margin-top: 0.25rem;
+            background-color: var(--color-submenu-bg);
+        }
+        
+        .navbar-nav .dropdown-item {
+            padding: 0.625rem 1rem;
+            transition: all 0.2s ease;
+            color: var(--color-text-secondary);
+        }
+        
+        .navbar-nav .dropdown-item:hover {
+            background-color: var(--color-dropdown-hover-bg);
+            color: var(--color-link-color);
+            transform: translateX(2px);
+        }
+        
+        .navbar-nav .dropdown-item i {
+            margin-right: 0.5rem;
+            width: 1rem;
+        }
+        
+        .navbar-nav .dropdown-toggle::after {
+            margin-left: 0.5rem;
+            transition: transform 0.3s ease;
+        }
+        
+        .navbar-nav .dropdown.show .dropdown-toggle::after {
+            transform: rotate(180deg);
+        }
+        
+        /* Estilos para o logo */
+        .navbar-brand {
+            display: flex;
+            align-items: center;
+        }
+        
+        .navbar-brand img {
+            height: 38px;
+            width: auto;
+            transition: all 0.3s ease;
+            margin-right: 0.5rem;
+        }
+        
+        .navbar-brand:hover img {
+            transform: scale(1.05);
+        }
+
+        /* ===== DARK MODE STYLES FOR BOOTSTRAP COMPONENTS ===== */
+
+        /* Navbar in dark mode */
+        html.dark-mode .navbar {
+            background-color: var(--color-navbar-bg) !important;
+            border-bottom: 1px solid var(--color-border-primary);
+        }
+
+        html.dark-mode .navbar-nav .nav-link {
+            color: var(--color-navbar-text) !important;
+        }
+
+        html.dark-mode .navbar-nav .nav-link:hover {
+            color: var(--color-link-hover) !important;
+        }
+
+        html.dark-mode .navbar-nav .dropdown-menu {
+            background-color: var(--color-submenu-bg);
+            border: 1px solid var(--color-border-primary);
+        }
+
+        html.dark-mode .navbar-nav .dropdown-item {
+            color: var(--color-text-secondary);
+        }
+
+        html.dark-mode .navbar-nav .dropdown-item:hover,
+        html.dark-mode .navbar-nav .dropdown-item:focus {
+            background-color: var(--color-dropdown-hover-bg);
+            color: var(--color-link-color);
+        }
+
+        /* Theme toggle button styling */
+        #theme-toggle {
+            color: var(--color-navbar-text) !important;
+            transition: all 0.3s ease;
+            border-radius: 0.375rem !important;
+        }
+
+        #theme-toggle:hover {
+            background-color: rgba(255, 255, 255, 0.15) !important;
+        }
+
+        #theme-toggle:focus {
+            outline: 2px solid var(--color-link-hover);
+            outline-offset: 2px;
+        }
+
+        #theme-icon {
+            transition: transform 0.3s ease, opacity 0.3s ease;
+        }
+
+        /* Forms and inputs */
+        html.dark-mode .form-control,
+        html.dark-mode .form-select,
+        html.dark-mode textarea {
+            background-color: var(--color-input-bg);
+            color: var(--color-text-primary);
+            border-color: var(--color-input-border);
+        }
+
+        html.dark-mode .form-control:focus,
+        html.dark-mode .form-select:focus,
+        html.dark-mode textarea:focus {
+            background-color: var(--color-input-bg);
+            color: var(--color-text-primary);
+            border-color: var(--color-input-focus-border);
+            box-shadow: 0 0 0 0.25rem var(--color-input-focus-shadow);
+        }
+
+        /* Cards */
+        html.dark-mode .card {
+            background-color: var(--color-card-bg);
+            color: var(--color-text-primary);
+            border-color: var(--color-border-primary);
+        }
+
+        /* Tables */
+        html.dark-mode .table {
+            --bs-table-color: var(--color-text-primary);
+            --bs-table-bg: var(--color-card-bg);
+            --bs-table-border-color: var(--color-border-primary);
+            --bs-table-striped-bg: var(--color-bg-tertiary);
+            --bs-table-striped-color: var(--color-text-primary);
+            --bs-table-hover-bg: var(--color-hover-bg);
+            --bs-table-hover-color: var(--color-text-primary);
+            color: var(--color-text-primary);
+            border-color: var(--color-border-primary);
+        }
+
+        html.dark-mode .table > :not(caption) > * > * {
+            background-color: var(--bs-table-bg);
+            color: var(--bs-table-color);
+            border-color: var(--bs-table-border-color);
+        }
+
+        html.dark-mode .table-striped > tbody > tr:nth-of-type(odd) > * {
+            background-color: var(--bs-table-striped-bg);
+            color: var(--bs-table-striped-color);
+        }
+
+        html.dark-mode .table-hover tbody tr:hover > * {
+            background-color: var(--bs-table-hover-bg);
+            color: var(--bs-table-hover-color);
+        }
+
+        html.dark-mode .table-light,
+        html.dark-mode .table-dark {
+            --bs-table-color: var(--color-text-primary);
+            --bs-table-bg: var(--color-bg-secondary);
+            --bs-table-border-color: var(--color-border-primary);
+            --bs-table-striped-bg: var(--color-bg-tertiary);
+            --bs-table-striped-color: var(--color-text-primary);
+            --bs-table-hover-bg: var(--color-hover-bg);
+            --bs-table-hover-color: var(--color-text-primary);
+        }
+
+        /* List groups */
+        html.dark-mode .list-group-item {
+            background-color: var(--color-bg-secondary);
+            color: var(--color-text-primary);
+            border-color: var(--color-border-primary);
+        }
+
+        html.dark-mode .list-group-item.active {
+            background-color: var(--color-active-bg);
+            border-color: var(--color-active-bg);
+            color: var(--color-active-text);
+        }
+
+        html.dark-mode .list-group-item:hover {
+            background-color: var(--color-hover-bg);
+        }
+
+        /* Buttons */
+        html.dark-mode .btn-secondary {
+            background-color: var(--color-bg-secondary);
+            border-color: var(--color-border-primary);
+            color: var(--color-text-primary);
+        }
+
+        html.dark-mode .btn-secondary:hover {
+            background-color: var(--color-hover-bg);
+            border-color: var(--color-border-primary);
+        }
+
+        /* Modals */
+        html.dark-mode .modal-content {
+            background-color: var(--color-card-bg);
+            color: var(--color-text-primary);
+            border-color: var(--color-border-primary);
+        }
+
+        html.dark-mode .modal-header {
+            background-color: var(--color-bg-secondary);
+            border-bottom-color: var(--color-border-primary);
+        }
+
+        html.dark-mode .modal-footer {
+            background-color: var(--color-bg-secondary);
+            border-top-color: var(--color-border-primary);
+        }
+
+        html.dark-mode .btn-close {
+            filter: invert(1);
+        }
+
+        /* Alerts */
+        html.dark-mode .alert-info {
+            background-color: var(--color-alert-bg-info);
+            color: var(--color-alert-text-info);
+            border-color: var(--color-alert-border-info);
+        }
+
+        /* Badges */
+        html.dark-mode .badge {
+            background-color: var(--color-link-color);
+        }
+
+        /* Breadcrumb */
+        html.dark-mode .breadcrumb {
+            background-color: var(--color-bg-secondary);
+        }
+
+        html.dark-mode .breadcrumb-item.active {
+            color: var(--color-text-primary);
+        }
+
+        /* Pagination */
+        html.dark-mode .pagination .page-link {
+            background-color: var(--color-bg-secondary);
+            border-color: var(--color-border-primary);
+            color: var(--color-text-primary);
+        }
+
+        html.dark-mode .pagination .page-link:hover {
+            background-color: var(--color-hover-bg);
+            border-color: var(--color-border-primary);
+            color: var(--color-link-color);
+        }
+
+        html.dark-mode .pagination .page-item.active .page-link {
+            background-color: var(--color-active-bg);
+            border-color: var(--color-active-bg);
+        }
+
+        /* Collapse/Accordion */
+        html.dark-mode .accordion {
+            background-color: transparent;
+        }
+
+        html.dark-mode .accordion-button {
+            background-color: var(--color-bg-secondary);
+            color: var(--color-text-primary);
+        }
+
+        html.dark-mode .accordion-button:not(.collapsed) {
+            background-color: var(--color-hover-bg);
+            color: var(--color-text-primary);
+        }
+
+        html.dark-mode .accordion-button:focus {
+            border-color: var(--color-input-focus-border);
+            box-shadow: 0 0 0 0.25rem var(--color-input-focus-shadow);
+        }
+
+        html.dark-mode .accordion-body {
+            background-color: var(--color-card-bg);
+            border-color: var(--color-border-primary);
+        }
+
+        /* Table headers - Fix white background in dark mode */
+        html.dark-mode .table-light {
+            background-color: var(--color-bg-secondary) !important;
+        }
+
+        html.dark-mode .table-light th {
+            background-color: var(--color-bg-secondary) !important;
+            color: var(--color-text-primary) !important;
+            border-color: var(--color-border-primary) !important;
+        }
+
+        html.dark-mode thead {
+            background-color: var(--color-bg-secondary) !important;
+        }
+
+        html.dark-mode thead th {
+            background-color: var(--color-bg-secondary) !important;
+            color: var(--color-text-primary) !important;
+            border-color: var(--color-border-primary) !important;
+        }
+
+        html.dark-mode table thead tr {
+            background-color: var(--color-bg-secondary) !important;
+        }
+
+        html.dark-mode table thead tr th {
+            background-color: var(--color-bg-secondary) !important;
+            color: var(--color-text-primary) !important;
+            border-bottom-color: var(--color-border-primary) !important;
+        }
+
+        html.dark-mode .table > :not(caption) > * > th {
+            background-color: var(--color-bg-secondary) !important;
+            color: var(--color-text-primary) !important;
+            border-color: var(--color-border-primary) !important;
+        }
+
+        /* SUPER SPECIFIC: thead with table-light class */
+        html.dark-mode thead.table-light,
+        html.dark-mode thead.table-light tr,
+        html.dark-mode thead.table-light th {
+            background-color: var(--color-bg-secondary) !important;
+            color: var(--color-text-primary) !important;
+            border-color: var(--color-border-primary) !important;
+        }
+
+        html.dark-mode .table thead.table-light th {
+            background-color: var(--color-bg-secondary) !important;
+            color: var(--color-text-primary) !important;
+            border-color: var(--color-border-primary) !important;
+        }
+
+        /* Card styles in dark mode */
+        html.dark-mode .card-footer {
+            background-color: var(--color-bg-secondary);
+            border-color: var(--color-border-primary);
+        }
+
+        html.dark-mode .card-header {
+            background-color: var(--color-bg-secondary);
+            border-color: var(--color-border-primary);
+        }
+
+        /* Dark mode: Fix gradients with light colors */
+        html.dark-mode [style*="linear-gradient(135deg, #f8f9fa"],
+        html.dark-mode [style*="linear-gradient(135deg, #ffffff"] {
+            background: linear-gradient(135deg, var(--color-bg-secondary) 0%, var(--color-bg-tertiary) 100%) !important;
+        }
+
+        /* Dark mode: Ensure card bodies are dark */
+        html.dark-mode .card-body {
+            background-color: var(--color-card-bg) !important;
+        }
+
+        /* Dark mode: Info items and details sections */
+        html.dark-mode .modulo-descricao,
+        html.dark-mode .info-item,
+        html.dark-mode .tamanho-card {
+            background: linear-gradient(135deg, var(--color-bg-secondary) 0%, var(--color-bg-tertiary) 100%) !important;
+            border-color: var(--color-border-primary) !important;
+        }
+
+        /* Dark mode: Text colors in detailed sections */
+        html.dark-mode .modulo-nome,
+        html.dark-mode .tamanho-details,
+        html.dark-mode .info-item .value {
+            color: var(--color-text-primary) !important;
+        }
+
+        html.dark-mode .modulo-dimensoes,
+        html.dark-mode .info-item .label {
+            color: var(--color-text-secondary) !important;
+        }
+
+        /* Dark mode: Page title sections */
+        html.dark-mode .page-title {
+            background: linear-gradient(135deg, var(--color-active-bg) 0%, #0056b3 100%) !important;
+        }
+
+        /* Dark mode: Force override all bg-white classes */
+        html.dark-mode .bg-white {
+            background-color: var(--color-bg-secondary) !important;
+        }
+
+        /* Dark mode: Card-related overrides */
+        html.dark-mode .card {
+            background-color: var(--color-bg-secondary) !important;
+        }
+
+        /* Dark mode: Footer overrides */
+        html.dark-mode .card-footer {
+            background-color: var(--color-bg-secondary) !important;
+            border-top-color: var(--color-border-primary) !important;
+        }
+
+        /* Dark mode: Section containers */
+        html.dark-mode [class*="container"],
+        html.dark-mode [class*="content"],
+        html.dark-mode [class*="section"] {
+            background-color: var(--color-bg-primary);
+        }
+
+        /* Dark mode: All text should be readable */
+        html.dark-mode {
+            color: var(--color-text-primary);
+        }
+
+        html.dark-mode body {
+            background-color: var(--color-bg-primary);
+            color: var(--color-text-primary);
+        }
+    </style>
+</head>
+<body>
+    <!-- Navbar -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
+        <div class="container-fluid">
+            <a class="navbar-brand" href="/">
+                
+                <img src="/static/images/essere-logo.svg" alt="Essere" />
+            </a>
+            
+            
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav me-auto">
+                    <li class="nav-item">
+                        <a class="nav-link" href="/">
+                            <i class="bi bi-house"></i> Home
+                        </a>
+                    </li>
+                    
+                    <!-- Dropdown Produtos -->
+                    
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                            <i class="bi bi-box-seam"></i> Produtos
+                        </a>
+                        <ul class="dropdown-menu">
+                            <li>
+                                <a class="dropdown-item" href="/produtos/">
+                                    <i class="bi bi-list-ul"></i> Listar Produtos
+                                </a>
+                            </li>
+                            <li>
+                                <a class="dropdown-item" href="/produtos/cadastro/">
+                                    <i class="bi bi-plus-circle"></i> Novo Produto
+                                </a>
+                            </li>
+                        </ul>
+                    </li>
+                    
+                    
+                    <!-- Dropdown Clientes -->
+                    
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                            <i class="bi bi-people"></i> Clientes
+                        </a>
+                        <ul class="dropdown-menu">
+                            <li>
+                                <a class="dropdown-item" href="/clientes/">
+                                    <i class="bi bi-people"></i> Listar Clientes
+                                </a>
+                            </li>
+                            <li>
+                                <a class="dropdown-item" href="/clientes/cadastro/">
+                                    <i class="bi bi-person-plus"></i> Novo Cliente
+                                </a>
+                            </li>
+                        </ul>
+                    </li>
+                    
+                    
+                    <!-- Dropdown Orçamentos -->
+                    
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                            <i class="bi bi-receipt"></i> Orçamentos
+                        </a>
+                        <ul class="dropdown-menu">
+                            <li>
+                                <a class="dropdown-item" href="/orcamentos/">
+                                    <i class="bi bi-receipt"></i> Listar Orçamentos
+                                </a>
+                            </li>
+                            <li>
+                                <a class="dropdown-item" href="/orcamentos/novo/">
+                                    <i class="bi bi-plus-circle"></i> Novo Orçamento
+                                </a>
+                            </li>
+                        </ul>
+                    </li>
+                    
+                    
+                    <!-- Dropdown Usuários -->
+                    
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                            <i class="bi bi-person-gear"></i> Usuários
+                        </a>
+                        <ul class="dropdown-menu">
+                            <li>
+                                <a class="dropdown-item" href="/auth/usuarios/">
+                                    <i class="bi bi-people"></i> Gestão de Usuários
+                                </a>
+                            </li>
+                            <li>
+                                <a class="dropdown-item" href="/auth/usuarios/novo/">
+                                    <i class="bi bi-person-plus"></i> Novo Usuário
+                                </a>
+                            </li>
+                        </ul>
+                    </li>
+                    
+                </ul>
+                
+                <ul class="navbar-nav">
+                    <!-- Theme Toggle Button -->
+                    <li class="nav-item me-2">
+                        <button 
+                            id="theme-toggle" 
+                            class="btn btn-outline-light btn-sm d-flex align-items-center" 
+                            title="Alternar tema"
+                            aria-label="Alternar entre tema claro e escuro"
+                            style="border: none; background: transparent; cursor: pointer; padding: 0.5rem 0.75rem;">
+                            <i class="bi bi-sun-fill" id="theme-icon" style="font-size: 1.2rem;"></i>
+                        </button>
+                    </li>
+
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
+                            <i class="bi bi-person-circle"></i> Matheus A
+                        </a>
+                        <ul class="dropdown-menu">
+                            <li><a class="dropdown-item" href="/auth/logout/">
+                                <i class="bi bi-box-arrow-right"></i> Sair
+                            </a></li>
+                        </ul>
+                    </li>
+                </ul>
+            </div>
+            
+        </div>
+    </nav>
+
+    <!-- Messages -->
+    
+
+    <!-- Main Content Area -->
+    <div class="container-fluid">
+        <div class="row">
+            
+            <!-- Sidebar for authenticated users -->
+            <div class="col-md-2 col-lg-2 sidebar p-3">
+                <div class="list-group list-group-flush">
+                    <!-- Dashboard -->
+                    
+                    <a href="/" class="list-group-item list-group-item-action ">
+                        <i class="bi bi-house"></i> Dashboard
+                    </a>
+                    
+                    
+                    <!-- Menu Produtos -->
+                    
+                    <div class="menu-section">
+                        <button class="menu-toggle collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#produtosMenu" aria-expanded="false" aria-controls="produtosMenu">
+                            <i class="bi bi-box-seam menu-icon"></i>
+                            <span>Produtos</span>
+                            <i class="bi bi-chevron-down arrow-icon"></i>
+                        </button>
+                        <div class="collapse" id="produtosMenu">
+                            <div class="menu-submenu">
+                                <a href="/produtos/" class="list-group-item list-group-item-action ">
+                                    <i class="bi bi-list-ul"></i> Listar Produtos
+                                </a>
+                                <a href="/produtos/cadastro/" class="list-group-item list-group-item-action active">
+                                    <i class="bi bi-plus-circle"></i> Novo Produto
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    
+                    <!-- Menu Clientes -->
+                    
+                    <div class="menu-section">
+                        <button class="menu-toggle collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#clientesMenu" aria-expanded="false" aria-controls="clientesMenu">
+                            <i class="bi bi-people menu-icon"></i>
+                            <span>Clientes</span>
+                            <i class="bi bi-chevron-down arrow-icon"></i>
+                        </button>
+                        <div class="collapse" id="clientesMenu">
+                            <div class="menu-submenu">
+                                <a href="/clientes/" class="list-group-item list-group-item-action ">
+                                    <i class="bi bi-people"></i> Listar Clientes
+                                </a>
+                                <a href="/clientes/cadastro/" class="list-group-item list-group-item-action ">
+                                    <i class="bi bi-person-plus"></i> Novo Cliente
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    
+                    <!-- Menu Orçamentos -->
+                    
+                    <div class="menu-section">
+                        <button class="menu-toggle collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#orcamentosMenu" aria-expanded="false" aria-controls="orcamentosMenu">
+                            <i class="bi bi-receipt menu-icon"></i>
+                            <span>Orçamentos</span>
+                            <i class="bi bi-chevron-down arrow-icon"></i>
+                        </button>
+                        <div class="collapse" id="orcamentosMenu">
+                            <div class="menu-submenu">
+                                <a href="/orcamentos/" class="list-group-item list-group-item-action ">
+                                    <i class="bi bi-receipt"></i> Listar Orçamentos
+                                </a>
+                                <a href="/orcamentos/novo/" class="list-group-item list-group-item-action ">
+                                    <i class="bi bi-plus-circle"></i> Novo Orçamento
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    
+                    <!-- Menu Usuários -->
+                    
+                    <div class="menu-section">
+                        <button class="menu-toggle collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#usuariosMenu" aria-expanded="false" aria-controls="usuariosMenu">
+                            <i class="bi bi-person-gear menu-icon"></i>
+                            <span>Usuários</span>
+                            <i class="bi bi-chevron-down arrow-icon"></i>
+                        </button>
+                        <div class="collapse" id="usuariosMenu">
+                            <div class="menu-submenu">
+                                <a href="/auth/usuarios/" class="list-group-item list-group-item-action ">
+                                    <i class="bi bi-people"></i> Gestão de Usuários
+                                </a>
+                                <a href="/auth/usuarios/novo/" class="list-group-item list-group-item-action ">
+                                    <i class="bi bi-person-plus"></i> Novo Usuário
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                    
+                </div>
+            </div>
+            <!-- Content area for authenticated users -->
+            <div class="col-md-10 col-lg-10 main-content p-4">
+            
+                    
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="d-flex justify-content-between align-items-center">
+            <h1 class="h2 mb-0">
+                <i class="bi bi-plus-circle"></i> Cadastrar Produto
+            </h1>
+            <a href="/produtos/" class="btn btn-outline-secondary">
+                <i class="bi bi-arrow-left"></i> Voltar
+            </a>
+        </div>
+    </div>
+</div>
+
+<form method="post" enctype="multipart/form-data" id="produtoForm">
+    <input type="hidden" name="csrfmiddlewaretoken" value="gx8I9lydjfuBXmLNvEUYX8Be8NofWipkb4fQD8pY9Jh86gRG2dNvZ6yzYJviTLez">
+    
+    <!-- Dados Básicos -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h6 class="mb-0">
+                        <i class="bi bi-info-circle"></i> Dados Básicos
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <!-- Campos Básicos de Produto -->
+<div class="row">
+    <div class="col-md-6">
+        <div class="form-floating mb-3">
+            <input type="text" class="form-control" id="ref_produto" name="ref_produto" 
+                   placeholder="Referência" required>
+            <label for="ref_produto">Referência do Produto *</label>
+        </div>
+    </div>
+    <div class="col-md-6">
+        <div class="form-floating mb-3">
+            <input type="text" class="form-control" id="nome_produto" name="nome_produto" 
+                   placeholder="Nome" required>
+            <label for="nome_produto">Nome do Produto *</label>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-6">
+        <div class="form-floating mb-3">
+            <select class="form-select" id="tipo_produto" name="tipo_produto" required onchange="toggleCamposPorTipo()">
+                <option value="">Selecione o tipo</option>
+                
+                    <option value="2" data-nome="Acessórios">Acessórios</option>
+                
+                    <option value="7" data-nome="Almofadas">Almofadas</option>
+                
+                    <option value="4" data-nome="Banquetas">Banquetas</option>
+                
+                    <option value="3" data-nome="Cadeiras">Cadeiras</option>
+                
+                    <option value="5" data-nome="Poltronas">Poltronas</option>
+                
+                    <option value="6" data-nome="Pufes">Pufes</option>
+                
+                    <option value="1" data-nome="Sofás">Sofás</option>
+                
+            </select>
+            <label for="tipo_produto">Tipo de Produto *</label>
+        </div>
+    </div>
+</div>
+
+                    
+                    
+<!-- Incluir campos específicos para cada tipo -->
+<!-- Campos específicos para Sofás -->
+<div class="row" id="campos-sofa" style="display: none;">
+    <div class="col-md-3">
+        <div class="form-check form-switch mb-3">
+            <input class="form-check-input" type="checkbox" id="ativo" name="ativo" checked>
+            <label class="form-check-label" for="ativo">
+                Produto Ativo
+            </label>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="form-check form-switch mb-3">
+            <input class="form-check-input" type="checkbox" id="tem_cor_tecido" name="tem_cor_tecido">
+            <label class="form-check-label" for="tem_cor_tecido">
+                Tem Cor Tecido
+            </label>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="form-check form-switch mb-3">
+            <input class="form-check-input" type="checkbox" id="tem_difer_desenho_lado" name="tem_difer_desenho_lado">
+            <label class="form-check-label" for="tem_difer_desenho_lado">
+                Diferencia Lado Dir./Esq.
+            </label>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="form-check form-switch mb-3">
+            <input class="form-check-input" type="checkbox" id="tem_difer_desenho_tamanho" name="tem_difer_desenho_tamanho">
+            <label class="form-check-label" for="tem_difer_desenho_tamanho">
+                Diferencia por Tamanho
+            </label>
+        </div>
+    </div>
+</div>
+
+<!-- Campos específicos para Acessórios -->
+<div class="row" id="campos-acessorio" style="display: none;">
+    <div class="col-md-3">
+        <div class="form-check form-switch mb-3">
+            <input class="form-check-input" type="checkbox" id="ativo_acessorio" name="ativo" checked>
+            <label class="form-check-label" for="ativo_acessorio">
+                Acessório Ativo
+            </label>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="form-floating mb-3">
+            <input type="number" step="0.01" class="form-control" id="preco_acessorio" name="preco_acessorio" placeholder="0.00">
+            <label for="preco_acessorio">Preço (R$)</label>
+        </div>
+    </div>
+    <div class="col-md-6">
+        <div class="form-floating mb-3">
+            <textarea class="form-control auto-resize-textarea" id="descricao_acessorio" name="descricao_acessorio" 
+                     placeholder="Descrição do acessório" style="height: 58px;"></textarea>
+            <label for="descricao_acessorio">Descrição</label>
+        </div>
+    </div>
+</div>
+
+<!-- Campos básicos para outros tipos de produto -->
+<div class="row" id="campos-outros" style="display: none;">
+    <div class="col-md-3">
+        <div class="form-check form-switch mb-3">
+            <input class="form-check-input" type="checkbox" id="ativo_outros" name="ativo" checked>
+            <label class="form-check-label" for="ativo_outros">
+                Produto Ativo
+            </label>
+        </div>
+    </div>
+    <div class="col-md-9">
+        <div class="alert alert-info mb-0">
+            <i class="bi bi-info-circle"></i> 
+            Campos específicos para este tipo de produto serão implementados em breve.
+        </div>
+    </div>
+</div>
+
+<!-- Campos específicos para Banquetas -->
+<div class="row" id="campos-banqueta" style="display: none;">
+    <div class="col-md-3">
+        <div class="form-check form-switch mb-3">
+            <input class="form-check-input" type="checkbox" id="ativo_banqueta" name="ativo_banqueta" checked>
+            <label class="form-check-label" for="ativo_banqueta">
+                Banqueta Ativa
+            </label>
+        </div>
+    </div>
+    <div class="col-md-9">
+        <p class="text-muted mb-3">
+            <i class="bi bi-info-circle"></i> 
+            Preencha as especificações técnicas da banqueta.
+        </p>
+    </div>
+</div>
+
+<!-- Dimensões da Banqueta -->
+<div id="dimensoes-banqueta" style="display: none;">
+    <div class="row">
+        <div class="col-md-4">
+            <div class="form-floating mb-3">
+                <input type="number" step="0.01" class="form-control" id="largura_banqueta" 
+                       name="largura_banqueta" placeholder="0.00" min="0.01">
+                <label for="largura_banqueta">Largura (cm) *</label>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="form-floating mb-3">
+                <input type="number" step="0.01" class="form-control" id="profundidade_banqueta" 
+                       name="profundidade_banqueta" placeholder="0.00" min="0.01">
+                <label for="profundidade_banqueta">Profundidade (cm) *</label>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="form-floating mb-3">
+                <input type="number" step="0.01" class="form-control" id="altura_banqueta" 
+                       name="altura_banqueta" placeholder="0.00" min="0.01">
+                <label for="altura_banqueta">Altura (cm) *</label>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Especificações Técnicas -->
+    <div class="row">
+        <div class="col-md-3">
+            <div class="form-floating mb-3">
+                <input type="number" step="0.01" class="form-control" id="tecido_metros_banqueta" 
+                       name="tecido_metros_banqueta" placeholder="0.00" min="0.01">
+                <label for="tecido_metros_banqueta">Tecido (m) *</label>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="form-floating mb-3">
+                <input type="number" step="0.001" class="form-control" id="volume_m3_banqueta" 
+                       name="volume_m3_banqueta" placeholder="0.000" min="0.001">
+                <label for="volume_m3_banqueta">Volume (m³) *</label>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="form-floating mb-3">
+                <input type="number" step="0.01" class="form-control" id="peso_kg_banqueta" 
+                       name="peso_kg_banqueta" placeholder="0.00" min="0.01">
+                <label for="peso_kg_banqueta">Peso (kg) *</label>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="form-floating mb-3">
+                <input type="number" step="0.01" class="form-control" id="preco_banqueta" 
+                       name="preco_banqueta" placeholder="0.00" min="0.01">
+                <label for="preco_banqueta">Preço (R$) *</label>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Descrição -->
+    <div class="row">
+        <div class="col-12">
+            <div class="form-floating mb-3">
+                <textarea class="form-control auto-resize-textarea" id="descricao_banqueta" name="descricao_banqueta" 
+                         placeholder="Descrição da banqueta" style="height: 80px;"></textarea>
+                <label for="descricao_banqueta">Descrição (opcional)</label>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Campos específicos para Cadeiras -->
+<div class="row" id="campos-cadeira" style="display: none;">
+    <div class="col-md-3">
+        <div class="form-check form-switch mb-3">
+            <input class="form-check-input" type="checkbox" id="ativo_cadeira" name="ativo_cadeira" checked>
+            <label class="form-check-label" for="ativo_cadeira">
+                Cadeira Ativa
+            </label>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="form-check form-switch mb-3">
+            <input class="form-check-input" type="checkbox" id="tem_cor_tecido_cadeira" name="tem_cor_tecido_cadeira">
+            <label class="form-check-label" for="tem_cor_tecido_cadeira">
+                Tem Cor Tecido
+            </label>
+        </div>
+    </div>
+    <div class="col-md-6">
+        <p class="text-muted mb-3">
+            <i class="bi bi-info-circle"></i> 
+            Preencha as especificações técnicas da cadeira.
+        </p>
+    </div>
+</div>
+
+<!-- Dimensões da Cadeira -->
+<div id="dimensoes-cadeira" style="display: none;">
+    <div class="row">
+        <div class="col-md-4">
+            <div class="form-floating mb-3">
+                <input type="number" step="0.01" class="form-control" id="largura_cadeira" 
+                       name="largura_cadeira" placeholder="0.00" min="0.01">
+                <label for="largura_cadeira">Largura (cm) *</label>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="form-floating mb-3">
+                <input type="number" step="0.01" class="form-control" id="profundidade_cadeira" 
+                       name="profundidade_cadeira" placeholder="0.00" min="0.01">
+                <label for="profundidade_cadeira">Profundidade (cm) *</label>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="form-floating mb-3">
+                <input type="number" step="0.01" class="form-control" id="altura_cadeira" 
+                       name="altura_cadeira" placeholder="0.00" min="0.01">
+                <label for="altura_cadeira">Altura (cm) *</label>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Especificações Técnicas -->
+    <div class="row">
+        <div class="col-md-3">
+            <div class="form-floating mb-3">
+                <input type="number" step="0.01" class="form-control" id="tecido_metros_cadeira" 
+                       name="tecido_metros_cadeira" placeholder="0.00" min="0.01">
+                <label for="tecido_metros_cadeira">Tecido (m) *</label>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="form-floating mb-3">
+                <input type="number" step="0.001" class="form-control" id="volume_m3_cadeira" 
+                       name="volume_m3_cadeira" placeholder="0.000" min="0.001">
+                <label for="volume_m3_cadeira">Volume (m³) *</label>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="form-floating mb-3">
+                <input type="number" step="0.01" class="form-control" id="peso_kg_cadeira" 
+                       name="peso_kg_cadeira" placeholder="0.00" min="0.01">
+                <label for="peso_kg_cadeira">Peso (kg) *</label>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="form-floating mb-3">
+                <input type="number" step="0.01" class="form-control" id="preco_cadeira" 
+                       name="preco_cadeira" placeholder="0.00" min="0.01">
+                <label for="preco_cadeira">Preço (R$) *</label>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Descrição -->
+    <div class="row">
+        <div class="col-12">
+            <div class="form-floating mb-3">
+                <textarea class="form-control auto-resize-textarea" id="descricao_cadeira" name="descricao_cadeira" 
+                         placeholder="Descrição da cadeira" style="height: 80px;"></textarea>
+                <label for="descricao_cadeira">Descrição (opcional)</label>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Campos específicos para Poltronas -->
+<div class="row" id="campos-poltrona" style="display: none;">
+    <div class="col-md-3">
+        <div class="form-check form-switch mb-3">
+            <input class="form-check-input" type="checkbox" id="ativo_poltrona" name="ativo_poltrona" checked>
+            <label class="form-check-label" for="ativo_poltrona">
+                Poltrona Ativa
+            </label>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="form-check form-switch mb-3">
+            <input class="form-check-input" type="checkbox" id="tem_cor_tecido_poltrona" name="tem_cor_tecido_poltrona">
+            <label class="form-check-label" for="tem_cor_tecido_poltrona">
+                Tem Cor Tecido
+            </label>
+        </div>
+    </div>
+    <div class="col-md-6">
+        <p class="text-muted mb-3">
+            <i class="bi bi-info-circle"></i> 
+            Preencha as especificações técnicas da poltrona.
+        </p>
+    </div>
+</div>
+
+<!-- Dimensões da Poltrona -->
+<div id="dimensoes-poltrona" style="display: none;">
+    <div class="row">
+        <div class="col-md-4">
+            <div class="form-floating mb-3">
+                <input type="number" step="0.01" class="form-control" id="largura_poltrona" 
+                       name="largura_poltrona" placeholder="0.00" min="0.01">
+                <label for="largura_poltrona">Largura (cm) *</label>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="form-floating mb-3">
+                <input type="number" step="0.01" class="form-control" id="profundidade_poltrona" 
+                       name="profundidade_poltrona" placeholder="0.00" min="0.01">
+                <label for="profundidade_poltrona">Profundidade (cm) *</label>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="form-floating mb-3">
+                <input type="number" step="0.01" class="form-control" id="altura_poltrona" 
+                       name="altura_poltrona" placeholder="0.00" min="0.01">
+                <label for="altura_poltrona">Altura (cm) *</label>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Especificações Técnicas -->
+    <div class="row">
+        <div class="col-md-3">
+            <div class="form-floating mb-3">
+                <input type="number" step="0.01" class="form-control" id="tecido_metros_poltrona" 
+                       name="tecido_metros_poltrona" placeholder="0.00" min="0.01">
+                <label for="tecido_metros_poltrona">Tecido (m) *</label>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="form-floating mb-3">
+                <input type="number" step="0.001" class="form-control" id="volume_m3_poltrona" 
+                       name="volume_m3_poltrona" placeholder="0.000" min="0.001">
+                <label for="volume_m3_poltrona">Volume (m³) *</label>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="form-floating mb-3">
+                <input type="number" step="0.01" class="form-control" id="peso_kg_poltrona" 
+                       name="peso_kg_poltrona" placeholder="0.00" min="0.01">
+                <label for="peso_kg_poltrona">Peso (kg) *</label>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="form-floating mb-3">
+                <input type="number" step="0.01" class="form-control" id="preco_poltrona" 
+                       name="preco_poltrona" placeholder="0.00" min="0.01">
+                <label for="preco_poltrona">Preço (R$) *</label>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Descrição -->
+    <div class="row">
+        <div class="col-12">
+            <div class="form-floating mb-3">
+                <textarea class="form-control auto-resize-textarea" id="descricao_poltrona" name="descricao_poltrona" 
+                         placeholder="Descrição da poltrona" style="height: 80px;"></textarea>
+                <label for="descricao_poltrona">Descrição (opcional)</label>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Campos específicos para Pufes -->
+<div class="row" id="campos-pufe" style="display: none;">
+    <div class="col-md-3">
+        <div class="form-check form-switch mb-3">
+            <input class="form-check-input" type="checkbox" id="ativo_pufe" name="ativo_pufe" checked>
+            <label class="form-check-label" for="ativo_pufe">
+                Pufe Ativo
+            </label>
+        </div>
+    </div>
+    <div class="col-md-9">
+        <p class="text-muted mb-3">
+            <i class="bi bi-info-circle"></i> 
+            Preencha as especificações técnicas do pufe.
+        </p>
+    </div>
+</div>
+
+<!-- Dimensões do Pufe -->
+<div id="dimensoes-pufe" style="display: none;">
+    <div class="row">
+        <div class="col-md-4">
+            <div class="form-floating mb-3">
+                <input type="number" step="0.01" class="form-control" id="largura_pufe" 
+                       name="largura_pufe" placeholder="0.00" min="0.01">
+                <label for="largura_pufe">Largura (cm) *</label>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="form-floating mb-3">
+                <input type="number" step="0.01" class="form-control" id="profundidade_pufe" 
+                       name="profundidade_pufe" placeholder="0.00" min="0.01">
+                <label for="profundidade_pufe">Profundidade (cm) *</label>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="form-floating mb-3">
+                <input type="number" step="0.01" class="form-control" id="altura_pufe" 
+                       name="altura_pufe" placeholder="0.00" min="0.01">
+                <label for="altura_pufe">Altura (cm) *</label>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Especificações Técnicas -->
+    <div class="row">
+        <div class="col-md-3">
+            <div class="form-floating mb-3">
+                <input type="number" step="0.01" class="form-control" id="tecido_metros_pufe" 
+                       name="tecido_metros_pufe" placeholder="0.00" min="0.01">
+                <label for="tecido_metros_pufe">Tecido (m) *</label>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="form-floating mb-3">
+                <input type="number" step="0.001" class="form-control" id="volume_m3_pufe" 
+                       name="volume_m3_pufe" placeholder="0.000" min="0.001">
+                <label for="volume_m3_pufe">Volume (m³) *</label>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="form-floating mb-3">
+                <input type="number" step="0.01" class="form-control" id="peso_kg_pufe" 
+                       name="peso_kg_pufe" placeholder="0.00" min="0.01">
+                <label for="peso_kg_pufe">Peso (kg) *</label>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="form-floating mb-3">
+                <input type="number" step="0.01" class="form-control" id="preco_pufe" 
+                       name="preco_pufe" placeholder="0.00" min="0.01">
+                <label for="preco_pufe">Preço (R$) *</label>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Descrição -->
+    <div class="row">
+        <div class="col-12">
+            <div class="form-floating mb-3">
+                <textarea class="form-control auto-resize-textarea" id="descricao_pufe" name="descricao_pufe" 
+                         placeholder="Descrição do pufe" style="height: 80px;"></textarea>
+                <label for="descricao_pufe">Descrição (opcional)</label>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Campos específicos para Almofadas -->
+<div class="row" id="campos-almofada" style="display: none;">
+    <div class="col-md-3">
+        <div class="form-check form-switch mb-3">
+            <input class="form-check-input" type="checkbox" id="ativo_almofada" name="ativo_almofada" checked>
+            <label class="form-check-label" for="ativo_almofada">
+                Almofada Ativa
+            </label>
+        </div>
+    </div>
+    <div class="col-md-9">
+        <p class="text-muted mb-3">
+            <i class="bi bi-info-circle"></i> 
+            Preencha as especificações técnicas da almofada.
+        </p>
+    </div>
+</div>
+
+<!-- Dimensões da Almofada -->
+<div id="dimensoes-almofada" style="display: none;">
+    <div class="row">
+        <div class="col-md-6">
+            <div class="form-floating mb-3">
+                <input type="number" step="0.01" class="form-control" id="largura_almofada" 
+                       name="largura_almofada" placeholder="0.00" min="0.01">
+                <label for="largura_almofada">Largura (cm) *</label>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="form-floating mb-3">
+                <input type="number" step="0.01" class="form-control" id="altura_almofada" 
+                       name="altura_almofada" placeholder="0.00" min="0.01">
+                <label for="altura_almofada">Altura (cm) *</label>
+            </div>
+        </div>
+        <!-- Nota: Almofadas não têm profundidade -->
+    </div>
+    
+    <!-- Especificações Técnicas -->
+    <div class="row">
+        <div class="col-md-3">
+            <div class="form-floating mb-3">
+                <input type="number" step="0.01" class="form-control" id="tecido_metros_almofada" 
+                       name="tecido_metros_almofada" placeholder="0.00" min="0.01">
+                <label for="tecido_metros_almofada">Tecido (m) *</label>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="form-floating mb-3">
+                <input type="number" step="0.001" class="form-control" id="volume_m3_almofada" 
+                       name="volume_m3_almofada" placeholder="0.000" min="0.001">
+                <label for="volume_m3_almofada">Volume (m³) *</label>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="form-floating mb-3">
+                <input type="number" step="0.01" class="form-control" id="peso_kg_almofada" 
+                       name="peso_kg_almofada" placeholder="0.00" min="0.01">
+                <label for="peso_kg_almofada">Peso (kg) *</label>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="form-floating mb-3">
+                <input type="number" step="0.01" class="form-control" id="preco_almofada" 
+                       name="preco_almofada" placeholder="0.00" min="0.01">
+                <label for="preco_almofada">Preço (R$) *</label>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Descrição -->
+    <div class="row">
+        <div class="col-12">
+            <div class="form-floating mb-3">
+                <textarea class="form-control auto-resize-textarea" id="descricao_almofada" name="descricao_almofada" 
+                         placeholder="Descrição da almofada" style="height: 80px;"></textarea>
+                <label for="descricao_almofada">Descrição (opcional)</label>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+                    
+                    <!-- Seção de Imagens Reutilizável -->
+                    <div id="secao-imagens" style="display: none;">
+                        <!-- Seção de Imagens Reutilizável -->
+<div class="row mb-3">
+    <div class="col-12">
+        <hr class="my-4">
+    </div>
+</div>
+<div class="row">
+    <!-- Imagem Principal -->
+    <div class="col-md-8">
+        <div class="mb-3">
+            <label for="imagem_principal" class="form-label fw-bold">
+                <i class="bi bi-image"></i> Imagem Principal
+            </label>
+            
+            <input type="file" class="form-control form-control-lg" 
+                   id="imagem_principal" 
+                   name="imagem_principal" 
+                   accept="image/*" 
+                   onchange="previewImage(this, 'preview_principal')">
+            <div class="form-text">JPG, PNG, GIF (máx. 5MB)</div>
+                            
+                            <!-- Preview da Imagem Principal -->
+                            <div id="preview_principal" style="display: none;" class="mt-2">
+                                <img id="img_preview_principal" src="" alt="Preview" 
+                                     class="img-thumbnail border border-primary" style="max-width: 200px; max-height: 200px;">
+                                <div class="mt-1">
+                                    <button type="button" class="btn btn-sm btn-outline-danger" 
+                                            onclick="removeImage('preview_principal', 'imagem_principal')">
+                                        <i class="bi bi-trash"></i> Remover
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Segunda Imagem - Botão Compacto -->
+                    <div class="col-md-4">
+                        <div class="mb-3">
+                            
+                            <div id="segunda_imagem_area" style="display: none;">
+                                <label for="imagem_secundaria" class="form-label fw-bold">
+                                    <i class="bi bi-image"></i> Segunda Imagem
+                                </label>
+                                <input type="file" class="form-control" 
+                                       id="imagem_secundaria" 
+                                       name="imagem_secundaria" 
+                                       accept="image/*"
+                                       onchange="previewImage(this, 'preview_secundaria')">
+                                <div class="form-text">Formatos aceitos: JPG, PNG, GIF (máx. 5MB)</div>
+                                
+                                <!-- Preview da Segunda Imagem -->
+                                <div id="preview_secundaria" style="display: none;" class="mt-2">
+                                    <img id="img_preview_secundaria" src="" alt="Preview Segunda Imagem" 
+                                         class="img-thumbnail border border-primary" style="max-width: 150px; max-height: 150px;">
+                                    <div class="mt-1">
+                                        <button type="button" class="btn btn-sm btn-outline-danger" 
+                                                onclick="removeImage('preview_secundaria', 'imagem_secundaria')">
+                                            <i class="bi bi-trash"></i> Remover
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="text-end mt-3">
+                                <button type="button" class="btn btn-outline-primary btn-sm btn-add-image" 
+                                        id="btn_adicionar_segunda_imagem" 
+                                        onclick="mostrarSegundaImagem()" 
+                                        title="Adicionar outra imagem">
+                                    <i class="bi bi-camera-fill"></i><i class="bi bi-plus-circle-fill" style="font-size: 0.7em; margin-left: -3px;"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+<!-- CSS específico para seção de imagens -->
+<style>
+    .btn-add-image {
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border: 2px solid #0d6efd;
+        background: #fff;
+        color: #0d6efd;
+        transition: all 0.3s ease;
+        position: relative;
+    }
+    .btn-add-image:hover {
+        background: #0d6efd;
+        color: #fff;
+        transform: scale(1.1);
+    }
+    .btn-add-image .bi-camera-fill {
+        font-size: 14px;
+    }
+    .btn-add-image .bi-plus-circle-fill {
+        position: absolute;
+        top: -2px;
+        right: -2px;
+        background: #fff;
+        border-radius: 50%;
+        color: #28a745;
+    }
+</style>
+
+<!-- JavaScript específico para seção de imagens -->
+<script>
+function mostrarSegundaImagem() {
+    document.getElementById('segunda_imagem_area').style.display = 'block';
+    document.getElementById('btn_adicionar_segunda_imagem').style.display = 'none';
+}
+
+function previewImage(input, previewId) {
+    if (input.files && input.files[0]) {
+        var reader = new FileReader();
+        reader.onload = function(e) {
+            document.getElementById('img_' + previewId).src = e.target.result;
+            document.getElementById(previewId).style.display = 'block';
+        }
+        reader.readAsDataURL(input.files[0]);
+    }
+}
+
+function removeImage(previewId, inputId) {
+    document.getElementById(previewId).style.display = 'none';
+    document.getElementById('img_' + previewId).src = '';
+    document.getElementById(inputId).value = '';
+    
+    if (inputId === 'imagem_secundaria') {
+        document.getElementById('segunda_imagem_area').style.display = 'none';
+        document.getElementById('btn_adicionar_segunda_imagem').style.display = 'block';
+    }
+}
+</script>
+
+                    </div>
+                    
+                    <!-- Seção de Acessórios (apenas para sofás) -->
+                    <!-- Seção de Acessórios disponíveis para Sofás -->
+<div class="row mb-4" id="secao-acessorios" style="display: none;" data-acessorios-endpoint="/api/acessorios/lookup/">
+    <div class="col-12">
+        <div class="card border-success">
+            <div class="card-header bg-success text-white">
+                <h5 class="mb-0">
+                    <i class="bi bi-puzzle"></i> Acessórios Disponíveis
+                </h5>
+            </div>
+            <div class="card-body">
+                
+                <!-- Busca e Filtros -->
+                <div class="row mb-3">
+                    <div class="col-md-8">
+                        <div class="input-group">
+                            <span class="input-group-text">
+                                <i class="bi bi-search"></i>
+                            </span>
+                            <input type="text" class="form-control" id="busca-acessorios" 
+                                   placeholder="Buscar por nome ou código do acessório...">
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="d-flex gap-2">
+                            <button type="button" class="btn btn-outline-secondary btn-sm" id="limpar-busca" title="Limpar busca">
+                                <i class="bi bi-x-circle"></i> Limpar
+                            </button>
+                            <button type="button" class="btn btn-outline-primary btn-sm" id="selecionar-todos" title="Selecionar todos visíveis">
+                                <i class="bi bi-check-all"></i> Todos
+                            </button>
+                            <button type="button" class="btn btn-outline-danger btn-sm" id="desmarcar-todos" title="Desmarcar todos">
+                                <i class="bi bi-x-square"></i> Nenhum
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Estado de Loading -->
+                <div id="loading-acessorios" class="text-center py-4" style="display: none;">
+                    <div class="spinner-border text-primary" role="status">
+                        <span class="visually-hidden">Carregando acessórios...</span>
+                    </div>
+                    <p class="text-muted mt-2">Carregando acessórios disponíveis...</p>
+                </div>
+                
+                <!-- Estado Vazio -->
+                <div id="empty-acessorios" class="text-center py-4" style="display: none;">
+                    <i class="bi bi-puzzle text-muted" style="font-size: 3rem;"></i>
+                    <p class="text-muted mt-2">Nenhum acessório encontrado</p>
+                    <small class="text-muted">Verifique os filtros ou cadastre novos acessórios.</small>
+                </div>
+                
+                <!-- Estado de Erro -->
+                <div id="error-acessorios" class="alert alert-warning" style="display: none;" role="alert">
+                    <i class="bi bi-exclamation-triangle"></i>
+                    <strong>Erro ao carregar acessórios</strong>
+                    <p class="mb-0">Houve um problema ao carregar a lista de acessórios. Tente novamente.</p>
+                </div>
+                
+                <!-- Grid de Acessórios -->
+                <div id="grid-acessorios" class="row">
+                    <!-- Os cards de acessórios serão inseridos aqui via JavaScript -->
+                </div>
+                
+                <!-- Contador de selecionados -->
+                <div class="row mt-3">
+                    <div class="col-12">
+                        <div class="alert alert-info" id="contador-selecionados" style="display: none;">
+                            <i class="bi bi-info-circle"></i>
+                            <span id="texto-contador">Nenhum acessório selecionado</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Formset Management Forms (será preenchido via JavaScript) -->
+                <div id="acessorios-management-forms">
+                    <!-- Management forms do Django Formset serão inseridos aqui -->
+                </div>
+                
+                <!-- Container para os forms dos acessórios selecionados -->
+                <div id="acessorios-selecionados-forms">
+                    <!-- Forms dos acessórios selecionados serão inseridos aqui -->
+                </div>
+                
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Template para Card de Acessório -->
+<template id="template-card-acessorio">
+    <div class="col-lg-4 col-md-6 col-sm-12 mb-3 acessorio-card" data-acessorio-id="">
+        <div class="card h-100 border-secondary">
+            <div class="card-body">
+                <div class="row align-items-center">
+                    <div class="col-3">
+                        <div class="acessorio-image-container">
+                            <img src="" alt="Imagem do acessório" class="img-fluid rounded border acessorio-image" 
+                                 style="width: 60px; height: 60px; object-fit: cover;">
+                            <div class="acessorio-no-image text-center bg-light rounded border d-flex align-items-center justify-content-center" 
+                                 style="width: 60px; height: 60px; display: none;">
+                                <i class="bi bi-image text-muted"></i>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-6">
+                        <h6 class="card-title mb-1 acessorio-nome">Nome do Acessório</h6>
+                        <small class="text-muted acessorio-codigo">Código: ABC123</small>
+                        <div class="acessorio-preco mt-1">
+                            <small class="text-success fw-bold">R$ 0,00</small>
+                        </div>
+                    </div>
+                    <div class="col-3 text-end">
+                        <div class="form-check form-switch">
+                            <input class="form-check-input acessorio-checkbox" type="checkbox" 
+                                   role="switch" data-acessorio-id="">
+                            <label class="form-check-label" for="">
+                                <small>Vincular</small>
+                            </label>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Campos que aparecem quando o acessório é selecionado -->
+                <div class="acessorio-campos mt-3" style="display: none;">
+                    <hr class="my-2">
+                    <div class="row">
+                        <div class="col-6">
+                            <div class="form-floating">
+                                <input type="number" class="form-control form-control-sm acessorio-quantidade" 
+                                       min="1" value="1" placeholder="Quantidade">
+                                <label>Quantidade</label>
+                            </div>
+                        </div>
+                        <div class="col-12 mt-2">
+                            <div class="form-floating">
+                                <textarea class="form-control acessorio-observacoes" 
+                                          placeholder="Observações" 
+                                          maxlength="1000" 
+                                          style="height: 60px;"></textarea>
+                                <label>Observações (opcional)</label>
+                            </div>
+                            <div class="form-text">
+                                <span class="contador-chars">0</span>/1000 caracteres
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</template>
+
+<!-- Template para Form de Acessório Selecionado (oculto) -->
+<template id="template-form-acessorio">
+    <div class="acessorio-form-item" data-form-index="" style="display: none;">
+        <input type="hidden" name="acessorios-__prefix__-acessorio" value="">
+        <input type="hidden" name="acessorios-__prefix__-quantidade" value="1">
+        <input type="hidden" name="acessorios-__prefix__-observacoes" value="">
+        <input type="hidden" name="acessorios-__prefix__-DELETE" value="">
+    </div>
+</template>
+
+<style>
+/* Estilos específicos para a seção de acessórios */
+.acessorio-card {
+    transition: transform 0.2s ease-in-out;
+}
+
+.acessorio-card:hover {
+    transform: translateY(-2px);
+}
+
+.acessorio-card.selecionado .card {
+    border-color: #28a745 !important;
+    box-shadow: 0 0 0 0.2rem rgba(40, 167, 69, 0.25);
+}
+
+.acessorio-image {
+    border: 1px solid #dee2e6;
+}
+
+.form-check-input:checked {
+    background-color: #28a745;
+    border-color: #28a745;
+}
+
+.acessorio-campos {
+    background-color: #f8f9fa;
+    padding: 10px;
+    border-radius: 4px;
+    border-left: 3px solid #28a745;
+}
+
+.contador-chars {
+    font-weight: 500;
+}
+
+/* Animação para mostrar/esconder campos */
+.acessorio-campos {
+    transition: all 0.3s ease-in-out;
+}
+
+/* Responsividade */
+@media (max-width: 768px) {
+    .acessorio-card {
+        margin-bottom: 1rem;
+    }
+    
+    .acessorio-card .col-3,
+    .acessorio-card .col-6 {
+        flex: 0 0 auto;
+        width: 100%;
+        margin-bottom: 0.5rem;
+    }
+    
+    .acessorio-card .row {
+        flex-direction: column;
+    }
+}
+
+/* Loading state */
+#loading-acessorios .spinner-border {
+    width: 3rem;
+    height: 3rem;
+}
+</style>
+
+                    
+                    
+
+<!-- Seção de Módulos para Sofás -->
+<!-- DEBUG: Template atualizado com unlocalize -->
+<div id="secao-modulos" style="display: none;">
+    <hr class="my-4">
+    <div class="d-flex justify-content-between align-items-center mb-3" style="background-color: #e3f2fd !important; padding: 8px 12px; border-radius: 4px; border: 1px solid #bbdefb;">
+        <h6 class="mb-0">
+            <i class="bi bi-grid-3x3 text-primary"></i> Módulos
+        </h6>
+        <div class="btn-group" role="group">
+            <button type="button" class="btn btn-sm btn-primary" onclick="toggleTodosModulos()" id="toggleModulosBtn" 
+                    style="font-weight: 500;">
+                <i class="bi bi-arrows-expand"></i> <span id="toggleModulosText">Expandir Todos</span>
+            </button>
+            <button type="button" class="btn btn-sm btn-success" onclick="adicionarModulo()">
+                <i class="bi bi-plus"></i> Adicionar Módulo
+            </button>
+        </div>
+    </div>
+    <div id="modulosContainer">
+        
+    </div>
+    <div class="alert alert-info mb-0" id="noModulosAlert">
+        <i class="bi bi-info-circle"></i> 
+        Os módulos são opcionais. Clique em "Adicionar Módulo" se desejar adicionar módulos ao produto.
+    </div>
+</div>
+
+<!-- Seção de Vinculação de Sofás para Acessórios -->
+<div id="vinculacao-produtos" style="display: none;">
+    <hr class="my-4">
+    <h6 class="mb-3">
+        <i class="bi bi-link text-success"></i> Sofás Compatíveis
+    </h6>
+    <p class="text-muted mb-3">
+        Busque e selecione os sofás aos quais este acessório pode ser vinculado (apenas sofás ativos).
+    </p>
+
+    <div
+        class="card border-0 shadow-sm"
+        data-acessorio-vinculos
+        data-acessorio-id=""
+        data-sofas-endpoint="/api/sofas/"
+        
+    >
+        <div class="card-body">
+            <div class="row g-3">
+                <div class="col-12">
+                    <input
+                        type="text"
+                        class="form-control"
+                        placeholder="Buscar sofá por código ou nome"
+                        data-role="sofa-search"
+                    >
+                </div>
+                <div class="col-md-6">
+                    <div class="small text-muted mb-2">Sofás disponíveis</div>
+                    <div class="list-group" data-role="sofa-list"></div>
+                </div>
+                <div class="col-md-6">
+                    <div class="small text-muted mb-2">Sofás vinculados</div>
+                    <div class="list-group" data-role="sofa-selected"></div>
+                </div>
+            </div>
+
+            <div class="mt-3" data-role="sofa-message"></div>
+            <div data-role="sofa-hidden"></div>
+
+            
+        </div>
+    </div>
+</div>
+
+
+                    
+                    <!-- Botões de Ação -->
+                    <div class="row mt-4">
+                        <div class="col-12">
+                            <div class="d-flex gap-2">
+                                <button type="submit" class="btn btn-primary">
+                                    <i class="bi bi-check-circle"></i> Cadastrar Produto
+                                </button>
+                                <a href="/produtos/" class="btn btn-outline-secondary">
+                                    <i class="bi bi-x-circle"></i> Cancelar
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                    
+                </div>
+            </div>
+        </div>
+    </div>
+</form>
+
+            
+            </div>
+            
+        </div>
+    </div>
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    
+    <!-- Theme Manager -->
+    <script>
+        // ===== THEME MANAGER (No dependencies, vanilla JS) =====
+        const ThemeManager = (() => {
+            const STORAGE_KEY = 'theme-preference';
+            const CLASS_DARK = 'dark-mode';
+            const ATTR_THEME = 'data-theme';
+            const LIGHT = 'light';
+            const DARK = 'dark';
+
+            const getSystemPreference = () => {
+                return window.matchMedia('(prefers-color-scheme: dark)').matches ? DARK : LIGHT;
+            };
+
+            const getSavedPreference = () => {
+                return localStorage.getItem(STORAGE_KEY);
+            };
+
+            const getEffectiveTheme = () => {
+                return getSavedPreference() || getSystemPreference();
+            };
+
+            const setTheme = (theme) => {
+                const html = document.documentElement;
+                const isDark = theme === DARK;
+
+                html.setAttribute(ATTR_THEME, theme);
+                html.classList.toggle(CLASS_DARK, isDark);
+                localStorage.setItem(STORAGE_KEY, theme);
+
+                updateThemeIcon(isDark);
+                updateAriaLabel(isDark);
+            };
+
+            const updateThemeIcon = (isDark) => {
+                const icon = document.getElementById('theme-icon');
+                if (icon) {
+                    icon.className = isDark ? 'bi bi-moon-fill' : 'bi bi-sun-fill';
+                }
+            };
+
+            const updateAriaLabel = (isDark) => {
+                const button = document.getElementById('theme-toggle');
+                if (button) {
+                    button.setAttribute('aria-label', 
+                        isDark ? 'Alternar para tema claro' : 'Alternar para tema escuro'
+                    );
+                }
+            };
+
+            const toggle = () => {
+                const current = getEffectiveTheme();
+                const next = current === LIGHT ? DARK : LIGHT;
+                setTheme(next);
+            };
+
+            const init = () => {
+                const button = document.getElementById('theme-toggle');
+                if (button) {
+                    button.addEventListener('click', toggle);
+                    button.addEventListener('keydown', (e) => {
+                        if (e.key === 'Enter' || e.key === ' ') {
+                            e.preventDefault();
+                            toggle();
+                        }
+                    });
+                }
+
+                // Listen for system preference changes
+                window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', (e) => {
+                    if (!getSavedPreference()) {
+                        setTheme(e.matches ? DARK : LIGHT);
+                    }
+                });
+            };
+
+            return {
+                init,
+                toggle,
+                setTheme,
+                getEffectiveTheme,
+                getSavedPreference,
+                getSystemPreference
+            };
+        })();
+
+        // Initialize on DOM ready
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', ThemeManager.init);
+        } else {
+            ThemeManager.init();
+        }
+    </script>
+    
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Função para gerenciar o estado dos menus expansíveis na sidebar
+            function initExpandableMenus() {
+                // Encontrar menu ativo baseado na página atual
+                const activeMenuItems = document.querySelectorAll('.menu-submenu .list-group-item.active');
+                
+                // Expandir o menu que contém o item ativo
+                activeMenuItems.forEach(function(activeItem) {
+                    const menuSection = activeItem.closest('.menu-section');
+                    if (menuSection) {
+                        const toggleButton = menuSection.querySelector('.menu-toggle');
+                        const collapseTarget = menuSection.querySelector('.collapse');
+                        
+                        if (toggleButton && collapseTarget) {
+                            // Remover classe collapsed e adicionar classe active ao botão
+                            toggleButton.classList.remove('collapsed');
+                            toggleButton.classList.add('active');
+                            toggleButton.setAttribute('aria-expanded', 'true');
+                            
+                            // Mostrar o menu
+                            collapseTarget.classList.add('show');
+                        }
+                    }
+                });
+                
+                // Adicionar listeners para os botões de toggle
+                const toggleButtons = document.querySelectorAll('.menu-toggle');
+                toggleButtons.forEach(function(button) {
+                    // Listener para o evento de collapse do Bootstrap
+                    const target = button.getAttribute('data-bs-target');
+                    const collapseElement = document.querySelector(target);
+                    
+                    if (collapseElement) {
+                        collapseElement.addEventListener('show.bs.collapse', function() {
+                            button.classList.add('active');
+                            button.classList.remove('collapsed');
+                        });
+                        
+                        collapseElement.addEventListener('hide.bs.collapse', function() {
+                            button.classList.remove('active');
+                            button.classList.add('collapsed');
+                        });
+                    }
+                });
+                
+                // Adicionar efeito de hover suave
+                const menuItems = document.querySelectorAll('.menu-submenu .list-group-item');
+                menuItems.forEach(function(item) {
+                    item.addEventListener('mouseenter', function() {
+                        if (!this.classList.contains('active')) {
+                            this.style.transform = 'translateX(4px)';
+                        }
+                    });
+                    
+                    item.addEventListener('mouseleave', function() {
+                        if (!this.classList.contains('active')) {
+                            this.style.transform = 'translateX(0)';
+                        }
+                    });
+                });
+            }
+            
+            // Função para gerenciar dropdowns do navbar superior
+            function initNavbarDropdowns() {
+                // Adicionar efeito de rotação para as setas dos dropdowns
+                const dropdownToggles = document.querySelectorAll('.navbar-nav .dropdown-toggle');
+                dropdownToggles.forEach(function(toggle) {
+                    const dropdown = toggle.closest('.dropdown');
+                    
+                    // Listener para quando o dropdown abre
+                    dropdown.addEventListener('show.bs.dropdown', function() {
+                        toggle.classList.add('show');
+                    });
+                    
+                    // Listener para quando o dropdown fecha
+                    dropdown.addEventListener('hide.bs.dropdown', function() {
+                        toggle.classList.remove('show');
+                    });
+                });
+                
+                // Adicionar efeito de hover suave aos itens do dropdown
+                const dropdownItems = document.querySelectorAll('.navbar-nav .dropdown-item');
+                dropdownItems.forEach(function(item) {
+                    item.addEventListener('mouseenter', function() {
+                        this.style.transform = 'translateX(4px)';
+                    });
+                    
+                    item.addEventListener('mouseleave', function() {
+                        this.style.transform = 'translateX(0)';
+                    });
+                });
+            }
+            
+            // Inicializar os menus
+            initExpandableMenus();
+            initNavbarDropdowns();
+            
+            // Função para auto-ajustar altura dos textareas de descrição
+            function autoResizeTextarea(textarea) {
+                textarea.style.height = 'auto';
+                textarea.style.height = Math.max(textarea.scrollHeight, 80) + 'px';
+            }
+            
+            // Inicializar auto-resize para todos os textareas com classe auto-resize-textarea
+            function initAutoResizeTextareas() {
+                const textareas = document.querySelectorAll('.auto-resize-textarea');
+                
+                textareas.forEach(function(textarea) {
+                    // Ajustar altura inicial
+                    autoResizeTextarea(textarea);
+                    
+                    // Adicionar event listeners
+                    textarea.addEventListener('input', function() {
+                        autoResizeTextarea(this);
+                    });
+                    
+                    textarea.addEventListener('paste', function() {
+                        // Pequeno delay para permitir que o conteúdo seja colado
+                        setTimeout(() => {
+                            autoResizeTextarea(this);
+                        }, 10);
+                    });
+                    
+                    // Ajustar altura quando o conteúdo é carregado (para edição)
+                    textarea.addEventListener('focus', function() {
+                        autoResizeTextarea(this);
+                    });
+                });
+            }
+            
+            // Inicializar auto-resize textareas
+            initAutoResizeTextareas();
+            
+            // Observar mudanças no DOM para aplicar auto-resize em novos elementos
+            const observer = new MutationObserver(function(mutations) {
+                mutations.forEach(function(mutation) {
+                    if (mutation.type === 'childList') {
+                        mutation.addedNodes.forEach(function(node) {
+                            if (node.nodeType === 1) { // Element node
+                                const newTextareas = node.querySelectorAll('.auto-resize-textarea');
+                                if (newTextareas.length > 0) {
+                                    newTextareas.forEach(function(textarea) {
+                                        autoResizeTextarea(textarea);
+                                        
+                                        textarea.addEventListener('input', function() {
+                                            autoResizeTextarea(this);
+                                        });
+                                        
+                                        textarea.addEventListener('paste', function() {
+                                            setTimeout(() => {
+                                                autoResizeTextarea(this);
+                                            }, 10);
+                                        });
+                                        
+                                        textarea.addEventListener('focus', function() {
+                                            autoResizeTextarea(this);
+                                        });
+                                    });
+                                }
+                            }
+                        });
+                    }
+                });
+            });
+            
+            // Observar mudanças no documento
+            observer.observe(document.body, {
+                childList: true,
+                subtree: true
+            });
+        });
+    </script>
+    
+    
+<!-- JavaScript Base para Cadastro de Produtos -->
+<script>
+// Função para preview de imagens (genérica)
+function previewImage(input, previewId) {
+    const preview = document.getElementById(previewId);
+    const img = document.getElementById('img_' + previewId);
+    
+    if (input.files && input.files[0]) {
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            img.src = e.target.result;
+            preview.style.display = 'block';
+        }
+        reader.readAsDataURL(input.files[0]);
+    }
+}
+
+// Função para remover imagem (genérica)
+function removeImage(previewId, inputId) {
+    const preview = document.getElementById(previewId);
+    const input = document.getElementById(inputId);
+    const img = document.getElementById('img_' + previewId);
+    
+    preview.style.display = 'none';
+    input.value = '';
+    img.src = '';
+    
+    // Se for segunda imagem, esconder área novamente
+    if (inputId === 'imagem_secundaria') {
+        document.getElementById('segunda_imagem_area').style.display = 'none';
+        document.getElementById('btn_adicionar_segunda_imagem').style.display = 'block';
+    }
+}
+
+// Função para mostrar segunda imagem (genérica)
+function mostrarSegundaImagem() {
+    document.getElementById('segunda_imagem_area').style.display = 'block';
+    document.getElementById('btn_adicionar_segunda_imagem').style.display = 'none';
+}
+
+// Função básica para alternar campos por tipo (será estendida por cada produto)
+function toggleCamposPorTipo() {
+    const tipoSelect = document.getElementById('tipo_produto');
+    const selectedOption = tipoSelect.options[tipoSelect.selectedIndex];
+    const tipoNome = selectedOption.getAttribute('data-nome');
+    
+    // Elementos básicos
+    const secaoImagens = document.getElementById('secao-imagens');
+    
+    // Esconder seção de imagens primeiro
+    if (secaoImagens) secaoImagens.style.display = 'none';
+    
+    // Se nenhum tipo está selecionado, esconder tudo e sair
+    if (!tipoNome || tipoNome === '') {
+        // Chamar função específica para esconder todos os campos
+        if (typeof toggleCamposEspecificos === 'function') {
+            toggleCamposEspecificos(''); // Passa string vazia para esconder tudo
+        }
+        return;
+    }
+    
+    // Mostrar seção de imagens para todos os tipos selecionados
+    if (secaoImagens) secaoImagens.style.display = 'block';
+    
+    // Chamar função específica do produto se existir
+    if (typeof toggleCamposEspecificos === 'function') {
+        toggleCamposEspecificos(tipoNome);
+    }
+}
+
+// Validação básica do formulário
+document.getElementById('produtoForm').addEventListener('submit', function(e) {
+    const refProduto = document.getElementById('ref_produto').value;
+    const nomeProduto = document.getElementById('nome_produto').value;
+    const tipoProduto = document.getElementById('tipo_produto').value;
+    
+    if (!refProduto || !nomeProduto || !tipoProduto) {
+        e.preventDefault();
+        alert('Por favor, preencha todos os campos obrigatórios.');
+        return false;
+    }
+    
+    // Chamar validação específica do produto se existir
+    if (typeof validacaoEspecifica === 'function') {
+        return validacaoEspecifica(e);
+    }
+});
+
+// Inicializar estado dos campos ao carregar a página
+document.addEventListener('DOMContentLoaded', function() {
+    toggleCamposPorTipo(); // Garantir que os campos estejam ocultos inicialmente
+});
+</script>
+
+
+<script id="acessorios-data" type="application/json">[]</script>
+<script>
+// Dados dos acessórios disponíveis injetados do backend
+window.acessoriosData = JSON.parse(document.getElementById('acessorios-data').textContent);
+</script>
+<!-- JavaScript Unificado para Cadastro de Produtos -->
+<script>
+let moduloCount = 0;
+let produtosDisponiveis = [];
+let modulosColapsados = true;
+
+// Carregar produtos para vinculação
+document.addEventListener('DOMContentLoaded', function() {
+    carregarProdutosDisponiveis();
+});
+
+// Função específica para alternar campos por tipo
+function toggleCamposEspecificos(tipoNome) {
+    // Elementos de controle específicos
+    const camposSofa = document.getElementById('campos-sofa');
+    const camposAcessorio = document.getElementById('campos-acessorio');
+    const camposOutros = document.getElementById('campos-outros');
+    const camposBanqueta = document.getElementById('campos-banqueta');
+    const dimensoesBanqueta = document.getElementById('dimensoes-banqueta');
+    const camposCadeira = document.getElementById('campos-cadeira');
+    const dimensoesCadeira = document.getElementById('dimensoes-cadeira');
+    const camposPoltrona = document.getElementById('campos-poltrona');
+    const dimensoesPoltrona = document.getElementById('dimensoes-poltrona');
+    const camposPufe = document.getElementById('campos-pufe');
+    const dimensoesPufe = document.getElementById('dimensoes-pufe');
+    const camposAlmofada = document.getElementById('campos-almofada');
+    const dimensoesAlmofada = document.getElementById('dimensoes-almofada');
+    const secaoModulos = document.getElementById('secao-modulos');
+    const vinculacaoProdutos = document.getElementById('vinculacao-produtos');
+    
+    // Esconder todos os campos específicos primeiro
+    if (camposSofa) camposSofa.style.display = 'none';
+    if (camposAcessorio) camposAcessorio.style.display = 'none';
+    if (camposOutros) camposOutros.style.display = 'none';
+    if (camposBanqueta) camposBanqueta.style.display = 'none';
+    if (dimensoesBanqueta) dimensoesBanqueta.style.display = 'none';
+    if (camposCadeira) camposCadeira.style.display = 'none';
+    if (dimensoesCadeira) dimensoesCadeira.style.display = 'none';
+    if (camposPoltrona) camposPoltrona.style.display = 'none';
+    if (dimensoesPoltrona) dimensoesPoltrona.style.display = 'none';
+    if (camposPufe) camposPufe.style.display = 'none';
+    if (dimensoesPufe) dimensoesPufe.style.display = 'none';
+    if (camposAlmofada) camposAlmofada.style.display = 'none';
+    if (dimensoesAlmofada) dimensoesAlmofada.style.display = 'none';
+    if (secaoModulos) secaoModulos.style.display = 'none';
+    if (vinculacaoProdutos) vinculacaoProdutos.style.display = 'none';
+    
+    // Se nenhum tipo está selecionado, manter tudo escondido
+    if (!tipoNome || tipoNome === '') {
+        return;
+    }
+    
+    // Mostrar campos conforme o tipo
+    if (tipoNome === 'Sofás') {
+        if (camposSofa) camposSofa.style.display = 'flex';
+        if (secaoModulos) secaoModulos.style.display = 'block';
+    } else if (tipoNome === 'Acessórios') {
+        if (camposAcessorio) camposAcessorio.style.display = 'flex';
+        if (vinculacaoProdutos) vinculacaoProdutos.style.display = 'block';
+    } else if (tipoNome === 'Banquetas') {
+        if (camposBanqueta) camposBanqueta.style.display = 'flex';
+        if (dimensoesBanqueta) dimensoesBanqueta.style.display = 'block';
+    } else if (tipoNome === 'Cadeiras') {
+        if (camposCadeira) camposCadeira.style.display = 'flex';
+        if (dimensoesCadeira) dimensoesCadeira.style.display = 'block';
+    } else if (tipoNome === 'Poltronas') {
+        if (camposPoltrona) camposPoltrona.style.display = 'flex';
+        if (dimensoesPoltrona) dimensoesPoltrona.style.display = 'block';
+    } else if (tipoNome === 'Pufes') {
+        if (camposPufe) camposPufe.style.display = 'flex';
+        if (dimensoesPufe) dimensoesPufe.style.display = 'block';
+    } else if (tipoNome === 'Almofadas') {
+        if (camposAlmofada) camposAlmofada.style.display = 'flex';
+        if (dimensoesAlmofada) dimensoesAlmofada.style.display = 'block';
+    } else {
+        // Para outros tipos não implementados
+        if (camposOutros) camposOutros.style.display = 'flex';
+    }
+}
+
+// Função para carregar produtos disponíveis para vinculação
+function carregarProdutosDisponiveis() {
+    fetch('/api/produtos/')
+        .then(response => response.json())
+        .then(data => {
+            produtosDisponiveis = data;
+            renderizarProdutosDisponiveis();
+        })
+        .catch(error => {
+            console.log('Erro ao carregar produtos:', error);
+            produtosDisponiveis = [];
+            renderizarProdutosDisponiveis();
+        });
+}
+
+// Função para renderizar checkboxes de produtos
+function renderizarProdutosDisponiveis() {
+    const container = document.getElementById('produtos-disponiveis');
+    if (!container) return;
+    
+    container.innerHTML = '';
+    
+    if (produtosDisponiveis.length === 0) {
+        container.innerHTML = '<div class="col-12"><p class="text-muted">Nenhum produto disponível para vinculação.</p></div>';
+        return;
+    }
+    
+    produtosDisponiveis.forEach(produto => {
+        const html = `
+            <div class="col-md-4 col-lg-3 mb-2">
+                <div class="form-check">
+                    <input class="form-check-input" type="checkbox" value="${produto.id}" 
+                           id="produto_${produto.id}" name="produtos_vinculados">
+                    <label class="form-check-label" for="produto_${produto.id}">
+                        ${produto.ref_produto} - ${produto.nome_produto}
+                    </label>
+                </div>
+            </div>
+        `;
+        container.insertAdjacentHTML('beforeend', html);
+    });
+}
+
+// === FUNÇÕES ESPECÍFICAS PARA SOFÁS ===
+
+// Função para adicionar módulo
+function adicionarModulo() {
+    moduloCount++;
+    const container = document.getElementById('modulosContainer');
+    const noModulosAlert = document.getElementById('noModulosAlert');
+    
+    if (noModulosAlert) noModulosAlert.style.display = 'none';
+    
+    const moduloHTML = `
+        <div class="card mb-3 modulo-expandido" id="modulo_${moduloCount}">
+            <div class="card-header d-flex justify-content-between align-items-center" 
+                 style="cursor: pointer; user-select: none; background-color: #e3f2fd !important; border-bottom: 1px solid #bbdefb !important;" 
+                 onclick="toggleModuloIndividual(${moduloCount})">
+                <div class="d-flex align-items-center">
+                    <button type="button" class="btn btn-sm btn-outline-secondary me-2" 
+                            onclick="event.stopPropagation(); toggleModuloIndividual(${moduloCount})" 
+                            id="toggleBtn_${moduloCount}" title="Recolher módulo">
+                        <i class="bi bi-dash-lg"></i>
+                    </button>
+                    <div class="modulo-header-container">
+                        <h6 class="mb-0" id="moduloTitle_${moduloCount}">Módulo ${moduloCount}</h6>
+                        <div class="modulo-status-indicator ativo"></div>
+                    </div>
+                </div>
+                <button type="button" class="btn btn-sm btn-danger" onclick="event.stopPropagation(); removerModulo(${moduloCount})">
+                    <i class="bi bi-trash"></i> Remover
+                </button>
+            </div>
+            <div class="card-body" id="cardBody_${moduloCount}">
+                <!-- Nome do Módulo -->
+                <div class="row mb-3">
+                    <div class="col-md-6">
+                        <div class="form-floating">
+                            <input type="text" class="form-control" id="modulo_nome_${moduloCount}" name="modulo_nome" placeholder="Nome">
+                            <label for="modulo_nome_${moduloCount}">Nome do Módulo</label>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Campos de dimensões -->
+                <div class="row mb-3">
+                    <div class="col-md-3">
+                        <div class="form-floating">
+                            <input type="number" step="0.01" class="form-control" id="modulo_profundidade_${moduloCount}" name="modulo_profundidade_${moduloCount}" placeholder="Profundidade">
+                            <label for="modulo_profundidade_${moduloCount}">Profundidade (cm)</label>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="form-floating">
+                            <input type="number" step="0.01" class="form-control" id="modulo_altura_${moduloCount}" name="modulo_altura_${moduloCount}" placeholder="Altura">
+                            <label for="modulo_altura_${moduloCount}">Altura (cm)</label>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="form-floating">
+                            <input type="number" step="0.01" class="form-control" id="modulo_braco_${moduloCount}" name="modulo_braco_${moduloCount}" placeholder="Braço">
+                            <label for="modulo_braco_${moduloCount}">Braço (cm)</label>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="form-floating">
+                            <textarea class="form-control auto-resize-textarea" id="modulo_descricao_${moduloCount}" name="modulo_descricao_${moduloCount}" placeholder="Descrição" style="height: 58px;"></textarea>
+                            <label for="modulo_descricao_${moduloCount}">Descrição (Opcional)</label>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Imagens do Módulo -->
+                <div class="row mb-3">
+                    <div class="col-md-8">
+                        <label for="modulo_imagem_principal_${moduloCount}" class="form-label fw-bold">
+                            <i class="bi bi-image"></i> Imagem Principal do Módulo
+                        </label>
+                        <input type="file" class="form-control" id="modulo_imagem_principal_${moduloCount}" name="modulo_imagem_principal_${moduloCount}" 
+                               accept="image/*" onchange="previewImage(this, 'preview_modulo_principal_${moduloCount}')">
+                        <div id="preview_modulo_principal_${moduloCount}" class="mt-3" style="display: none;">
+                            <img id="img_preview_modulo_principal_${moduloCount}" src="" alt="Preview" 
+                                 class="img-thumbnail border border-primary" style="max-width: 250px; max-height: 250px;">
+                            <button type="button" class="btn btn-sm btn-danger mt-2" onclick="removeImage('preview_modulo_principal_${moduloCount}', 'modulo_imagem_principal_${moduloCount}')">
+                                <i class="bi bi-trash"></i> Remover
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <div class="col-md-4">
+                        <div id="modulo_segunda_imagem_area_${moduloCount}" style="display: none;">
+                            <label for="modulo_imagem_secundaria_${moduloCount}" class="form-label fw-bold">
+                                <i class="bi bi-image"></i> Segunda Imagem
+                            </label>
+                            <input type="file" class="form-control" id="modulo_imagem_secundaria_${moduloCount}" name="modulo_imagem_secundaria_${moduloCount}" 
+                                   accept="image/*" onchange="previewImage(this, 'preview_modulo_secundaria_${moduloCount}')">
+                            <div id="preview_modulo_secundaria_${moduloCount}" class="mt-3" style="display: none;">
+                                <img id="img_preview_modulo_secundaria_${moduloCount}" src="" alt="Preview" 
+                                     class="img-thumbnail border border-primary" style="max-width: 150px; max-height: 150px;">
+                                <button type="button" class="btn btn-sm btn-danger mt-2" onclick="removeModuloSegundaImagem(${moduloCount})">
+                                    <i class="bi bi-trash"></i> Remover
+                                </button>
+                            </div>
+                        </div>
+                        <div class="text-end mt-3">
+                            <button type="button" class="btn btn-outline-primary btn-sm btn-add-image" 
+                                    id="btn_modulo_segunda_imagem_${moduloCount}" 
+                                    onclick="mostrarModuloSegundaImagem(${moduloCount})"
+                                    title="Adicionar outra imagem">
+                                <i class="bi bi-camera-fill"></i><i class="bi bi-plus-circle-fill" style="font-size: 0.7em; margin-left: -3px;"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Tamanhos do Módulo (Opcional) -->
+                <div class="mt-4">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <h6 class="mb-0">
+                            <i class="bi bi-rulers"></i> Tamanhos
+                        </h6>
+                        <div class="btn-group" role="group">
+                            <button type="button" class="btn btn-sm btn-outline-secondary" onclick="toggleTodosTamanhos(${moduloCount})" id="toggleTamanhosBtn_${moduloCount}">
+                                <i class="bi bi-arrows-expand"></i> <span id="toggleTamanhosText_${moduloCount}">Expandir Todos</span>
+                            </button>
+                            <button type="button" class="btn btn-sm btn-outline-success" onclick="adicionarTamanho(${moduloCount})">
+                                <i class="bi bi-plus"></i> Adicionar Tamanho
+                            </button>
+                        </div>
+                    </div>
+                    <div id="tamanhosContainer_${moduloCount}">
+                        <!-- Tamanhos serão adicionados aqui -->
+                    </div>
+                </div>
+            </div>
+        </div>
+    `;
+    
+    if (container) container.insertAdjacentHTML('beforeend', moduloHTML);
+}
+
+// Função para remover módulo
+function removerModulo(moduloId) {
+    const modulo = document.getElementById(`modulo_${moduloId}`);
+    if (modulo) modulo.remove();
+    
+    // Se não há mais módulos, mostrar alert
+    const container = document.getElementById('modulosContainer');
+    const noModulosAlert = document.getElementById('noModulosAlert');
+    if (container && container.children.length === 0 && noModulosAlert) {
+        noModulosAlert.style.display = 'block';
+    }
+}
+
+// Função para expandir/recolher todos os módulos
+function toggleTodosModulos() {
+    const btn = document.getElementById('toggleModulosBtn');
+    const btnText = document.getElementById('toggleModulosText');
+    const btnIcon = btn ? btn.querySelector('i') : null;
+    
+    if (!btn || !btnText || !btnIcon) {
+        console.error('Elementos do botão de módulos não encontrados');
+        return;
+    }
+    
+    modulosColapsados = !modulosColapsados;
+    
+    // Buscar todos os módulos
+    const modulos = document.querySelectorAll('[id^="modulo_"]');
+    
+    modulos.forEach(modulo => {
+        const cardBody = modulo.querySelector('.card-body[id^="cardBody_"]');
+        const toggleBtn = modulo.querySelector('[id^="toggleBtn_"]');
+        const icon = toggleBtn ? toggleBtn.querySelector('i') : null;
+        
+        if (cardBody && toggleBtn && icon) {
+            if (modulosColapsados) {
+                // Recolher módulo
+                cardBody.style.display = 'none';
+                icon.className = 'bi bi-plus-lg';
+                toggleBtn.title = 'Expandir módulo';
+            } else {
+                // Expandir módulo
+                cardBody.style.display = 'block';
+                icon.className = 'bi bi-dash-lg';
+                toggleBtn.title = 'Recolher módulo';
+            }
+        }
+    });
+    
+    // Atualizar botão
+    if (modulosColapsados) {
+        btnText.textContent = 'Expandir Todos';
+        btnIcon.className = 'bi bi-arrows-expand';
+    } else {
+        btnText.textContent = 'Recolher Todos';
+        btnIcon.className = 'bi bi-arrows-collapse';
+    }
+}
+
+// Função para expandir/recolher um módulo individual
+function toggleModuloIndividual(moduloId) {
+    const cardBody = document.getElementById(`cardBody_${moduloId}`);
+    const toggleBtn = document.getElementById(`toggleBtn_${moduloId}`);
+    const icon = toggleBtn ? toggleBtn.querySelector('i') : null;
+    const card = document.getElementById(`modulo_${moduloId}`);
+    
+    if (cardBody && toggleBtn && icon && card) {
+        if (cardBody.style.display === 'none') {
+            // Expandir módulo
+            cardBody.style.display = 'block';
+            icon.className = 'bi bi-dash-lg';
+            toggleBtn.title = 'Recolher módulo';
+            card.classList.remove('modulo-recolhido');
+            card.classList.add('modulo-expandido');
+        } else {
+            // Recolher módulo
+            cardBody.style.display = 'none';
+            icon.className = 'bi bi-plus-lg';
+            toggleBtn.title = 'Expandir módulo';
+            card.classList.remove('modulo-expandido');
+            card.classList.add('modulo-recolhido');
+        }
+    }
+}
+
+// Função para mostrar segunda imagem do módulo
+function mostrarModuloSegundaImagem(moduloId) {
+    const area = document.getElementById(`modulo_segunda_imagem_area_${moduloId}`);
+    const btn = document.getElementById(`btn_modulo_segunda_imagem_${moduloId}`);
+    if (area) area.style.display = 'block';
+    if (btn) btn.style.display = 'none';
+}
+
+// Função para remover segunda imagem do módulo
+function removeModuloSegundaImagem(moduloId) {
+    const preview = document.getElementById(`preview_modulo_secundaria_${moduloId}`);
+    const input = document.getElementById(`modulo_imagem_secundaria_${moduloId}`);
+    const img = document.getElementById(`img_preview_modulo_secundaria_${moduloId}`);
+    const area = document.getElementById(`modulo_segunda_imagem_area_${moduloId}`);
+    const btn = document.getElementById(`btn_modulo_segunda_imagem_${moduloId}`);
+    
+    if (preview) preview.style.display = 'none';
+    if (input) input.value = '';
+    if (img) img.src = '';
+    if (area) area.style.display = 'none';
+    if (btn) btn.style.display = 'block';
+}
+
+// Função para adicionar tamanho
+function adicionarTamanho(moduloId) {
+    const container = document.getElementById(`tamanhosContainer_${moduloId}`);
+    if (!container) return;
+    
+    const tamanhoCount = container.children.length + 1;
+    
+    const tamanhoHTML = `
+        <div class="card mb-2 tamanho-expandido" id="tamanho_${moduloId}_${tamanhoCount}">
+            <div class="card-header d-flex justify-content-between align-items-center py-2"
+                 style="cursor: pointer; user-select: none; background-color: #e8f5e8 !important; border-bottom: 1px solid #c8e6c9 !important;"
+                 onclick="toggleTamanhoIndividual(${moduloId}, ${tamanhoCount})">
+                <div class="d-flex align-items-center">
+                    <button type="button" class="btn btn-sm btn-outline-secondary me-2" 
+                            onclick="event.stopPropagation(); toggleTamanhoIndividual(${moduloId}, ${tamanhoCount})" 
+                            id="toggleBtnTamanho_${moduloId}_${tamanhoCount}" title="Recolher tamanho">
+                        <i class="bi bi-dash-lg"></i>
+                    </button>
+                    <div class="tamanho-header-container">
+                        <small class="mb-0 fw-medium" id="tamanhoTitle_${moduloId}_${tamanhoCount}">Tamanho ${tamanhoCount}</small>
+                        <div class="tamanho-status-indicator ativo"></div>
+                    </div>
+                </div>
+                <button type="button" class="btn btn-sm btn-danger" onclick="event.stopPropagation(); removerTamanho('tamanho_${moduloId}_${tamanhoCount}')">
+                    <i class="bi bi-trash"></i>
+                </button>
+            </div>
+            <div class="card-body" id="cardBodyTamanho_${moduloId}_${tamanhoCount}">
+                <div class="row">
+                    <div class="col-md-4">
+                        <div class="form-floating mb-2">
+                            <input type="number" step="0.01" class="form-control" name="tamanho_largura_total_${moduloId}" placeholder="Largura Total">
+                            <label>Largura Total (cm)</label>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="form-floating mb-2">
+                            <input type="number" step="0.01" class="form-control" name="tamanho_largura_assento_${moduloId}" placeholder="Largura Assento">
+                            <label>Largura Assento (cm)</label>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="form-floating mb-2">
+                            <input type="number" step="0.01" class="form-control" name="tamanho_tecido_${moduloId}" placeholder="Tecido">
+                            <label>Tecido (metros)</label>
+                        </div>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-md-3">
+                        <div class="form-floating mb-2">
+                            <input type="number" step="0.001" class="form-control" name="tamanho_volume_${moduloId}" placeholder="Volume">
+                            <label>Volume (m³)</label>
+                        </div>
+                    </div>
+                    <div class="col-md-2">
+                        <div class="form-floating mb-2">
+                            <input type="number" step="0.01" class="form-control" name="tamanho_peso_${moduloId}" placeholder="Peso">
+                            <label>Peso (kg)</label>
+                        </div>
+                    </div>
+                    <div class="col-md-2">
+                        <div class="form-floating mb-2">
+                            <input type="number" step="0.01" class="form-control" name="tamanho_preco_${moduloId}" placeholder="Preço">
+                            <label>Preço (R$)</label>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="form-floating mb-2">
+                            <textarea class="form-control auto-resize-textarea" name="tamanho_descricao_${moduloId}" placeholder="Descrição" style="height: 58px;"></textarea>
+                            <label>Descrição</label>
+                        </div>
+                    </div>
+                    <div class="col-md-2">
+                        <div class="d-flex align-items-end">
+                            <button type="button" class="btn btn-sm btn-danger" onclick="removerTamanho('tamanho_${moduloId}_${tamanhoCount}')">
+                                <i class="bi bi-trash"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    `;
+    
+    container.insertAdjacentHTML('beforeend', tamanhoHTML);
+}
+
+// Função para remover tamanho
+function removerTamanho(tamanhoId) {
+    const element = document.getElementById(tamanhoId);
+    if (element) element.remove();
+}
+
+// Função para expandir/recolher todos os tamanhos de um módulo
+function toggleTodosTamanhos(moduloId) {
+    const btn = document.getElementById(`toggleTamanhosBtn_${moduloId}`);
+    const btnText = document.getElementById(`toggleTamanhosText_${moduloId}`);
+    const btnIcon = btn ? btn.querySelector('i') : null;
+    
+    if (!btn || !btnText || !btnIcon) {
+        console.error('Elementos do botão de tamanhos não encontrados para módulo:', moduloId);
+        return;
+    }
+    
+    // Determinar estado atual baseado no texto do botão
+    const isCollapsed = btnText.textContent.includes('Expandir');
+    
+    // Buscar todos os tamanhos deste módulo
+    const tamanhos = document.querySelectorAll(`#tamanhosContainer_${moduloId} .card`);
+    
+    tamanhos.forEach(tamanho => {
+        const cardBody = tamanho.querySelector('.card-body[id^="cardBodyTamanho_"]');
+        const toggleBtn = tamanho.querySelector('[id^="toggleBtnTamanho_"]');
+        const icon = toggleBtn ? toggleBtn.querySelector('i') : null;
+        
+        if (cardBody && toggleBtn && icon) {
+            if (isCollapsed) {
+                // Expandir
+                cardBody.style.display = 'block';
+                icon.className = 'bi bi-dash-lg';
+                toggleBtn.title = 'Recolher tamanho';
+            } else {
+                // Recolher
+                cardBody.style.display = 'none';
+                icon.className = 'bi bi-plus-lg';
+                toggleBtn.title = 'Expandir tamanho';
+            }
+        }
+    });
+    
+    // Atualizar botão
+    if (isCollapsed) {
+        btnText.textContent = 'Recolher Todos';
+        btnIcon.className = 'bi bi-arrows-collapse';
+    } else {
+        btnText.textContent = 'Expandir Todos';
+        btnIcon.className = 'bi bi-arrows-expand';
+    }
+}
+
+// Função para expandir/recolher um tamanho individual
+function toggleTamanhoIndividual(moduloId, tamanhoId) {
+    const cardBody = document.getElementById(`cardBodyTamanho_${moduloId}_${tamanhoId}`);
+    const toggleBtn = document.getElementById(`toggleBtnTamanho_${moduloId}_${tamanhoId}`);
+    const icon = toggleBtn ? toggleBtn.querySelector('i') : null;
+    const card = document.getElementById(`tamanho_${moduloId}_${tamanhoId}`);
+    
+    if (cardBody && toggleBtn && icon && card) {
+        if (cardBody.style.display === 'none') {
+            // Expandir tamanho
+            cardBody.style.display = 'block';
+            icon.className = 'bi bi-dash-lg';
+            toggleBtn.title = 'Recolher tamanho';
+            card.classList.remove('tamanho-recolhido');
+            card.classList.add('tamanho-expandido');
+        } else {
+            // Recolher tamanho
+            cardBody.style.display = 'none';
+            icon.className = 'bi bi-plus-lg';
+            toggleBtn.title = 'Expandir tamanho';
+            card.classList.remove('tamanho-expandido');
+            card.classList.add('tamanho-recolhido');
+        }
+    }
+}
+
+// Validação específica unificada
+function validacaoEspecifica(e) {
+    const tipoSelect = document.getElementById('tipo_produto');
+    const selectedOption = tipoSelect.options[tipoSelect.selectedIndex];
+    const tipoNome = selectedOption.getAttribute('data-nome');
+    
+    if (tipoNome && tipoNome.toLowerCase() === 'acessórios') {
+        const precoAcessorio = document.getElementById('preco_acessorio').value;
+        if (!precoAcessorio || parseFloat(precoAcessorio) < 0) {
+            e.preventDefault();
+            alert('Por favor, informe um preço válido para o acessório.');
+            return false;
+        }
+    }
+    
+    return true;
+}
+</script>
+
+<!-- JavaScript para gerenciar acessórios de sofás -->
+<script>
+/* JavaScript para gerenciar a seção de acessórios em sofás */
+
+class AcessoriosManager {
+    constructor() {
+        this.acessoriosDisponiveis = [];
+        this.acessoriosSelecionados = new Map(); // Map<acessorioId, {quantidade, observacoes}>
+        this.formIndex = 0;
+        this.isLoading = false;
+        this.currentQuery = '';
+        this.secaoAcessorios = document.getElementById('secao-acessorios');
+        this.acessoriosEndpoint = this.secaoAcessorios ? this.secaoAcessorios.dataset.acessoriosEndpoint : '';
+        
+        this.init();
+    }
+    
+    init() {
+        // Bind de eventos
+        this.bindEvents();
+        
+        // Carregar acessórios se for um sofá
+        this.checkTipoAndLoadAcessorios();
+    }
+    
+    bindEvents() {
+        // Evento de mudança do tipo de produto
+        const tipoSelect = document.getElementById('tipo_produto');
+        if (tipoSelect) {
+            tipoSelect.addEventListener('change', () => {
+                this.checkTipoAndLoadAcessorios();
+            });
+        }
+        
+        // Eventos de busca e filtros
+        const buscaInput = document.getElementById('busca-acessorios');
+        if (buscaInput) {
+            buscaInput.addEventListener('input', this.debounce(() => {
+                this.filtrarAcessorios();
+            }, 300));
+        }
+        
+        const limparBtn = document.getElementById('limpar-busca');
+        if (limparBtn) {
+            limparBtn.addEventListener('click', () => {
+                document.getElementById('busca-acessorios').value = '';
+                this.filtrarAcessorios();
+            });
+        }
+        
+        const selecionarTodosBtn = document.getElementById('selecionar-todos');
+        if (selecionarTodosBtn) {
+            selecionarTodosBtn.addEventListener('click', () => {
+                this.selecionarTodosVisiveis();
+            });
+        }
+        
+        const desmarcarTodosBtn = document.getElementById('desmarcar-todos');
+        if (desmarcarTodosBtn) {
+            desmarcarTodosBtn.addEventListener('click', () => {
+                this.desmarcarTodos();
+            });
+        }
+    }
+    
+    checkTipoAndLoadAcessorios() {
+        const tipoSelect = document.getElementById('tipo_produto');
+        const secaoAcessorios = this.secaoAcessorios;
+        
+        if (!tipoSelect || !secaoAcessorios) return;
+        
+        const tipoSelecionado = tipoSelect.options[tipoSelect.selectedIndex];
+        const tipoNome = (tipoSelecionado && (tipoSelecionado.getAttribute('data-nome') || tipoSelecionado.text)) || '';
+        const tipoNomeLower = tipoNome.toLowerCase();
+        const ehSofa = ['sofá', 'sofa', 'sofás', 'sofas'].some((termo) => tipoNomeLower.includes(termo));
+        
+        if (ehSofa) {
+            secaoAcessorios.style.display = 'block';
+            this.carregarAcessorios('');
+        } else {
+            secaoAcessorios.style.display = 'none';
+            this.limparSelecoes();
+        }
+    }
+    
+    async carregarAcessorios(query = '') {
+        if (this.isLoading) return;
+        
+        this.isLoading = true;
+        this.currentQuery = query;
+        this.showLoading();
+        
+        try {
+            // Buscar acessórios via AJAX ou usar dados injetados no template
+            const response = await this.fetchAcessorios(query);
+            this.acessoriosDisponiveis = response.acessorios || [];
+            
+            this.renderizarAcessorios();
+            this.hideLoading();
+            
+            if (this.acessoriosDisponiveis.length === 0) {
+                this.showEmpty();
+            }
+            
+        } catch (error) {
+            console.error('Erro ao carregar acessórios:', error);
+            this.showError();
+        } finally {
+            this.isLoading = false;
+        }
+    }
+    
+    async fetchAcessorios(query = '') {
+        if (this.acessoriosEndpoint) {
+            const url = new URL(this.acessoriosEndpoint, window.location.origin);
+            if (query) {
+                url.searchParams.set('q', query);
+            }
+            url.searchParams.set('limit', '50');
+
+            const response = await fetch(url.toString(), { headers: { 'Accept': 'application/json' } });
+            const data = await response.json();
+            if (!response.ok) {
+                throw new Error(data.error || 'Erro ao carregar acessórios.');
+            }
+            return { acessorios: data.acessorios || [] };
+        }
+
+        return { acessorios: window.acessoriosData || [] };
+    }
+    
+    renderizarAcessorios() {
+        const gridContainer = document.getElementById('grid-acessorios');
+        const template = document.getElementById('template-card-acessorio');
+        
+        if (!gridContainer || !template) return;
+        
+        gridContainer.innerHTML = '';
+        
+        this.acessoriosDisponiveis.forEach(acessorio => {
+            const cardElement = this.criarCardAcessorio(acessorio, template);
+            gridContainer.appendChild(cardElement);
+        });
+    }
+    
+    criarCardAcessorio(acessorio, template) {
+        const clone = template.content.cloneNode(true);
+        const cardDiv = clone.querySelector('.acessorio-card');
+        
+        // Preencher dados do acessório
+        cardDiv.setAttribute('data-acessorio-id', acessorio.id);
+        
+        const img = clone.querySelector('.acessorio-image');
+        const noImage = clone.querySelector('.acessorio-no-image');
+        if (acessorio.imagem_principal) {
+            img.src = acessorio.imagem_principal;
+            img.style.display = 'block';
+            noImage.style.display = 'none';
+        } else {
+            img.style.display = 'none';
+            noImage.style.display = 'flex';
+        }
+        
+        clone.querySelector('.acessorio-nome').textContent = acessorio.nome;
+        clone.querySelector('.acessorio-codigo').textContent = `Código: ${acessorio.ref_acessorio}`;
+        
+        const precoElement = clone.querySelector('.acessorio-preco small');
+        if (acessorio.preco) {
+            precoElement.textContent = `R$ ${this.formatMoney(acessorio.preco)}`;
+            precoElement.style.display = 'block';
+        } else {
+            precoElement.style.display = 'none';
+        }
+        
+        // Configurar checkbox
+        const checkbox = clone.querySelector('.acessorio-checkbox');
+        checkbox.setAttribute('data-acessorio-id', acessorio.id);
+        checkbox.id = `acessorio_${acessorio.id}`;
+        
+        const label = clone.querySelector('.form-check-label');
+        label.setAttribute('for', checkbox.id);
+        
+        // Evento do checkbox
+        checkbox.addEventListener('change', (e) => {
+            this.toggleAcessorio(acessorio, e.target.checked);
+        });
+        
+        // Configurar campos de quantidade e observações
+        const quantidadeInput = clone.querySelector('.acessorio-quantidade');
+        const observacoesTextarea = clone.querySelector('.acessorio-observacoes');
+        const contadorChars = clone.querySelector('.contador-chars');
+        
+        quantidadeInput.addEventListener('change', () => {
+            if (this.acessoriosSelecionados.has(acessorio.id)) {
+                this.atualizarAcessorioSelecionado(acessorio.id, {
+                    quantidade: parseInt(quantidadeInput.value) || 1,
+                    observacoes: observacoesTextarea.value
+                });
+            }
+        });
+        
+        observacoesTextarea.addEventListener('input', () => {
+            const length = observacoesTextarea.value.length;
+            contadorChars.textContent = length;
+            contadorChars.className = length > 800 ? 'contador-chars text-warning' : 'contador-chars';
+            
+            if (this.acessoriosSelecionados.has(acessorio.id)) {
+                this.atualizarAcessorioSelecionado(acessorio.id, {
+                    quantidade: parseInt(quantidadeInput.value) || 1,
+                    observacoes: observacoesTextarea.value
+                });
+            }
+        });
+        
+        const selecionado = this.acessoriosSelecionados.get(acessorio.id);
+        if (selecionado) {
+            checkbox.checked = true;
+            cardDiv.classList.add('selecionado');
+            const camposDiv = clone.querySelector('.acessorio-campos');
+            camposDiv.style.display = 'block';
+            quantidadeInput.value = selecionado.quantidade || 1;
+            observacoesTextarea.value = selecionado.observacoes || '';
+            contadorChars.textContent = observacoesTextarea.value.length;
+        }
+
+        return clone;
+    }
+    
+    toggleAcessorio(acessorio, selecionado) {
+        const cardElement = document.querySelector(`[data-acessorio-id="${acessorio.id}"]`);
+        const camposDiv = cardElement.querySelector('.acessorio-campos');
+        
+        if (selecionado) {
+            // Adicionar à seleção
+            this.acessoriosSelecionados.set(acessorio.id, {
+                acessorio: acessorio,
+                quantidade: 1,
+                observacoes: ''
+            });
+            
+            cardElement.classList.add('selecionado');
+            camposDiv.style.display = 'block';
+            
+        } else {
+            // Remover da seleção
+            this.acessoriosSelecionados.delete(acessorio.id);
+            cardElement.classList.remove('selecionado');
+            camposDiv.style.display = 'none';
+            
+            // Limpar campos
+            const quantidadeInput = cardElement.querySelector('.acessorio-quantidade');
+            const observacoesTextarea = cardElement.querySelector('.acessorio-observacoes');
+            quantidadeInput.value = 1;
+            observacoesTextarea.value = '';
+        }
+        
+        this.atualizarFormset();
+        this.atualizarContador();
+    }
+    
+    atualizarAcessorioSelecionado(acessorioId, dados) {
+        if (this.acessoriosSelecionados.has(acessorioId)) {
+            const item = this.acessoriosSelecionados.get(acessorioId);
+            Object.assign(item, dados);
+            this.atualizarFormset();
+        }
+    }
+    
+    atualizarFormset() {
+        const managementContainer = document.getElementById('acessorios-management-forms');
+        const formsContainer = document.getElementById('acessorios-selecionados-forms');
+        
+        if (!managementContainer || !formsContainer) return;
+        
+        // Limpar containers
+        managementContainer.innerHTML = '';
+        formsContainer.innerHTML = '';
+        
+        // Criar management forms
+        const totalForms = this.acessoriosSelecionados.size;
+        managementContainer.innerHTML = `
+            <input type="hidden" name="acessorios-TOTAL_FORMS" value="${totalForms}">
+            <input type="hidden" name="acessorios-INITIAL_FORMS" value="0">
+            <input type="hidden" name="acessorios-MIN_NUM_FORMS" value="0">
+            <input type="hidden" name="acessorios-MAX_NUM_FORMS" value="1000">
+        `;
+        
+        // Criar forms para cada acessório selecionado
+        let index = 0;
+        this.acessoriosSelecionados.forEach((item, acessorioId) => {
+            const formHTML = `
+                <div class="acessorio-form-item" data-form-index="${index}">
+                    <input type="hidden" name="acessorios-${index}-acessorio" value="${acessorioId}">
+                    <input type="hidden" name="acessorios-${index}-quantidade" value="${item.quantidade}">
+                    <input type="hidden" name="acessorios-${index}-observacoes" value="${item.observacoes || ''}">
+                    <input type="hidden" name="acessorios-${index}-DELETE" value="">
+                </div>
+            `;
+            formsContainer.insertAdjacentHTML('beforeend', formHTML);
+            index++;
+        });
+    }
+    
+    atualizarContador() {
+        const contador = document.getElementById('contador-selecionados');
+        const textoContador = document.getElementById('texto-contador');
+        
+        if (!contador || !textoContador) return;
+        
+        const total = this.acessoriosSelecionados.size;
+        
+        if (total === 0) {
+            contador.style.display = 'none';
+        } else {
+            contador.style.display = 'block';
+            textoContador.textContent = `${total} acessório${total > 1 ? 's' : ''} selecionado${total > 1 ? 's' : ''}`;
+        }
+    }
+    
+    filtrarAcessorios() {
+        const busca = document.getElementById('busca-acessorios').value.toLowerCase();
+        if (this.acessoriosEndpoint) {
+            this.carregarAcessorios(busca);
+            return;
+        }
+
+        const cards = document.querySelectorAll('.acessorio-card');
+        let visibleCount = 0;
+
+        cards.forEach(card => {
+            const nome = card.querySelector('.acessorio-nome').textContent.toLowerCase();
+            const codigo = card.querySelector('.acessorio-codigo').textContent.toLowerCase();
+
+            const matches = nome.includes(busca) || codigo.includes(busca);
+
+            if (matches) {
+                card.style.display = 'block';
+                visibleCount++;
+            } else {
+                card.style.display = 'none';
+            }
+        });
+
+        // Mostrar/esconder estado vazio baseado na busca
+        const emptyDiv = document.getElementById('empty-acessorios');
+        if (visibleCount === 0 && busca.length > 0) {
+            emptyDiv.style.display = 'block';
+            emptyDiv.querySelector('p').textContent = 'Nenhum acessório encontrado para a busca';
+        } else if (visibleCount === 0 && this.acessoriosDisponiveis.length === 0) {
+            emptyDiv.style.display = 'block';
+            emptyDiv.querySelector('p').textContent = 'Nenhum acessório encontrado';
+        } else {
+            emptyDiv.style.display = 'none';
+        }
+    }
+    
+    selecionarTodosVisiveis() {
+        const cards = document.querySelectorAll('.acessorio-card');
+        cards.forEach(card => {
+            if (card.style.display !== 'none') {
+                const checkbox = card.querySelector('.acessorio-checkbox');
+                if (!checkbox.checked) {
+                    checkbox.checked = true;
+                    checkbox.dispatchEvent(new Event('change'));
+                }
+            }
+        });
+    }
+    
+    desmarcarTodos() {
+        const checkboxes = document.querySelectorAll('.acessorio-checkbox:checked');
+        checkboxes.forEach(checkbox => {
+            checkbox.checked = false;
+            checkbox.dispatchEvent(new Event('change'));
+        });
+    }
+    
+    limparSelecoes() {
+        this.acessoriosSelecionados.clear();
+        this.atualizarFormset();
+        this.atualizarContador();
+    }
+    
+    showLoading() {
+        document.getElementById('loading-acessorios').style.display = 'block';
+        document.getElementById('grid-acessorios').style.display = 'none';
+        document.getElementById('empty-acessorios').style.display = 'none';
+        document.getElementById('error-acessorios').style.display = 'none';
+    }
+    
+    hideLoading() {
+        document.getElementById('loading-acessorios').style.display = 'none';
+        document.getElementById('grid-acessorios').style.display = 'block';
+    }
+    
+    showEmpty() {
+        document.getElementById('empty-acessorios').style.display = 'block';
+        document.getElementById('grid-acessorios').style.display = 'none';
+    }
+    
+    showError() {
+        document.getElementById('error-acessorios').style.display = 'block';
+        document.getElementById('loading-acessorios').style.display = 'none';
+        document.getElementById('grid-acessorios').style.display = 'none';
+    }
+    
+    // Utility functions
+    debounce(func, wait) {
+        let timeout;
+        return function executedFunction(...args) {
+            const later = () => {
+                clearTimeout(timeout);
+                func(...args);
+            };
+            clearTimeout(timeout);
+            timeout = setTimeout(later, wait);
+        };
+    }
+    
+    formatMoney(value) {
+        return new Intl.NumberFormat('pt-BR', {
+            minimumFractionDigits: 2,
+            maximumFractionDigits: 2
+        }).format(value);
+    }
+}
+
+// Inicializar quando o DOM estiver carregado
+document.addEventListener('DOMContentLoaded', function() {
+    // Verificar se estamos na página de cadastro de produtos
+    if (document.getElementById('produtoForm')) {
+        window.acessoriosManager = new AcessoriosManager();
+    }
+});
+
+// Validação antes do submit do formulário
+document.addEventListener('DOMContentLoaded', function() {
+    const form = document.getElementById('produtoForm');
+    if (form) {
+        form.addEventListener('submit', function(e) {
+            // Validar acessórios selecionados se for um sofá
+            const tipoSelect = document.getElementById('tipo_produto');
+            const secaoAcessorios = document.getElementById('secao-acessorios');
+            
+            if (tipoSelect && secaoAcessorios && secaoAcessorios.style.display !== 'none') {
+                const tipoSelecionado = tipoSelect.options[tipoSelect.selectedIndex];
+                const ehSofa = tipoSelecionado && tipoSelecionado.text.toLowerCase().includes('sofá');
+                
+                if (ehSofa && window.acessoriosManager) {
+                    // Validar quantidades dos acessórios selecionados
+                    let hasError = false;
+                    window.acessoriosManager.acessoriosSelecionados.forEach((item, acessorioId) => {
+                        if (!item.quantidade || item.quantidade <= 0) {
+                            hasError = true;
+                            alert(`Por favor, informe uma quantidade válida para o acessório ${item.acessorio.nome}.`);
+                        }
+                    });
+                    
+                    if (hasError) {
+                        e.preventDefault();
+                        return false;
+                    }
+                }
+            }
+        });
+    }
+});
+</script>
+
+
+
+
+</body>
+</html>

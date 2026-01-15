@@ -183,7 +183,7 @@
                 </h6>
             </div>
             <div class="card-body p-0">
-                {% if produtos or banquetas or cadeiras or poltronas or pufes or almofadas %}
+                {% if itens %}
                 <div class="table-responsive">
                     <table class="table table-hover mb-0">
                         <thead>
@@ -252,33 +252,17 @@
                             </tr>
                         </thead>
                         <tbody>
-                            {% for produto in produtos %}
+                            {% for item in itens %}
                             <tr>
                                 <td>
-                                    <strong>{{ produto.ref_produto }}</strong>
+                                    <strong>{{ item.ref }}</strong>
                                 </td>
-                                <td>{{ produto.nome_produto }}</td>
+                                <td>{{ item.nome }}</td>
                                 <td>
-                                    {% with tipo_nome=produto.id_tipo_produto.nome|lower %}
-                                        {% if 'sofá' in tipo_nome or 'sofa' in tipo_nome %}
-                                            <span class="badge tipo-sofas">{{ produto.id_tipo_produto.nome }}</span>
-                                        {% elif 'acessório' in tipo_nome or 'acessorio' in tipo_nome %}
-                                            <span class="badge tipo-acessorios">{{ produto.id_tipo_produto.nome }}</span>
-                                        {% elif 'cadeira' in tipo_nome %}
-                                            <span class="badge tipo-cadeiras">{{ produto.id_tipo_produto.nome }}</span>
-                                        {% elif 'poltrona' in tipo_nome %}
-                                            <span class="badge tipo-poltronas">{{ produto.id_tipo_produto.nome }}</span>
-                                        {% elif 'pufe' in tipo_nome %}
-                                            <span class="badge tipo-pufes">{{ produto.id_tipo_produto.nome }}</span>
-                                        {% elif 'almofada' in tipo_nome %}
-                                            <span class="badge tipo-almofadas">{{ produto.id_tipo_produto.nome }}</span>
-                                        {% else %}
-                                            <span class="badge bg-secondary">{{ produto.id_tipo_produto.nome }}</span>
-                                        {% endif %}
-                                    {% endwith %}
+                                    <span class="badge {{ item.badge_class }}">{{ item.tipo }}</span>
                                 </td>
                                 <td>
-                                    {% if produto.ativo %}
+                                    {% if item.ativo %}
                                         <span class="badge bg-success">Ativo</span>
                                     {% else %}
                                         <span class="badge bg-danger">Inativo</span>
@@ -286,46 +270,23 @@
                                 </td>
                                 <td>
                                     <div class="btn-group-actions">
-                                        {% with tipo_nome=produto.id_tipo_produto.nome|lower %}
-                                            {% if 'sofá' in tipo_nome or 'sofa' in tipo_nome %}
-                                                <a href="{% url 'sofa_detalhes' produto.id %}" 
-                                                   class="btn btn-sm btn-outline-primary" title="Ver Detalhes">
-                                                    <i class="bi bi-eye"></i>
-                                                </a>
-                                                <a href="{% url 'sofa_editar' produto.id %}" 
-                                                   class="btn btn-sm btn-outline-warning" title="Editar">
-                                                    <i class="bi bi-pencil"></i>
-                                                </a>
-                                            {% elif 'acessório' in tipo_nome or 'acessorio' in tipo_nome %}
-                                                <a href="{% url 'acessorio_detalhes' produto.id %}" 
-                                                   class="btn btn-sm btn-outline-primary" title="Ver Detalhes">
-                                                    <i class="bi bi-eye"></i>
-                                                </a>
-                                                <a href="{% url 'acessorio_editar' produto.id %}" 
-                                                   class="btn btn-sm btn-outline-warning" title="Editar">
-                                                    <i class="bi bi-pencil"></i>
-                                                </a>
-                                            {% else %}
-                                                <!-- Fallback para tipos não mapeados -->
-                                                <a href="{% url 'produto_detalhes' produto.id %}" 
-                                                   class="btn btn-sm btn-outline-primary" title="Ver Detalhes">
-                                                    <i class="bi bi-eye"></i>
-                                                </a>
-                                                <a href="{% url 'produto_editar' produto.id %}" 
-                                                   class="btn btn-sm btn-outline-warning" title="Editar">
-                                                    <i class="bi bi-pencil"></i>
-                                                </a>
-                                            {% endif %}
-                                        {% endwith %}
+                                        <a href="{{ item.detalhe_url }}" 
+                                           class="btn btn-sm btn-outline-primary" title="Ver Detalhes">
+                                            <i class="bi bi-eye"></i>
+                                        </a>
+                                        <a href="{{ item.editar_url }}" 
+                                           class="btn btn-sm btn-outline-warning" title="Editar">
+                                            <i class="bi bi-pencil"></i>
+                                        </a>
                                         <button type="button" class="btn btn-sm btn-outline-danger" 
                                                 title="Excluir" data-bs-toggle="modal" 
-                                                data-bs-target="#deleteModal{{ produto.id }}">
+                                                data-bs-target="#{{ item.modal_id }}">
                                             <i class="bi bi-trash"></i>
                                         </button>
                                     </div>
                                     
                                     <!-- Modal de Confirmação de Exclusão -->
-                                    <div class="modal fade" id="deleteModal{{ produto.id }}" tabindex="-1">
+                                    <div class="modal fade" id="{{ item.modal_id }}" tabindex="-1">
                                         <div class="modal-dialog">
                                             <div class="modal-content">
                                                 <div class="modal-header">
@@ -333,332 +294,19 @@
                                                     <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                                                 </div>
                                                 <div class="modal-body">
-                                                    <p>Tem certeza que deseja excluir o produto:</p>
-                                                    <strong>{{ produto.ref_produto }} - {{ produto.nome_produto }}</strong>
+                                                    <p>Tem certeza que deseja excluir {{ item.tipo_singular }}:</p>
+                                                    <strong>{{ item.ref }} - {{ item.nome }}</strong>
                                                     <p class="text-danger mt-2">Esta ação não pode ser desfeita!</p>
                                                 </div>
                                                 <div class="modal-footer">
                                                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
                                                         Cancelar
                                                     </button>
-                                                    <form method="post" action="{% url 'produto_excluir' produto.id %}" class="d-inline">
+                                                    <form method="post" action="{{ item.excluir_url }}" class="d-inline">
                                                         {% csrf_token %}
                                                         <button type="submit" class="btn btn-danger">
                                                             <i class="bi bi-trash"></i> Excluir
                                                         </button>
-                                                    </form>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </td>
-                            </tr>
-                            {% endfor %}
-                            
-                            {% for banqueta in banquetas %}
-                            <tr>
-                                <td>
-                                    <strong>{{ banqueta.ref_banqueta }}</strong>
-                                </td>
-                                <td>{{ banqueta.nome }}</td>
-                                <td>
-                                    <span class="badge tipo-banquetas">Banquetas</span>
-                                </td>
-                                <td>
-                                    {% if banqueta.ativo %}
-                                        <span class="badge bg-success">Ativo</span>
-                                    {% else %}
-                                        <span class="badge bg-danger">Inativo</span>
-                                    {% endif %}
-                                </td>
-                                <td>
-                                    <div class="btn-group-actions">
-                                        <a href="{% url 'banqueta_detalhes' banqueta.id %}" 
-                                           class="btn btn-sm btn-outline-primary" title="Ver Detalhes">
-                                            <i class="bi bi-eye"></i>
-                                        </a>
-                                        <a href="{% url 'banqueta_editar' banqueta.id %}" 
-                                           class="btn btn-sm btn-outline-warning" title="Editar">
-                                            <i class="bi bi-pencil"></i>
-                                        </a>
-                                        <button type="button" class="btn btn-sm btn-outline-danger" 
-                                                title="Excluir" data-bs-toggle="modal" 
-                                                data-bs-target="#deleteBanquetaModal{{ banqueta.id }}">
-                                            <i class="bi bi-trash"></i>
-                                        </button>
-                                    </div>
-                                    
-                                    <!-- Modal de Confirmação de Exclusão para Banqueta -->
-                                    <div class="modal fade" id="deleteBanquetaModal{{ banqueta.id }}" tabindex="-1">
-                                        <div class="modal-dialog">
-                                            <div class="modal-content">
-                                                <div class="modal-header">
-                                                    <h5 class="modal-title">Confirmar Exclusão</h5>
-                                                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                                                </div>
-                                                <div class="modal-body">
-                                                    <p>Tem certeza de que deseja excluir a banqueta <strong>{{ banqueta.nome }}</strong>?</p>
-                                                    <p class="text-warning">
-                                                        <i class="bi bi-exclamation-triangle"></i>
-                                                        Esta ação não pode ser desfeita.
-                                                    </p>
-                                                </div>
-                                                <div class="modal-footer">
-                                                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-                                                    <form method="post" action="{% url 'banqueta_excluir' banqueta.id %}" style="display: inline;">
-                                                        {% csrf_token %}
-                                                        <button type="submit" class="btn btn-danger">Excluir</button>
-                                                    </form>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </td>
-                            </tr>
-                            {% endfor %}
-                            
-                            {% for cadeira in cadeiras %}
-                            <tr>
-                                <td>
-                                    <strong>{{ cadeira.ref_cadeira }}</strong>
-                                </td>
-                                <td>{{ cadeira.nome }}</td>
-                                <td>
-                                    <span class="badge tipo-cadeiras">Cadeiras</span>
-                                </td>
-                                <td>
-                                    {% if cadeira.ativo %}
-                                        <span class="badge bg-success">Ativo</span>
-                                    {% else %}
-                                        <span class="badge bg-danger">Inativo</span>
-                                    {% endif %}
-                                </td>
-                                <td>
-                                    <div class="btn-group-actions">
-                                        <a href="{% url 'cadeira_detalhes' cadeira.id %}" 
-                                           class="btn btn-sm btn-outline-primary" title="Ver Detalhes">
-                                            <i class="bi bi-eye"></i>
-                                        </a>
-                                        <a href="{% url 'cadeira_editar' cadeira.id %}" 
-                                           class="btn btn-sm btn-outline-warning" title="Editar">
-                                            <i class="bi bi-pencil"></i>
-                                        </a>
-                                        <button type="button" class="btn btn-sm btn-outline-danger" 
-                                                title="Excluir" data-bs-toggle="modal" 
-                                                data-bs-target="#deleteCadeiraModal{{ cadeira.id }}">
-                                            <i class="bi bi-trash"></i>
-                                        </button>
-                                    </div>
-                                    
-                                    <!-- Modal de Confirmação de Exclusão para Cadeira -->
-                                    <div class="modal fade" id="deleteCadeiraModal{{ cadeira.id }}" tabindex="-1">
-                                        <div class="modal-dialog">
-                                            <div class="modal-content">
-                                                <div class="modal-header">
-                                                    <h5 class="modal-title">Confirmar Exclusão</h5>
-                                                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                                                </div>
-                                                <div class="modal-body">
-                                                    <p>Tem certeza de que deseja excluir a cadeira <strong>{{ cadeira.nome }}</strong>?</p>
-                                                    <p class="text-warning">
-                                                        <i class="bi bi-exclamation-triangle"></i>
-                                                        Esta ação não pode ser desfeita.
-                                                    </p>
-                                                </div>
-                                                <div class="modal-footer">
-                                                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-                                                    <form method="post" action="{% url 'cadeira_excluir' cadeira.id %}" style="display: inline;">
-                                                        {% csrf_token %}
-                                                        <button type="submit" class="btn btn-danger">Excluir</button>
-                                                    </form>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </td>
-                            </tr>
-                            {% endfor %}
-
-                            <!-- Seção para Poltronas -->
-                            {% for poltrona in poltronas %}
-                            <tr>
-                                <td>
-                                    <strong>{{ poltrona.ref_poltrona }}</strong>
-                                </td>
-                                <td>{{ poltrona.nome }}</td>
-                                <td>
-                                    <span class="badge tipo-poltronas">Poltronas</span>
-                                </td>
-                                <td>
-                                    {% if poltrona.ativo %}
-                                        <span class="badge bg-success">Ativo</span>
-                                    {% else %}
-                                        <span class="badge bg-danger">Inativo</span>
-                                    {% endif %}
-                                </td>
-                                <td>
-                                    <div class="btn-group-actions">
-                                        <a href="{% url 'poltrona_detalhes' poltrona.id %}" 
-                                           class="btn btn-sm btn-outline-primary" title="Ver Detalhes">
-                                            <i class="bi bi-eye"></i>
-                                        </a>
-                                        <a href="{% url 'poltrona_editar' poltrona.id %}" 
-                                           class="btn btn-sm btn-outline-warning" title="Editar">
-                                            <i class="bi bi-pencil"></i>
-                                        </a>
-                                        <button type="button" class="btn btn-sm btn-outline-danger" 
-                                                title="Excluir" data-bs-toggle="modal" 
-                                                data-bs-target="#deletePoltronaModal{{ poltrona.id }}">
-                                            <i class="bi bi-trash"></i>
-                                        </button>
-                                    </div>
-                                    
-                                    <!-- Modal de Confirmação de Exclusão para Poltrona -->
-                                    <div class="modal fade" id="deletePoltronaModal{{ poltrona.id }}" tabindex="-1">
-                                        <div class="modal-dialog">
-                                            <div class="modal-content">
-                                                <div class="modal-header">
-                                                    <h5 class="modal-title">Confirmar Exclusão</h5>
-                                                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                                                </div>
-                                                <div class="modal-body">
-                                                    <p>Tem certeza de que deseja excluir a poltrona <strong>{{ poltrona.nome }}</strong>?</p>
-                                                    <p class="text-warning">
-                                                        <i class="bi bi-exclamation-triangle"></i>
-                                                        Esta ação não pode ser desfeita.
-                                                    </p>
-                                                </div>
-                                                <div class="modal-footer">
-                                                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-                                                    <form method="post" action="{% url 'poltrona_excluir' poltrona.id %}" style="display: inline;">
-                                                        {% csrf_token %}
-                                                        <button type="submit" class="btn btn-danger">Excluir</button>
-                                                    </form>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </td>
-                            </tr>
-                            {% endfor %}
-
-                            <!-- Seção para Pufes -->
-                            {% for pufe in pufes %}
-                            <tr>
-                                <td>
-                                    <strong>{{ pufe.ref_pufe }}</strong>
-                                </td>
-                                <td>{{ pufe.nome }}</td>
-                                <td>
-                                    <span class="badge tipo-pufes">Pufes</span>
-                                </td>
-                                <td>
-                                    {% if pufe.ativo %}
-                                        <span class="badge bg-success">Ativo</span>
-                                    {% else %}
-                                        <span class="badge bg-danger">Inativo</span>
-                                    {% endif %}
-                                </td>
-                                <td>
-                                    <div class="btn-group-actions">
-                                        <a href="{% url 'pufe_detalhes' pufe.id %}" 
-                                           class="btn btn-sm btn-outline-primary" title="Ver Detalhes">
-                                            <i class="bi bi-eye"></i>
-                                        </a>
-                                        <a href="{% url 'pufe_editar' pufe.id %}" 
-                                           class="btn btn-sm btn-outline-warning" title="Editar">
-                                            <i class="bi bi-pencil"></i>
-                                        </a>
-                                        <button type="button" class="btn btn-sm btn-outline-danger" 
-                                                title="Excluir" data-bs-toggle="modal" 
-                                                data-bs-target="#deletePufeModal{{ pufe.id }}">
-                                            <i class="bi bi-trash"></i>
-                                        </button>
-                                    </div>
-                                    
-                                    <!-- Modal de Confirmação de Exclusão para Pufe -->
-                                    <div class="modal fade" id="deletePufeModal{{ pufe.id }}" tabindex="-1">
-                                        <div class="modal-dialog">
-                                            <div class="modal-content">
-                                                <div class="modal-header">
-                                                    <h5 class="modal-title">Confirmar Exclusão</h5>
-                                                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                                                </div>
-                                                <div class="modal-body">
-                                                    <p>Tem certeza de que deseja excluir o pufe <strong>{{ pufe.nome }}</strong>?</p>
-                                                    <p class="text-warning">
-                                                        <i class="bi bi-exclamation-triangle"></i>
-                                                        Esta ação não pode ser desfeita.
-                                                    </p>
-                                                </div>
-                                                <div class="modal-footer">
-                                                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-                                                    <form method="post" action="{% url 'pufe_excluir' pufe.id %}" style="display: inline;">
-                                                        {% csrf_token %}
-                                                        <button type="submit" class="btn btn-danger">Excluir</button>
-                                                    </form>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </td>
-                            </tr>
-                            {% endfor %}
-
-                            <!-- Seção para Almofadas -->
-                            {% for almofada in almofadas %}
-                            <tr>
-                                <td>
-                                    <strong>{{ almofada.ref_almofada }}</strong>
-                                </td>
-                                <td>{{ almofada.nome }}</td>
-                                <td>
-                                    <span class="badge tipo-almofadas">Almofadas</span>
-                                </td>
-                                <td>
-                                    {% if almofada.ativo %}
-                                        <span class="badge bg-success">Ativo</span>
-                                    {% else %}
-                                        <span class="badge bg-danger">Inativo</span>
-                                    {% endif %}
-                                </td>
-                                <td>
-                                    <div class="btn-group-actions">
-                                        <a href="{% url 'almofada_detalhes' almofada.id %}" 
-                                           class="btn btn-sm btn-outline-primary" title="Ver Detalhes">
-                                            <i class="bi bi-eye"></i>
-                                        </a>
-                                        <a href="{% url 'almofada_editar' almofada.id %}" 
-                                           class="btn btn-sm btn-outline-warning" title="Editar">
-                                            <i class="bi bi-pencil"></i>
-                                        </a>
-                                        <button type="button" class="btn btn-sm btn-outline-danger" 
-                                                title="Excluir" data-bs-toggle="modal" 
-                                                data-bs-target="#deleteAlmofadaModal{{ almofada.id }}">
-                                            <i class="bi bi-trash"></i>
-                                        </button>
-                                    </div>
-                                    
-                                    <!-- Modal de Confirmação de Exclusão para Almofada -->
-                                    <div class="modal fade" id="deleteAlmofadaModal{{ almofada.id }}" tabindex="-1">
-                                        <div class="modal-dialog">
-                                            <div class="modal-content">
-                                                <div class="modal-header">
-                                                    <h5 class="modal-title">Confirmar Exclusão</h5>
-                                                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                                                </div>
-                                                <div class="modal-body">
-                                                    <p>Tem certeza de que deseja excluir a almofada <strong>{{ almofada.nome }}</strong>?</p>
-                                                    <p class="text-warning">
-                                                        <i class="bi bi-exclamation-triangle"></i>
-                                                        Esta ação não pode ser desfeita.
-                                                    </p>
-                                                </div>
-                                                <div class="modal-footer">
-                                                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-                                                    <form method="post" action="{% url 'almofada_excluir' almofada.id %}" style="display: inline;">
-                                                        {% csrf_token %}
-                                                        <button type="submit" class="btn btn-danger">Excluir</button>
                                                     </form>
                                                 </div>
                                             </div>

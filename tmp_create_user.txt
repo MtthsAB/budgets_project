@@ -1,0 +1,5 @@
+==================================================
+RECRIANDO USUÁRIO MASTER
+==================================================
+Usuário admin@essere.com já existe. Removendo...
+❌ Erro geral: ("Cannot delete some instances of model 'CustomUser' because they are referenced through protected foreign keys: 'Orcamento.vendedor'.", {<Orcamento: Orçamento ORC-202601-0002 - teste asdasdad>, <Orcamento: Orçamento ORC-202601-0003 - Empresa Teste>, <Orcamento: Orçamento ORC-202601-0001 - Empresa Teste>})

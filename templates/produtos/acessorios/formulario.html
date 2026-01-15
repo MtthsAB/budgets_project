@@ -1,4 +1,5 @@
 {% extends 'base.html' %}
+{% load static %}
 
 {% block title %}{{ titulo }} - Sistema de Produtos{% endblock %}
 
@@ -164,30 +165,7 @@
 
             <!-- Produtos Vinculados -->
             <div class="form-section">
-                <h6><i class="bi bi-link-45deg"></i> Produtos Vinculados</h6>
-                <div class="mb-3">
-                    <label class="form-label">
-                        <strong>{{ form.produtos_vinculados.label }}:</strong>
-                    </label>
-                    {% if form.produtos_vinculados.help_text %}
-                        <div class="form-text mb-2">{{ form.produtos_vinculados.help_text }}</div>
-                    {% endif %}
-                    <div class="checkbox-grid">
-                        {% for choice in form.produtos_vinculados %}
-                            <div class="form-check">
-                                {{ choice.tag }}
-                                <label class="form-check-label" for="{{ choice.id_for_label }}">
-                                    {{ choice.choice_label }}
-                                </label>
-                            </div>
-                        {% empty %}
-                            <p class="text-muted">Nenhum produto disponível para vinculação.</p>
-                        {% endfor %}
-                    </div>
-                    {% if form.produtos_vinculados.errors %}
-                        <div class="text-danger small">{{ form.produtos_vinculados.errors }}</div>
-                    {% endif %}
-                </div>
+                {% include 'produtos/includes/secao_vinculacao_acessorio.html' %}
             </div>
 
             <!-- Botões de Ação -->
@@ -210,4 +188,8 @@
         </form>
     </div>
 </div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{% static 'js/acessorio_vinculos.js' %}?v=20260115"></script>
 {% endblock %}

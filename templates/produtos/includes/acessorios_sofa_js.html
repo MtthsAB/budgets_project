@@ -7,6 +7,9 @@ class AcessoriosManager {
         this.acessoriosSelecionados = new Map(); // Map<acessorioId, {quantidade, observacoes}>
         this.formIndex = 0;
         this.isLoading = false;
+        this.currentQuery = '';
+        this.secaoAcessorios = document.getElementById('secao-acessorios');
+        this.acessoriosEndpoint = this.secaoAcessorios ? this.secaoAcessorios.dataset.acessoriosEndpoint : '';
         
         this.init();
     }
@@ -61,31 +64,34 @@ class AcessoriosManager {
     
     checkTipoAndLoadAcessorios() {
         const tipoSelect = document.getElementById('tipo_produto');
-        const secaoAcessorios = document.getElementById('secao-acessorios');
+        const secaoAcessorios = this.secaoAcessorios;
         
         if (!tipoSelect || !secaoAcessorios) return;
         
         const tipoSelecionado = tipoSelect.options[tipoSelect.selectedIndex];
-        const ehSofa = tipoSelecionado && tipoSelecionado.text.toLowerCase().includes('sofá');
+        const tipoNome = (tipoSelecionado && (tipoSelecionado.getAttribute('data-nome') || tipoSelecionado.text)) || '';
+        const tipoNomeLower = tipoNome.toLowerCase();
+        const ehSofa = ['sofá', 'sofa', 'sofás', 'sofas'].some((termo) => tipoNomeLower.includes(termo));
         
         if (ehSofa) {
             secaoAcessorios.style.display = 'block';
-            this.carregarAcessorios();
+            this.carregarAcessorios('');
         } else {
             secaoAcessorios.style.display = 'none';
             this.limparSelecoes();
         }
     }
     
-    async carregarAcessorios() {
+    async carregarAcessorios(query = '') {
         if (this.isLoading) return;
         
         this.isLoading = true;
+        this.currentQuery = query;
         this.showLoading();
         
         try {
             // Buscar acessórios via AJAX ou usar dados injetados no template
-            const response = await this.fetchAcessorios();
+            const response = await this.fetchAcessorios(query);
             this.acessoriosDisponiveis = response.acessorios || [];
             
             this.renderizarAcessorios();
@@ -103,16 +109,23 @@ class AcessoriosManager {
         }
     }
     
-    async fetchAcessorios() {
-        // Para implementação inicial, vamos usar dados mockados
-        // Em produção, isso seria uma chamada AJAX para /api/acessorios/
-        return new Promise((resolve) => {
-            setTimeout(() => {
-                resolve({
-                    acessorios: window.acessoriosData || []
-                });
-            }, 500);
-        });
+    async fetchAcessorios(query = '') {
+        if (this.acessoriosEndpoint) {
+            const url = new URL(this.acessoriosEndpoint, window.location.origin);
+            if (query) {
+                url.searchParams.set('q', query);
+            }
+            url.searchParams.set('limit', '50');
+
+            const response = await fetch(url.toString(), { headers: { 'Accept': 'application/json' } });
+            const data = await response.json();
+            if (!response.ok) {
+                throw new Error(data.error || 'Erro ao carregar acessórios.');
+            }
+            return { acessorios: data.acessorios || [] };
+        }
+
+        return { acessorios: window.acessoriosData || [] };
     }
     
     renderizarAcessorios() {
@@ -198,6 +211,17 @@ class AcessoriosManager {
             }
         });
         
+        const selecionado = this.acessoriosSelecionados.get(acessorio.id);
+        if (selecionado) {
+            checkbox.checked = true;
+            cardDiv.classList.add('selecionado');
+            const camposDiv = clone.querySelector('.acessorio-campos');
+            camposDiv.style.display = 'block';
+            quantidadeInput.value = selecionado.quantidade || 1;
+            observacoesTextarea.value = selecionado.observacoes || '';
+            contadorChars.textContent = observacoesTextarea.value.length;
+        }
+
         return clone;
     }
     
@@ -294,16 +318,20 @@ class AcessoriosManager {
     
     filtrarAcessorios() {
         const busca = document.getElementById('busca-acessorios').value.toLowerCase();
+        if (this.acessoriosEndpoint) {
+            this.carregarAcessorios(busca);
+            return;
+        }
+
         const cards = document.querySelectorAll('.acessorio-card');
-        
         let visibleCount = 0;
-        
+
         cards.forEach(card => {
             const nome = card.querySelector('.acessorio-nome').textContent.toLowerCase();
             const codigo = card.querySelector('.acessorio-codigo').textContent.toLowerCase();
-            
+
             const matches = nome.includes(busca) || codigo.includes(busca);
-            
+
             if (matches) {
                 card.style.display = 'block';
                 visibleCount++;
@@ -311,7 +339,7 @@ class AcessoriosManager {
                 card.style.display = 'none';
             }
         });
-        
+
         // Mostrar/esconder estado vazio baseado na busca
         const emptyDiv = document.getElementById('empty-acessorios');
         if (visibleCount === 0 && busca.length > 0) {

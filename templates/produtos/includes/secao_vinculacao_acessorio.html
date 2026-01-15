@@ -1,10 +1,46 @@
-<!-- Seção de Vinculação de Produtos para Acessórios -->
+<!-- Seção de Vinculação de Sofás para Acessórios -->
 <div id="vinculacao-produtos" style="display: none;">
     <hr class="my-4">
     <h6 class="mb-3">
-        <i class="bi bi-link text-success"></i> Produtos Vinculados
+        <i class="bi bi-link text-success"></i> Sofás Compatíveis
     </h6>
-    <div class="row" id="produtos-disponiveis">
-        <!-- Os produtos serão carregados via JavaScript -->
+    <p class="text-muted mb-3">
+        Busque e selecione os sofás aos quais este acessório pode ser vinculado (apenas sofás ativos).
+    </p>
+
+    <div
+        class="card border-0 shadow-sm"
+        data-acessorio-vinculos
+        data-acessorio-id="{% if acessorio %}{{ acessorio.id }}{% endif %}"
+        data-sofas-endpoint="{% url 'api_sofas_disponiveis' %}"
+        {% if acessorio %}data-vinculos-endpoint="{% url 'acessorio_vinculos' acessorio.id %}"{% endif %}
+    >
+        <div class="card-body">
+            <div class="row g-3">
+                <div class="col-12">
+                    <input
+                        type="text"
+                        class="form-control"
+                        placeholder="Buscar sofá por código ou nome"
+                        data-role="sofa-search"
+                    >
+                </div>
+                <div class="col-md-6">
+                    <div class="small text-muted mb-2">Sofás disponíveis</div>
+                    <div class="list-group" data-role="sofa-list"></div>
+                </div>
+                <div class="col-md-6">
+                    <div class="small text-muted mb-2">Sofás vinculados</div>
+                    <div class="list-group" data-role="sofa-selected"></div>
+                </div>
+            </div>
+
+            <div class="mt-3" data-role="sofa-message"></div>
+            <div data-role="sofa-hidden"></div>
+
+            {% if form.produtos_vinculados.errors %}
+                <div class="invalid-feedback d-block mt-2">{{ form.produtos_vinculados.errors }}</div>
+            {% endif %}
+        </div>
     </div>
 </div>

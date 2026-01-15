@@ -1,0 +1,7 @@
+]633;E;{   echo "== /api/sofas/?limit=5 =="\x3b   curl -m 5 -s -w "\\nstatus:%{http_code}\\n" -b "$COOKIE_FILE" http://localhost/api/sofas/?limit=5\x3b   echo\x3b   echo "== /api/acessorios/lookup/?limit=5 =="\x3b   curl -m 5 -s -w "\\nstatus:%{http_code}\\n" -b "$COOKIE_FILE" http://localhost/api/acessorios/lookup/?limit=5\x3b } > "$DEBUG_FILE";5c69fc2f-9147-4c11-b6b1-73e921d9ba22]633;C== /api/sofas/?limit=5 ==
+{"sofas": [{"id": 89, "ref_produto": "BIGBOSS", "nome_produto": "Bigboss"}, {"id": 88, "ref_produto": "LE_COULTRE", "nome_produto": "SOF\u00c1 LE COULTRE"}, {"id": 87, "ref_produto": "SF939", "nome_produto": "SOF\u00c1 SF939"}]}
+status:200
+
+== /api/acessorios/lookup/?limit=5 ==
+{"acessorios": []}
+status:200

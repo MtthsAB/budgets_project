@@ -2,15 +2,19 @@ from django.shortcuts import render, get_object_or_404, redirect
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from django.views.decorators.csrf import csrf_protect
+from django.views.decorators.http import require_http_methods, require_GET
 from django.db import transaction
 from django.db import models
 from django.http import JsonResponse, Http404
+from django.urls import reverse
 from django.core.paginator import Paginator
 from rest_framework import viewsets, status
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 import logging
+import json
+import unicodedata
 from sistema_produtos.mixins import track_user_changes
 from authentication.decorators import admin_or_master_required, produtos_access_required
 from .models import (
@@ -148,6 +152,20 @@ def produtos_list_view(request):
         ) | almofadas.filter(
             ref_almofada__icontains=busca
         )
+
+    # Evitar duplicação quando um produto existe também em tabela específica
+    # (ex.: Produto + Banqueta/Cadeira/Poltrona/Pufe/Almofada com a mesma referência)
+    produtos = produtos.exclude(
+        ref_produto__in=models.Subquery(banquetas.values('ref_banqueta'))
+    ).exclude(
+        ref_produto__in=models.Subquery(cadeiras.values('ref_cadeira'))
+    ).exclude(
+        ref_produto__in=models.Subquery(poltronas.values('ref_poltrona'))
+    ).exclude(
+        ref_produto__in=models.Subquery(pufes.values('ref_pufe'))
+    ).exclude(
+        ref_produto__in=models.Subquery(almofadas.values('ref_almofada'))
+    )
     
     # Aplicar ordenação
     # Mapeamento de campos para ordenação
@@ -209,15 +227,155 @@ def produtos_list_view(request):
         poltronas = poltronas.order_by(campo_poltrona)
         pufes = pufes.order_by(campo_pufe)
         almofadas = almofadas.order_by(campo_almofada)
+
+    def _normalize_sort_value(value):
+        if value is None:
+            return ''
+        normalized = unicodedata.normalize('NFKD', str(value).strip().lower())
+        return ''.join(char for char in normalized if not unicodedata.combining(char))
+
+    def _produto_badge_class(tipo_nome_normalizado):
+        if 'sofá' in tipo_nome_normalizado or 'sofa' in tipo_nome_normalizado:
+            return 'tipo-sofas'
+        if 'acessório' in tipo_nome_normalizado or 'acessorio' in tipo_nome_normalizado:
+            return 'tipo-acessorios'
+        if 'cadeira' in tipo_nome_normalizado:
+            return 'tipo-cadeiras'
+        if 'poltrona' in tipo_nome_normalizado:
+            return 'tipo-poltronas'
+        if 'pufe' in tipo_nome_normalizado:
+            return 'tipo-pufes'
+        if 'almofada' in tipo_nome_normalizado:
+            return 'tipo-almofadas'
+        return 'bg-secondary'
+
+    def _produto_urls(tipo_nome_normalizado, produto_id):
+        if 'sofá' in tipo_nome_normalizado or 'sofa' in tipo_nome_normalizado:
+            detalhe_url = reverse('sofa_detalhes', args=[produto_id])
+            editar_url = reverse('sofa_editar', args=[produto_id])
+        elif 'acessório' in tipo_nome_normalizado or 'acessorio' in tipo_nome_normalizado:
+            detalhe_url = reverse('acessorio_detalhes', args=[produto_id])
+            editar_url = reverse('acessorio_editar', args=[produto_id])
+        else:
+            detalhe_url = reverse('produto_detalhes', args=[produto_id])
+            editar_url = reverse('produto_editar', args=[produto_id])
+        excluir_url = reverse('produto_excluir', args=[produto_id])
+        return detalhe_url, editar_url, excluir_url
+
+    itens = []
+
+    for produto in produtos:
+        tipo_nome = produto.id_tipo_produto.nome
+        tipo_nome_normalizado = tipo_nome.lower()
+        detalhe_url, editar_url, excluir_url = _produto_urls(tipo_nome_normalizado, produto.id)
+        itens.append({
+            'id': produto.id,
+            'origem': 'produto',
+            'ref': produto.ref_produto,
+            'nome': produto.nome_produto,
+            'tipo': tipo_nome,
+            'tipo_singular': 'produto',
+            'ativo': produto.ativo,
+            'badge_class': _produto_badge_class(tipo_nome_normalizado),
+            'detalhe_url': detalhe_url,
+            'editar_url': editar_url,
+            'excluir_url': excluir_url,
+            'modal_id': f'deleteModal-produto-{produto.id}',
+        })
+
+    for banqueta in banquetas:
+        itens.append({
+            'id': banqueta.id,
+            'origem': 'banqueta',
+            'ref': banqueta.ref_banqueta,
+            'nome': banqueta.nome,
+            'tipo': 'Banquetas',
+            'tipo_singular': 'banqueta',
+            'ativo': banqueta.ativo,
+            'badge_class': 'tipo-banquetas',
+            'detalhe_url': reverse('banqueta_detalhes', args=[banqueta.id]),
+            'editar_url': reverse('banqueta_editar', args=[banqueta.id]),
+            'excluir_url': reverse('banqueta_excluir', args=[banqueta.id]),
+            'modal_id': f'deleteModal-banqueta-{banqueta.id}',
+        })
+
+    for cadeira in cadeiras:
+        itens.append({
+            'id': cadeira.id,
+            'origem': 'cadeira',
+            'ref': cadeira.ref_cadeira,
+            'nome': cadeira.nome,
+            'tipo': 'Cadeiras',
+            'tipo_singular': 'cadeira',
+            'ativo': cadeira.ativo,
+            'badge_class': 'tipo-cadeiras',
+            'detalhe_url': reverse('cadeira_detalhes', args=[cadeira.id]),
+            'editar_url': reverse('cadeira_editar', args=[cadeira.id]),
+            'excluir_url': reverse('cadeira_excluir', args=[cadeira.id]),
+            'modal_id': f'deleteModal-cadeira-{cadeira.id}',
+        })
+
+    for poltrona in poltronas:
+        itens.append({
+            'id': poltrona.id,
+            'origem': 'poltrona',
+            'ref': poltrona.ref_poltrona,
+            'nome': poltrona.nome,
+            'tipo': 'Poltronas',
+            'tipo_singular': 'poltrona',
+            'ativo': poltrona.ativo,
+            'badge_class': 'tipo-poltronas',
+            'detalhe_url': reverse('poltrona_detalhes', args=[poltrona.id]),
+            'editar_url': reverse('poltrona_editar', args=[poltrona.id]),
+            'excluir_url': reverse('poltrona_excluir', args=[poltrona.id]),
+            'modal_id': f'deleteModal-poltrona-{poltrona.id}',
+        })
+
+    for pufe in pufes:
+        itens.append({
+            'id': pufe.id,
+            'origem': 'pufe',
+            'ref': pufe.ref_pufe,
+            'nome': pufe.nome,
+            'tipo': 'Pufes',
+            'tipo_singular': 'pufe',
+            'ativo': pufe.ativo,
+            'badge_class': 'tipo-pufes',
+            'detalhe_url': reverse('pufe_detalhes', args=[pufe.id]),
+            'editar_url': reverse('pufe_editar', args=[pufe.id]),
+            'excluir_url': reverse('pufe_excluir', args=[pufe.id]),
+            'modal_id': f'deleteModal-pufe-{pufe.id}',
+        })
+
+    for almofada in almofadas:
+        itens.append({
+            'id': almofada.id,
+            'origem': 'almofada',
+            'ref': almofada.ref_almofada,
+            'nome': almofada.nome,
+            'tipo': 'Almofadas',
+            'tipo_singular': 'almofada',
+            'ativo': almofada.ativo,
+            'badge_class': 'tipo-almofadas',
+            'detalhe_url': reverse('almofada_detalhes', args=[almofada.id]),
+            'editar_url': reverse('almofada_editar', args=[almofada.id]),
+            'excluir_url': reverse('almofada_excluir', args=[almofada.id]),
+            'modal_id': f'deleteModal-almofada-{almofada.id}',
+        })
+
+    ordenar_por_normalizado = ordenar_por if ordenar_por in ['referencia', 'nome', 'tipo'] else 'referencia'
+    if ordenar_por_normalizado == 'referencia':
+        chave_ordenacao = lambda item: _normalize_sort_value(item['ref'])
+    elif ordenar_por_normalizado == 'nome':
+        chave_ordenacao = lambda item: _normalize_sort_value(item['nome'])
+    else:
+        chave_ordenacao = lambda item: _normalize_sort_value(item['tipo'])
+
+    itens_ordenados = sorted(itens, key=chave_ordenacao, reverse=(direcao == 'desc'))
     
     context = {
-        'produtos': produtos,
-        'banquetas': banquetas,
-        'cadeiras': cadeiras,
-        'poltronas': poltronas,
-        'pufes': pufes,
-        'almofadas': almofadas,
-        'total_itens': produtos.count() + banquetas.count() + cadeiras.count() + poltronas.count() + pufes.count() + almofadas.count(),
+        'itens': itens_ordenados,
+        'total_itens': len(itens_ordenados),
         'tipos': TipoItem.objects.all(),
         'filtros': {
             'tipo': tipo_filtro,
@@ -225,7 +383,7 @@ def produtos_list_view(request):
             'busca': busca,
         },
         'ordenacao': {
-            'campo': ordenar_por,
+            'campo': ordenar_por_normalizado,
             'direcao': direcao,
         }
     }
@@ -462,7 +620,10 @@ def produto_cadastro_view(request):
                     
                 elif eh_acessorio:
                     # Processar como acessório usando os modelos separados
-                    ativo = request.POST.get('ativo_acessorio') == 'on'
+                    if 'ativo_acessorio' in request.POST:
+                        ativo = request.POST.get('ativo_acessorio') == 'on'
+                    else:
+                        ativo = request.POST.get('ativo') == 'on'
                     preco = request.POST.get('preco_acessorio')
                     descricao = request.POST.get('descricao_acessorio')
                     produtos_vinculados = request.POST.getlist('produtos_vinculados')
@@ -746,7 +907,11 @@ def produto_editar_view(request, produto_id):
                     
                 elif eh_acessorio:
                     # Atualizar como acessório
-                    produto.ativo = request.POST.get('ativo') == 'on'
+                    if 'ativo_acessorio' in request.POST:
+                        ativo = request.POST.get('ativo_acessorio') == 'on'
+                    else:
+                        ativo = request.POST.get('ativo') == 'on'
+                    produto.ativo = ativo
                     preco = request.POST.get('preco_acessorio')
                     produto.preco_acessorio = float(preco) if preco else None
                     produto.descricao_acessorio = request.POST.get('descricao_acessorio')
@@ -765,23 +930,31 @@ def produto_editar_view(request, produto_id):
                     # Rastrear usuário na edição
                     track_user_changes(produto, request.user)
                     produto.save()
+
+                    # Sincronizar tabela de Acessório
+                    acessorio = Acessorio.objects.filter(ref_acessorio=produto.ref_produto).first()
+                    if not acessorio:
+                        acessorio = Acessorio(ref_acessorio=produto.ref_produto)
+                    acessorio.nome = produto.nome_produto
+                    acessorio.ativo = ativo
+                    acessorio.preco = float(preco) if preco else None
+                    acessorio.descricao = produto.descricao_acessorio
+
+                    if 'imagem_principal' in request.FILES:
+                        acessorio.imagem_principal = request.FILES['imagem_principal']
+                    if 'imagem_secundaria' in request.FILES:
+                        acessorio.imagem_secundaria = request.FILES['imagem_secundaria']
+
+                    track_user_changes(acessorio, request.user)
+                    acessorio.save()
                     
-                    # Atualizar vinculações (não aplicável para modelo Produto)
+                    # Atualizar vinculações no modelo Acessorio
                     produtos_vinculados = request.POST.getlist('produtos_vinculados')
                     logger.info(f"Produtos vinculados recebidos: {produtos_vinculados}")
-                    # produto.produtos_vinculados.clear()  # Produto não tem produtos_vinculados
-                    if produtos_vinculados:
-                        logger.warning("Tentativa de vincular produtos ignorada - modelo Produto não suporta vinculações")
-                        # for produto_id_vinc in produtos_vinculados:
-                        #     if produto_id_vinc:
-                        #         try:
-                        #             produto_vinculado = Produto.objects.get(id=produto_id_vinc)
-                        #             produto.produtos_vinculados.add(produto_vinculado)
-                        #             logger.info(f"Produto {produto_vinculado.ref_produto} vinculado com sucesso")
-                        #         except Produto.DoesNotExist:
-                        #             logger.warning(f"Produto com ID {produto_id_vinc} não encontrado")
-                        #             continue
-                    # logger.info(f"Total de produtos vinculados após atualização: {produto.produtos_vinculados.count()}")
+                    ids_vinculados = [pid for pid in produtos_vinculados if pid]
+                    acessorio.produtos_vinculados.set(
+                        Produto.objects.filter(id__in=ids_vinculados)
+                    )
                     
                     # Remover módulos se produto foi convertido para acessório
                     produto.modulos.all().delete()
@@ -1032,6 +1205,125 @@ def api_produtos_disponiveis(request):
     return JsonResponse(list(produtos), safe=False)
 
 @produtos_access_required
+@require_GET
+def api_sofas_disponiveis(request):
+    """API para carregar sofás disponíveis para vinculação de acessórios"""
+    busca = (request.GET.get('q') or '').strip()
+    limit_raw = (request.GET.get('limit') or '').strip()
+    limit = None
+    if limit_raw.isdigit():
+        limit = max(1, int(limit_raw))
+    sofas = Produto.objects.filter(
+        ativo=True
+    ).filter(
+        models.Q(id_tipo_produto__nome__icontains='sofá') |
+        models.Q(id_tipo_produto__nome__icontains='sofa')
+    ).order_by('ref_produto')
+
+    if busca:
+        sofas = sofas.filter(
+            models.Q(ref_produto__icontains=busca) |
+            models.Q(nome_produto__icontains=busca)
+        )
+
+    if limit:
+        sofas = sofas[:limit]
+
+    data = list(sofas.values('id', 'ref_produto', 'nome_produto'))
+    return JsonResponse({'sofas': data})
+
+@produtos_access_required
+@require_GET
+def api_acessorios_lookup(request):
+    """API para carregar acessórios disponíveis para vinculação em sofás"""
+    busca = (request.GET.get('q') or '').strip()
+    limit_raw = (request.GET.get('limit') or '').strip()
+    limit = None
+    if limit_raw.isdigit():
+        limit = max(1, int(limit_raw))
+
+    acessorios = Acessorio.objects.filter(ativo=True).order_by('ref_acessorio')
+    if busca:
+        acessorios = acessorios.filter(
+            models.Q(ref_acessorio__icontains=busca) |
+            models.Q(nome__icontains=busca)
+        )
+
+    if limit:
+        acessorios = acessorios[:limit]
+
+    data = []
+    for acessorio in acessorios:
+        data.append({
+            'id': acessorio.id,
+            'ref_acessorio': acessorio.ref_acessorio,
+            'nome': acessorio.nome,
+            'preco': float(acessorio.preco) if acessorio.preco else None,
+            'imagem_principal': acessorio.imagem_principal.url if acessorio.imagem_principal else None,
+        })
+
+    return JsonResponse({'acessorios': data})
+
+@produtos_access_required
+@require_http_methods(["GET", "POST"])
+@csrf_protect
+def acessorio_vinculos_view(request, acessorio_id):
+    """Gerencia vínculos entre acessório e sofás (GET/POST)"""
+    acessorio = get_object_or_404(Acessorio, id=acessorio_id)
+
+    if request.method == "GET":
+        sofas = acessorio.produtos_vinculados.filter(
+            models.Q(id_tipo_produto__nome__icontains='sofá') |
+            models.Q(id_tipo_produto__nome__icontains='sofa')
+        ).order_by('ref_produto')
+        data = list(sofas.values('id', 'ref_produto', 'nome_produto', 'ativo'))
+        return JsonResponse({'sofas': data})
+
+    try:
+        payload = json.loads(request.body or '{}')
+    except json.JSONDecodeError:
+        return JsonResponse({'error': 'JSON inválido.'}, status=400)
+
+    sofa_ids = payload.get('sofa_ids')
+    if not isinstance(sofa_ids, list) or not sofa_ids:
+        return JsonResponse({'error': 'Informe uma lista de IDs de sofás.'}, status=400)
+
+    sofas = Produto.objects.filter(
+        id__in=sofa_ids,
+        ativo=True
+    ).filter(
+        models.Q(id_tipo_produto__nome__icontains='sofá') |
+        models.Q(id_tipo_produto__nome__icontains='sofa')
+    ).order_by('ref_produto')
+
+    if sofas.count() != len(set(sofa_ids)):
+        return JsonResponse({'error': 'Um ou mais sofás são inválidos ou inativos.'}, status=400)
+
+    acessorio.produtos_vinculados.add(*list(sofas))
+
+    data = list(sofas.values('id', 'ref_produto', 'nome_produto'))
+    return JsonResponse({'added': data, 'total': acessorio.produtos_vinculados.count()})
+
+@produtos_access_required
+@require_http_methods(["DELETE"])
+@csrf_protect
+def acessorio_vinculo_delete_view(request, acessorio_id, sofa_id):
+    """Remove vínculo entre acessório e sofá"""
+    acessorio = get_object_or_404(Acessorio, id=acessorio_id)
+    sofa = get_object_or_404(
+        Produto,
+        id=sofa_id
+    )
+    if not sofa.eh_sofa():
+        return JsonResponse({'error': 'O produto selecionado não é um sofá.'}, status=400)
+
+    if not acessorio.produtos_vinculados.filter(id=sofa.id).exists():
+        return JsonResponse({'error': 'Vínculo não encontrado.'}, status=404)
+
+    acessorio.produtos_vinculados.remove(sofa)
+    return JsonResponse({'removed_id': sofa.id, 'total': acessorio.produtos_vinculados.count()})
+
+@produtos_access_required
 def acessorios_list_view(request):
     """View para listagem de acessórios"""
     acessorios = Acessorio.objects.prefetch_related('produtos_vinculados').all()
@@ -1070,6 +1362,7 @@ def acessorio_cadastro_view(request):
                     # Rastrear usuário
                     track_user_changes(acessorio, request.user)
                     acessorio.save()
+                    form.save_m2m()
                     messages.success(
                         request, 
                         f'Acessório "{acessorio.ref_acessorio} - {acessorio.nome}" cadastrado com sucesso!'
@@ -1164,6 +1457,7 @@ def acessorio_editar_view(request, acessorio_id):
                     # Rastrear usuário na edição
                     track_user_changes(acessorio, request.user)
                     acessorio.save()
+                    form.save_m2m()
                     messages.success(
                         request, 
                         f'Acessório "{acessorio.ref_acessorio} - {acessorio.nome}" atualizado com sucesso!'
