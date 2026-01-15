@@ -31,6 +31,17 @@ class ProdutoAdmin(admin.ModelAdmin):
         """Exibir tipo com formatação"""
         return obj.id_tipo_produto.nome
     get_tipo_display.short_description = 'Tipo'
+
+    def get_queryset(self, request):
+        """Restringe o admin de Produto apenas a sofás."""
+        qs = super().get_queryset(request)
+        return qs.filter(id_tipo_produto__nome__icontains='Sofá')
+
+    def formfield_for_foreignkey(self, db_field, request, **kwargs):
+        """Limita a escolha do tipo de produto a sofás no admin."""
+        if db_field.name == 'id_tipo_produto':
+            kwargs['queryset'] = TipoItem.objects.filter(nome__icontains='Sofá')
+        return super().formfield_for_foreignkey(db_field, request, **kwargs)
     
     fieldsets = (
         ('Informações Básicas', {

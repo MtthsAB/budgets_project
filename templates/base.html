@@ -371,16 +371,42 @@
 
         /* Tables */
         html.dark-mode .table {
+            --bs-table-color: var(--color-text-primary);
+            --bs-table-bg: var(--color-card-bg);
+            --bs-table-border-color: var(--color-border-primary);
+            --bs-table-striped-bg: var(--color-bg-tertiary);
+            --bs-table-striped-color: var(--color-text-primary);
+            --bs-table-hover-bg: var(--color-hover-bg);
+            --bs-table-hover-color: var(--color-text-primary);
             color: var(--color-text-primary);
             border-color: var(--color-border-primary);
         }
 
-        html.dark-mode .table-striped > tbody > tr:nth-of-type(odd) {
-            background-color: var(--color-bg-tertiary);
+        html.dark-mode .table > :not(caption) > * > * {
+            background-color: var(--bs-table-bg);
+            color: var(--bs-table-color);
+            border-color: var(--bs-table-border-color);
         }
 
-        html.dark-mode .table-hover tbody tr:hover {
-            background-color: var(--color-hover-bg);
+        html.dark-mode .table-striped > tbody > tr:nth-of-type(odd) > * {
+            background-color: var(--bs-table-striped-bg);
+            color: var(--bs-table-striped-color);
+        }
+
+        html.dark-mode .table-hover tbody tr:hover > * {
+            background-color: var(--bs-table-hover-bg);
+            color: var(--bs-table-hover-color);
+        }
+
+        html.dark-mode .table-light,
+        html.dark-mode .table-dark {
+            --bs-table-color: var(--color-text-primary);
+            --bs-table-bg: var(--color-bg-secondary);
+            --bs-table-border-color: var(--color-border-primary);
+            --bs-table-striped-bg: var(--color-bg-tertiary);
+            --bs-table-striped-color: var(--color-text-primary);
+            --bs-table-hover-bg: var(--color-hover-bg);
+            --bs-table-hover-color: var(--color-text-primary);
         }
 
         /* List groups */

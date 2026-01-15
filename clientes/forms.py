@@ -1,8 +1,9 @@
 from django import forms
 from .models import Cliente
+from sistema_produtos.mixins import BootstrapValidationMixin
 
 
-class ClienteForm(forms.ModelForm):
+class ClienteForm(BootstrapValidationMixin, forms.ModelForm):
     class Meta:
         model = Cliente
         fields = [
@@ -99,6 +100,9 @@ class ClienteForm(forms.ModelForm):
         for field_name in required_fields:
             if field_name in self.fields:
                 self.fields[field_name].widget.attrs['required'] = True
+        
+        # Adicionar classe is-invalid aos campos com erro
+        self.add_invalid_classes()
                 
     def clean_cnpj(self):
         cnpj = self.cleaned_data.get('cnpj')

@@ -96,4 +96,4 @@ class CustomUser(AbstractBaseUser, PermissionsMixin, BaseModel):
     
     def can_manage_users(self):
         """Verifica se pode gerenciar usuários"""
-        return self.tipo_permissao == TipoPermissao.MASTER
+        return self.tipo_permissao == TipoPermissao.MASTER or self.is_superuser

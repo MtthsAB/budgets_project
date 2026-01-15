@@ -56,13 +56,6 @@ docker compose exec app python manage.py migrate
 echo "📦 Coletando arquivos estáticos..."
 docker compose exec app python manage.py collectstatic --noinput
 
-# Criar superusuário (opcional)
-echo "👤 Criando superusuário (opcional)..."
-read -p "Deseja criar um superusuário? (y/n): " -n 1 -r
-echo
-if [[ $REPLY =~ ^[Yy]$ ]]; then
-    docker compose exec app python manage.py createsuperuser
-fi
 
 echo "✅ Configuração concluída!"
 echo ""

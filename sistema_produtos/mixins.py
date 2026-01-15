@@ -35,6 +35,31 @@ class UserTrackingMixin:
         return "Sistema"
 
 
+class BootstrapValidationMixin:
+    """
+    Mixin para formulários Django que adiciona automaticamente a classe 'is-invalid' 
+    do Bootstrap 5 aos campos com erros de validação.
+    
+    Uso:
+        class MeuForm(BootstrapValidationMixin, forms.ModelForm):
+            ...
+            
+            def __init__(self, *args, **kwargs):
+                super().__init__(*args, **kwargs)
+                # Seu código aqui (opcional)
+                self.add_invalid_classes()  # Chamar no final do __init__
+    """
+    
+    def add_invalid_classes(self):
+        """Adiciona classe is-invalid aos campos com erro"""
+        if self.errors:
+            for field_name in self.errors:
+                if field_name in self.fields:
+                    existing_classes = self.fields[field_name].widget.attrs.get('class', '')
+                    if 'is-invalid' not in existing_classes:
+                        self.fields[field_name].widget.attrs['class'] = f'{existing_classes} is-invalid'.strip()
+
+
 # Mixin para modelos que já herdam de BaseModel
 def track_user_changes(model_instance, user):
     """

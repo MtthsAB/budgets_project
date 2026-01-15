@@ -154,8 +154,18 @@
                         <input type="hidden" name="itens_pedido_json" id="itens-pedido-json" value="">
                         
                         {% if form.non_field_errors %}
-                            <div class="alert alert-danger">
+                            <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                                <strong><i class="bi bi-exclamation-triangle"></i> Erro:</strong>
                                 {{ form.non_field_errors }}
+                                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                            </div>
+                        {% endif %}
+                        
+                        {% if form.errors %}
+                            <div class="alert alert-warning alert-dismissible fade show" role="alert">
+                                <i class="bi bi-info-circle"></i> <strong>Atenção:</strong> 
+                                Verifique os campos destacados em vermelho abaixo e corrija os erros para salvar o orçamento.
+                                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
                             </div>
                         {% endif %}
 
@@ -212,6 +222,28 @@
                                 {{ form.status }}
                                 {% if form.status.errors %}
                                     <div class="text-danger small">{{ form.status.errors }}</div>
+                                {% endif %}
+                            </div>
+
+                            <!-- Data de Entrega -->
+                            <div class="col-md-4">
+                                <label for="{{ form.data_entrega.id_for_label }}" class="form-label">
+                                    {{ form.data_entrega.label }} <span class="text-danger">*</span>
+                                </label>
+                                {{ form.data_entrega }}
+                                {% if form.data_entrega.errors %}
+                                    <div class="text-danger small">{{ form.data_entrega.errors }}</div>
+                                {% endif %}
+                            </div>
+
+                            <!-- Data de Validade -->
+                            <div class="col-md-4">
+                                <label for="{{ form.data_validade.id_for_label }}" class="form-label">
+                                    {{ form.data_validade.label }} <span class="text-danger">*</span>
+                                </label>
+                                {{ form.data_validade }}
+                                {% if form.data_validade.errors %}
+                                    <div class="text-danger small">{{ form.data_validade.errors }}</div>
                                 {% endif %}
                             </div>
 
@@ -371,6 +403,50 @@
                         </div>
                     </div>
                     
+                    <!-- Preview genérico para produtos simples (Banqueta, Cadeira, Poltrona, Pufe, Almofada) -->
+                    <div class="mb-3" id="produto-simples-preview" style="display: none;">
+                        <div class="card">
+                            <div class="card-header bg-success bg-opacity-10">
+                                <h6 class="mb-0 text-success">
+                                    <i class="bi bi-eye"></i> <span id="preview-tipo-titulo">Detalhes do Produto</span>
+                                </h6>
+                            </div>
+                            <div class="card-body">
+                                <div class="row align-items-center">
+                                    <!-- Foto do produto -->
+                                    <div class="col-md-4 mb-3 mb-md-0">
+                                        <div class="produto-imagem-container" style="width: 100%; height: 200px; overflow: hidden; border-radius: 0.375rem;">
+                                            <img id="foto-produto-simples" 
+                                                 src="" 
+                                                 alt="Foto do produto" 
+                                                 style="width: 100%; height: 100%; object-fit: cover; display: none; border: none;">
+                                            <div id="sem-foto-simples" class="text-center text-muted d-flex flex-column align-items-center justify-content-center" style="width: 100%; height: 100%; background-color: #f8f9fa; border: 1px solid #dee2e6;">
+                                                <i class="bi bi-image" style="font-size: 2rem;"></i>
+                                                <div class="mt-2">Sem imagem</div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <!-- Informações do produto -->
+                                    <div class="col-md-8">
+                                        <h5 id="nome-produto-simples" class="mb-2 text-dark"></h5>
+                                        <p class="mb-1">
+                                            <strong>Referência:</strong> 
+                                            <span id="ref-produto-simples" class="text-muted"></span>
+                                        </p>
+                                        <p class="mb-1">
+                                            <strong>Tipo:</strong> 
+                                            <span id="tipo-produto-simples" class="badge bg-secondary"></span>
+                                        </p>
+                                        <p class="mb-0">
+                                            <strong>Preço unitário:</strong> 
+                                            <span id="preco-produto-simples" class="text-success fw-bold fs-5">R$ 0,00</span>
+                                        </p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
                     <!-- Quantidade -->
                     <div class="mb-3" id="campo-quantidade" style="display: none;">
                         <label for="quantidade" class="form-label">Quantidade *</label>
@@ -393,8 +469,30 @@
     </div>
 </div>
 
+<!-- Dados dos itens existentes (injetados via json_script para segurança) -->
+{% if itens_existentes_json %}
+{{ itens_existentes_json|json_script:"itens-existentes-data" }}
+{% endif %}
+
 <script>
+// Carregar itens existentes do orçamento (modo edição)
 let itensPedido = [];
+
+// Carregar itens existentes via json_script (mais seguro que template inline)
+(function() {
+    const dataElement = document.getElementById('itens-existentes-data');
+    if (dataElement) {
+        try {
+            const itensExistentes = JSON.parse(dataElement.textContent);
+            if (Array.isArray(itensExistentes) && itensExistentes.length > 0) {
+                itensPedido = itensExistentes;
+                console.log('Itens existentes carregados:', itensPedido.length);
+            }
+        } catch (e) {
+            console.error('Erro ao carregar itens existentes:', e);
+        }
+    }
+})();
 
 document.addEventListener('DOMContentLoaded', function() {
     // Elementos
@@ -410,21 +508,31 @@ document.addEventListener('DOMContentLoaded', function() {
     const clienteSelect = document.getElementById('id_cliente');
     const clienteResultados = document.getElementById('cliente-resultados');
     
+    // Carregar itens existentes na tela (modo edição)
+    if (itensPedido.length > 0) {
+        console.log('Carregando', itensPedido.length, 'itens existentes do orçamento');
+        atualizarListaItens();
+    }
+    
     // Event listener para tipo de produto
     if (tipoSelect) {
         tipoSelect.addEventListener('change', function() {
             const tipo = this.value;
             console.log('Tipo selecionado:', tipo);
             
+            // Sempre ocultar previews ao trocar tipo
+            const sofaConfig = document.getElementById('sofa-configuracao');
+            const produtoSimplesPreview = document.getElementById('produto-simples-preview');
+            sofaConfig.style.display = 'none';
+            if (produtoSimplesPreview) {
+                produtoSimplesPreview.style.display = 'none';
+            }
+            
             if (tipo) {
                 // Mostrar campos básicos
                 selecaoProduto.style.display = 'block';
                 campoQuantidade.style.display = 'block';
                 campoObservacoes.style.display = 'block';
-                
-                // Sempre ocultar configuração de sofás até um produto ser selecionado
-                const sofaConfig = document.getElementById('sofa-configuracao');
-                sofaConfig.style.display = 'none';
                 
                 // Carregar produtos
                 carregarProdutos(tipo);
@@ -433,7 +541,6 @@ document.addEventListener('DOMContentLoaded', function() {
                 selecaoProduto.style.display = 'none';
                 campoQuantidade.style.display = 'none';
                 campoObservacoes.style.display = 'none';
-                document.getElementById('sofa-configuracao').style.display = 'none';
             }
         });
     }
@@ -447,14 +554,26 @@ document.addEventListener('DOMContentLoaded', function() {
             console.log('Produto selecionado:', produtoId, 'Tipo:', tipo);
             
             const sofaConfig = document.getElementById('sofa-configuracao');
+            const produtoSimplesPreview = document.getElementById('produto-simples-preview');
             
-            if (produtoId && tipo === 'sofa') {
+            // Ocultar todas as previews primeiro
+            sofaConfig.style.display = 'none';
+            if (produtoSimplesPreview) {
+                produtoSimplesPreview.style.display = 'none';
+            }
+            
+            if (!produtoId) {
+                // Nenhum produto selecionado
+                return;
+            }
+            
+            if (tipo === 'sofa') {
                 // Mostrar configuração do sofá e carregar módulos
                 sofaConfig.style.display = 'block';
                 carregarModulosSofa(produtoId);
             } else {
-                // Ocultar configuração do sofá se não for um sofá ou nenhum produto selecionado
-                sofaConfig.style.display = 'none';
+                // Carregar preview para produtos simples (Banqueta, Cadeira, Poltrona, Pufe, Almofada)
+                carregarDetalhesProdutoSimples(produtoId, tipo);
             }
         });
     }
@@ -545,6 +664,100 @@ document.addEventListener('DOMContentLoaded', function() {
             fotoImg.style.display = 'none';
             semFoto.style.display = 'block';
         }
+    }
+    
+    // Função para mostrar preview de produtos simples (não-sofá)
+    function mostrarPreviewProdutoSimples(produto, tipo) {
+        const previewContainer = document.getElementById('produto-simples-preview');
+        const fotoImg = document.getElementById('foto-produto-simples');
+        const semFoto = document.getElementById('sem-foto-simples');
+        const nomeProduto = document.getElementById('nome-produto-simples');
+        const refProduto = document.getElementById('ref-produto-simples');
+        const tipoProduto = document.getElementById('tipo-produto-simples');
+        const precoProduto = document.getElementById('preco-produto-simples');
+        const tituloPreview = document.getElementById('preview-tipo-titulo');
+        
+        // Mapear tipo para nome amigável
+        const tiposNomes = {
+            'banqueta': 'Banqueta',
+            'cadeira': 'Cadeira',
+            'poltrona': 'Poltrona',
+            'pufe': 'Pufe',
+            'almofada': 'Almofada'
+        };
+        
+        const tipoNome = tiposNomes[tipo] || produto.tipo || 'Produto';
+        
+        // Mostrar container
+        previewContainer.style.display = 'block';
+        
+        // Atualizar título
+        tituloPreview.textContent = `Detalhes - ${tipoNome}`;
+        
+        // Preencher informações
+        nomeProduto.textContent = produto.nome || produto.nome_produto || 'Nome não disponível';
+        refProduto.textContent = produto.ref || produto.ref_produto || 'Ref. não disponível';
+        tipoProduto.textContent = tipoNome;
+        
+        // Formatar preço
+        const preco = produto.preco || produto.preco_base || 0;
+        precoProduto.textContent = `R$ ${preco.toFixed(2).replace('.', ',')}`;
+        
+        // Foto do produto
+        const imagemUrl = produto.imagem_principal || produto.foto_principal;
+        if (imagemUrl && imagemUrl.trim() !== '') {
+            fotoImg.src = imagemUrl;
+            fotoImg.style.display = 'block';
+            semFoto.style.display = 'none';
+            
+            fotoImg.onerror = function() {
+                console.log('Erro ao carregar imagem do produto simples:', imagemUrl);
+                this.style.display = 'none';
+                semFoto.style.display = 'block';
+            };
+        } else {
+            console.log('Nenhuma imagem encontrada para produto simples:', produto);
+            fotoImg.style.display = 'none';
+            semFoto.style.display = 'block';
+        }
+    }
+    
+    // Função para ocultar preview de produto simples
+    function ocultarPreviewProdutoSimples() {
+        const previewContainer = document.getElementById('produto-simples-preview');
+        if (previewContainer) {
+            previewContainer.style.display = 'none';
+        }
+    }
+    
+    // Função para carregar detalhes de produto simples (não-sofá)
+    function carregarDetalhesProdutoSimples(produtoId, tipo) {
+        console.log('Carregando detalhes para produto simples:', produtoId, 'tipo:', tipo);
+        
+        // Mostrar loading no preview
+        const previewContainer = document.getElementById('produto-simples-preview');
+        previewContainer.style.display = 'block';
+        document.getElementById('nome-produto-simples').textContent = 'Carregando...';
+        document.getElementById('ref-produto-simples').textContent = '';
+        document.getElementById('preco-produto-simples').textContent = '';
+        
+        fetch(`/orcamentos/detalhes-produto/?produto_id=${produtoId}`)
+            .then(response => response.json())
+            .then(data => {
+                if (data.erro) {
+                    console.error('Erro ao carregar detalhes:', data.erro);
+                    ocultarPreviewProdutoSimples();
+                    return;
+                }
+                
+                const produto = data.produto;
+                console.log('Dados do produto simples:', produto);
+                mostrarPreviewProdutoSimples(produto, tipo);
+            })
+            .catch(error => {
+                console.error('Erro ao carregar detalhes do produto:', error);
+                ocultarPreviewProdutoSimples();
+            });
     }
     
     // Função para mostrar módulos disponíveis
@@ -837,6 +1050,49 @@ document.addEventListener('DOMContentLoaded', function() {
     // Busca de clientes
     if (clienteBusca) {
         let timeoutBusca;
+
+        function executarBuscaClientes(termo, options = {}) {
+            const termoNormalizado = (termo || '').trim();
+            const forcarIniciais = options.forcarIniciais === true;
+            const limiteResultados = options.limiteResultados ?? null;
+
+            if (termoNormalizado.length < 2) {
+                if (forcarIniciais) {
+                    const limite = typeof limiteResultados === 'number' ? limiteResultados : 5;
+                    fetch(`{% url 'orcamentos:buscar_cliente' %}?iniciais=${limite}`)
+                        .then(response => response.json())
+                        .then(data => {
+                            mostrarClientes(data.clientes, limiteResultados);
+                        })
+                        .catch(error => {
+                            console.error('Erro ao carregar clientes iniciais:', error);
+                            clienteResultados.style.display = 'none';
+                        });
+                } else {
+                    clienteResultados.style.display = 'none';
+                }
+                return;
+            }
+
+            fetch(`{% url 'orcamentos:buscar_cliente' %}?termo=${encodeURIComponent(termoNormalizado)}`)
+                .then(response => response.json())
+                .then(data => {
+                    mostrarClientes(data.clientes, limiteResultados);
+                })
+                .catch(error => {
+                    console.error('Erro na busca:', error);
+                });
+        }
+
+        function dispararBuscaAoFocar() {
+            executarBuscaClientes(clienteBusca.value, {
+                forcarIniciais: true,
+                limiteResultados: 5
+            });
+        }
+
+        clienteBusca.addEventListener('focus', dispararBuscaAoFocar);
+        clienteBusca.addEventListener('click', dispararBuscaAoFocar);
         
         clienteBusca.addEventListener('input', function() {
             const termo = this.value;
@@ -849,23 +1105,27 @@ document.addEventListener('DOMContentLoaded', function() {
             }
             
             timeoutBusca = setTimeout(() => {
-                fetch(`{% url 'orcamentos:buscar_cliente' %}?termo=${encodeURIComponent(termo)}`)
-                    .then(response => response.json())
-                    .then(data => {
-                        mostrarClientes(data.clientes);
-                    })
-                    .catch(error => {
-                        console.error('Erro na busca:', error);
-                    });
+                executarBuscaClientes(termo);
             }, 300);
+        });
+
+        // Fechar resultados ao clicar fora
+        document.addEventListener('click', function(event) {
+            if (!event.target.closest('.busca-cliente')) {
+                clienteResultados.style.display = 'none';
+            }
         });
     }
     
-    function mostrarClientes(clientes) {
+    function mostrarClientes(clientes, limiteResultados = null) {
         clienteResultados.innerHTML = '';
+        const listaClientes = Array.isArray(clientes) ? clientes : [];
+        const clientesExibidos = typeof limiteResultados === 'number'
+            ? listaClientes.slice(0, limiteResultados)
+            : listaClientes;
         
-        if (clientes.length > 0) {
-            clientes.forEach(cliente => {
+        if (clientesExibidos.length > 0) {
+            clientesExibidos.forEach(cliente => {
                 const div = document.createElement('div');
                 div.className = 'item-resultado';
                 div.innerHTML = `

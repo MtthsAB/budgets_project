@@ -37,6 +37,28 @@
         <form method="post" novalidate>
             {% csrf_token %}
             
+            <!-- Exibir erros gerais do formulário -->
+            {% if form.non_field_errors %}
+            <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                <strong><i class="bi bi-exclamation-triangle"></i> Erro:</strong>
+                <ul class="mb-0 ps-3">
+                    {% for error in form.non_field_errors %}
+                    <li>{{ error }}</li>
+                    {% endfor %}
+                </ul>
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+            {% endif %}
+            
+            <!-- Indicador visual quando há erros de validação -->
+            {% if form.errors %}
+            <div class="alert alert-warning alert-dismissible fade show" role="alert">
+                <i class="bi bi-info-circle"></i> <strong>Atenção:</strong> 
+                Verifique os campos destacados em vermelho abaixo e corrija os erros para salvar o cliente.
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+            {% endif %}
+            
             <!-- Dados da Empresa -->
             <div class="form-section">
                 <h5><i class="bi bi-building"></i> Dados da Empresa</h5>

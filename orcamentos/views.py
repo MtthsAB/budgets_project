@@ -4,16 +4,128 @@ from django.contrib.auth.decorators import login_required
 from django.http import JsonResponse, HttpResponse
 from django.core.paginator import Paginator
 from django.db.models import Q
+from django.db import transaction
 from django.utils import timezone
 from datetime import timedelta
 from decimal import Decimal
 import json
+import logging
 
 from authentication.decorators import orcamentos_access_required
 from .models import Orcamento, OrcamentoItem, FaixaPreco, FormaPagamento
 from .forms import OrcamentoForm, OrcamentoItemForm, BuscaClienteForm
 from clientes.models import Cliente
 from produtos.models import Produto
+
+logger = logging.getLogger(__name__)
+
+
+def _normalize_dados_especificos(item):
+    dados_especificos = item.get('dados_especificos') or {}
+
+    # Compatibilidade: quando os módulos vêm no nível raiz (form.html)
+    if not dados_especificos and item.get('modulos'):
+        dados_especificos = {
+            'tipo': item.get('tipo', 'sofa'),
+            'modulos': item.get('modulos', [])
+        }
+
+    return dados_especificos
+
+
+def _resolve_produto_por_id(produto_id, preco_unitario):
+    if produto_id.startswith('produto_'):
+        produto_pk = produto_id.replace('produto_', '')
+        return Produto.objects.get(pk=produto_pk), preco_unitario
+
+    from produtos.models import Cadeira, Banqueta, Poltrona, Pufe, Almofada, TipoItem, Acessorio
+
+    tipo_prefixo = produto_id.split('_')[0]
+    pk = produto_id.split('_')[1] if '_' in produto_id else None
+
+    tipos_map = {
+        'cadeira': {
+            'model': Cadeira,
+            'tipo_nome': 'Cadeira',
+            'ref_field': 'ref_cadeira',
+            'nome_field': 'nome',
+            'preco_field': 'preco',
+        },
+        'banqueta': {
+            'model': Banqueta,
+            'tipo_nome': 'Banqueta',
+            'ref_field': 'ref_banqueta',
+            'nome_field': 'nome',
+            'preco_field': 'preco',
+        },
+        'poltrona': {
+            'model': Poltrona,
+            'tipo_nome': 'Poltrona',
+            'ref_field': 'ref_poltrona',
+            'nome_field': 'nome',
+            'preco_field': 'preco',
+        },
+        'pufe': {
+            'model': Pufe,
+            'tipo_nome': 'Pufe',
+            'ref_field': 'ref_pufe',
+            'nome_field': 'nome',
+            'preco_field': 'preco',
+        },
+        'almofada': {
+            'model': Almofada,
+            'tipo_nome': 'Almofada',
+            'ref_field': 'ref_almofada',
+            'nome_field': 'nome',
+            'preco_field': 'preco',
+        },
+        'acessorio': {
+            'model': Acessorio,
+            'tipo_nome': 'Acessório',
+            'ref_field': 'ref_acessorio',
+            'nome_field': 'nome',
+            'preco_field': 'preco',
+        }
+    }
+
+    if not pk or tipo_prefixo not in tipos_map:
+        raise ValueError(f"Tipo de produto inválido: {produto_id}")
+
+    config = tipos_map[tipo_prefixo]
+    produto_especifico = config['model'].objects.get(pk=pk)
+
+    tipo_produto = TipoItem.objects.filter(nome__icontains=config['tipo_nome']).first()
+    if not tipo_produto:
+        raise ValueError(f"Tipo de produto não configurado: {config['tipo_nome']}")
+
+    ref_produto = getattr(produto_especifico, config['ref_field'])
+    nome_produto = getattr(produto_especifico, config['nome_field'])
+
+    defaults = {
+        'nome_produto': nome_produto,
+        'id_tipo_produto': tipo_produto,
+        'ativo': True,
+    }
+
+    if hasattr(produto_especifico, 'imagem_principal') and produto_especifico.imagem_principal:
+        defaults['imagem_principal'] = produto_especifico.imagem_principal
+    if hasattr(produto_especifico, 'imagem_secundaria') and produto_especifico.imagem_secundaria:
+        defaults['imagem_secundaria'] = produto_especifico.imagem_secundaria
+
+    produto, created = Produto.objects.get_or_create(ref_produto=ref_produto, defaults=defaults)
+
+    if not created and produto.id_tipo_produto_id != tipo_produto.id:
+        logger.warning(
+            "Produto %s com tipo divergente (atual=%s, esperado=%s)",
+            ref_produto,
+            produto.id_tipo_produto_id,
+            tipo_produto.id
+        )
+
+    if preco_unitario == 0 and hasattr(produto_especifico, config['preco_field']):
+        preco_unitario = getattr(produto_especifico, config['preco_field']) or preco_unitario
+
+    return produto, preco_unitario
 
 
 @login_required
@@ -62,66 +174,31 @@ def novo_orcamento(request):
     if request.method == 'POST':
         form = OrcamentoForm(request.POST)
         if form.is_valid():
-            orcamento = form.save(commit=False)
-            orcamento.vendedor = request.user
-            orcamento.save()
-            # Processar itens do pedido
-            itens_json = request.POST.get('itens_pedido_json', '')
-            if itens_json:
-                try:
-                    itens = json.loads(itens_json)
-                    from produtos.models import Produto, Cadeira, Banqueta, Poltrona, Pufe, Almofada, TipoItem
-                    for item in itens:
-                        produto_id = item.get('produto_id', '')
-                        quantidade = int(item.get('quantidade', 1))
-                        preco_unitario = Decimal(str(item.get('preco_unitario', '0')))
-                        observacoes = item.get('observacoes', '')
-                        dados_especificos = item.get('dados_especificos', {})
-                        produto = None
-                        if produto_id.startswith('produto_'):
-                            produto_pk = produto_id.replace('produto_', '')
-                            produto = Produto.objects.get(pk=produto_pk)
-                        else:
-                            produto_especifico = None
-                            tipo_produto = None
-                            if produto_id.startswith('cadeira_'):
-                                pk = produto_id.replace('cadeira_', '')
-                                produto_especifico = Cadeira.objects.get(pk=pk)
-                                tipo_produto = TipoItem.objects.filter(nome__icontains='Cadeira').first()
-                            elif produto_id.startswith('banqueta_'):
-                                pk = produto_id.replace('banqueta_', '')
-                                produto_especifico = Banqueta.objects.get(pk=pk)
-                                tipo_produto = TipoItem.objects.filter(nome__icontains='Banqueta').first()
-                            elif produto_id.startswith('poltrona_'):
-                                pk = produto_id.replace('poltrona_', '')
-                                produto_especifico = Poltrona.objects.get(pk=pk)
-                                tipo_produto = TipoItem.objects.filter(nome__icontains='Poltrona').first()
-                            elif produto_id.startswith('pufe_'):
-                                pk = produto_id.replace('pufe_', '')
-                                produto_especifico = Pufe.objects.get(pk=pk)
-                                tipo_produto = TipoItem.objects.filter(nome__icontains='Pufe').first()
-                            elif produto_id.startswith('almofada_'):
-                                pk = produto_id.replace('almofada_', '')
-                                produto_especifico = Almofada.objects.get(pk=pk)
-                                tipo_produto = TipoItem.objects.filter(nome__icontains='Almofada').first()
-                            if produto_especifico and tipo_produto:
-                                # CORREÇÃO DO BUG: Em vez de get_or_create (que duplica produtos),
-                                # apenas buscar produto existente ou usar o próprio produto específico
-                                ref_campo = f'ref_{produto_id.split("_")[0]}'
-                                ref_produto = getattr(produto_especifico, ref_campo)
-                                
-                                try:
-                                    # Tentar buscar produto existente na tabela produtos_produto
-                                    produto = Produto.objects.get(ref_produto=ref_produto)
-                                except Produto.DoesNotExist:
-                                    # Se não existir, não criar! Apenas usar os dados do produto específico
-                                    # para o orçamento sem duplicar na tabela produtos_produto
-                                    produto = None
-                                    print(f"AVISO: Produto {ref_produto} não encontrado na tabela produtos_produto")
-                                
-                                if preco_unitario == 0:
-                                    preco_unitario = produto_especifico.preco
-                        if produto:
+            try:
+                with transaction.atomic():
+                    orcamento = form.save(commit=False)
+                    orcamento.vendedor = request.user
+                    orcamento.save()
+
+                    # Processar itens do pedido
+                    itens_json = request.POST.get('itens_pedido_json', '')
+                    if itens_json:
+                        itens = json.loads(itens_json)
+                        logger.info(
+                            "novo_orcamento: %s itens recebidos. Tipos=%s",
+                            len(itens),
+                            [item.get('tipo') or item.get('produto_id') for item in itens]
+                        )
+
+                        for item in itens:
+                            produto_id = item.get('produto_id', '')
+                            quantidade = int(item.get('quantidade', 1))
+                            preco_unitario = Decimal(str(item.get('preco_unitario', '0')))
+                            observacoes = item.get('observacoes', '')
+                            dados_especificos = _normalize_dados_especificos(item)
+
+                            produto, preco_unitario = _resolve_produto_por_id(produto_id, preco_unitario)
+
                             OrcamentoItem.objects.create(
                                 orcamento=orcamento,
                                 produto=produto,
@@ -130,14 +207,11 @@ def novo_orcamento(request):
                                 observacoes=observacoes,
                                 dados_produto=dados_especificos
                             )
-                        else:
-                            # Se produto específico não tem correspondente em produtos_produto,
-                            # pular este item ou retornar erro
-                            print(f"ERRO: Não foi possível criar item para produto {produto_id} - produto não encontrado na tabela principal")
-                except Exception as e:
-                    print(f'Erro ao salvar itens do pedido: {e}')
-            messages.success(request, 'Orçamento criado com sucesso!')
-            return redirect('orcamentos:editar', pk=orcamento.pk)
+                    messages.success(request, 'Orçamento criado com sucesso!')
+                    return redirect('orcamentos:editar', pk=orcamento.pk)
+            except Exception as e:
+                logger.exception('Erro ao salvar itens do pedido')
+                form.add_error(None, f'Erro ao salvar itens do orçamento: {e}')
     else:
         # Criar dados iniciais explícitos
         data_entrega = timezone.now().date() + timedelta(days=30)
@@ -168,19 +242,94 @@ def editar_orcamento(request, pk):
     if request.method == 'POST':
         form = OrcamentoForm(request.POST, instance=orcamento)
         if form.is_valid():
-            form.save()
-            messages.success(request, 'Orçamento atualizado com sucesso!')
-            return redirect('orcamentos:editar', pk=orcamento.pk)
+            try:
+                with transaction.atomic():
+                    form.save()
+
+                    # Processar itens do pedido (adicionados/modificados via JavaScript)
+                    itens_json = request.POST.get('itens_pedido_json', '')
+                    if itens_json:
+                        itens = json.loads(itens_json)
+                        logger.info(
+                            "editar_orcamento[%s]: %s itens recebidos. Tipos=%s",
+                            orcamento.pk,
+                            len(itens),
+                            [item.get('tipo') or item.get('produto_id') for item in itens]
+                        )
+
+                        # Coletar IDs dos itens que vieram do formulário
+                        itens_ids_form = set()
+
+                        for item in itens:
+                            saved_item_id = item.get('saved_item_id')
+
+                            # Se tem saved_item_id, é um item existente - apenas registrar o ID
+                            if saved_item_id:
+                                itens_ids_form.add(saved_item_id)
+                                continue
+
+                            # Item novo - criar
+                            produto_id = item.get('produto_id', '')
+                            quantidade = int(item.get('quantidade', 1))
+                            preco_unitario = Decimal(str(item.get('preco_unitario', '0')))
+                            observacoes = item.get('observacoes', '')
+                            dados_especificos = _normalize_dados_especificos(item)
+
+                            produto, preco_unitario = _resolve_produto_por_id(produto_id, preco_unitario)
+
+                            novo_item = OrcamentoItem.objects.create(
+                                orcamento=orcamento,
+                                produto=produto,
+                                quantidade=quantidade,
+                                preco_unitario=preco_unitario,
+                                observacoes=observacoes,
+                                dados_produto=dados_especificos
+                            )
+                            itens_ids_form.add(novo_item.id)
+
+                        # Remover itens que não vieram no formulário (foram removidos pelo usuário)
+                        orcamento.itens.exclude(id__in=itens_ids_form).delete()
+
+                    # Se não veio JSON de itens, manter os existentes (não deletar)
+                    messages.success(request, 'Orçamento atualizado com sucesso!')
+                    return redirect('orcamentos:editar', pk=orcamento.pk)
+            except Exception as e:
+                logger.exception('Erro ao processar itens do orçamento')
+                form.add_error(None, f'Erro ao salvar itens do orçamento: {e}')
     else:
         form = OrcamentoForm(instance=orcamento)
     
-    # Buscar itens do orçamento
-    itens = orcamento.itens.select_related('produto').all()
+    # Buscar itens do orçamento com produto e tipo
+    itens = orcamento.itens.select_related('produto', 'produto__id_tipo_produto').all()
+    
+    # Preparar itens existentes como JSON para injeção segura no JavaScript
+    itens_existentes = []
+    for item in itens:
+        # Verificar se é sofá (eh_sofa é um método)
+        is_sofa = item.produto.eh_sofa() if hasattr(item.produto.eh_sofa, '__call__') else item.produto.eh_sofa
+        
+        item_data = {
+            'id': item.id,
+            'tipo': 'sofa' if is_sofa else (item.produto.id_tipo_produto.nome.lower() if item.produto.id_tipo_produto else 'outro'),
+            'produto_id': f'produto_{item.produto.id}',
+            'produto_nome': f'{item.produto.nome_produto} - {item.produto.ref_produto}',
+            'quantidade': item.quantidade,
+            'preco_unitario': float(item.preco_unitario) if item.preco_unitario else 0,
+            'observacoes': item.observacoes or '',
+            'eh_sofa': is_sofa,
+            'dados_produto': item.dados_produto or {},
+            'saved_item_id': item.id,
+        }
+        # Adicionar módulos se for sofá
+        if is_sofa and item.dados_produto and item.dados_produto.get('modulos'):
+            item_data['modulos'] = item.dados_produto['modulos']
+        itens_existentes.append(item_data)
     
     context = {
         'form': form,
         'orcamento': orcamento,
         'itens': itens,
+        'itens_existentes_json': itens_existentes,  # Lista Python para json_script
         'titulo': f'Editar Orçamento {orcamento.numero}',
     }
     
@@ -287,66 +436,9 @@ def adicionar_item(request, orcamento_pk):
             quantidade = int(data.get('quantidade', 1))
             preco_unitario = Decimal(data.get('preco_unitario', '0'))
             observacoes = data.get('observacoes', '')
-            dados_especificos = data.get('dados_especificos', {})
-            
-            # Determinar se é produto da tabela genérica ou específica
-            produto = None
-            
-            if produto_id.startswith('produto_'):
-                # Produto da tabela genérica (sofás)
-                produto_pk = produto_id.replace('produto_', '')
-                produto = Produto.objects.get(pk=produto_pk)
-            else:
-                # Produto de tabela específica - criar registro na tabela Produto se necessário
-                from produtos.models import Cadeira, Banqueta, Poltrona, Pufe, Almofada, TipoItem
-                
-                produto_especifico = None
-                tipo_produto = None
-                
-                if produto_id.startswith('cadeira_'):
-                    pk = produto_id.replace('cadeira_', '')
-                    produto_especifico = Cadeira.objects.get(pk=pk)
-                    tipo_produto = TipoItem.objects.filter(nome__icontains='Cadeira').first()
-                elif produto_id.startswith('banqueta_'):
-                    pk = produto_id.replace('banqueta_', '')
-                    produto_especifico = Banqueta.objects.get(pk=pk)
-                    tipo_produto = TipoItem.objects.filter(nome__icontains='Banqueta').first()
-                elif produto_id.startswith('poltrona_'):
-                    pk = produto_id.replace('poltrona_', '')
-                    produto_especifico = Poltrona.objects.get(pk=pk)
-                    tipo_produto = TipoItem.objects.filter(nome__icontains='Poltrona').first()
-                elif produto_id.startswith('pufe_'):
-                    pk = produto_id.replace('pufe_', '')
-                    produto_especifico = Pufe.objects.get(pk=pk)
-                    tipo_produto = TipoItem.objects.filter(nome__icontains='Pufe').first()
-                elif produto_id.startswith('almofada_'):
-                    pk = produto_id.replace('almofada_', '')
-                    produto_especifico = Almofada.objects.get(pk=pk)
-                    tipo_produto = TipoItem.objects.filter(nome__icontains='Almofada').first()
-                
-                if produto_especifico and tipo_produto:
-                    # CORREÇÃO DO BUG: Em vez de get_or_create (que duplica produtos),
-                    # apenas buscar produto existente ou rejeitar se não existir
-                    ref_campo = f'ref_{produto_id.split("_")[0]}'
-                    ref_produto = getattr(produto_especifico, ref_campo)
-                    
-                    try:
-                        # Tentar buscar produto existente na tabela produtos_produto
-                        produto = Produto.objects.get(ref_produto=ref_produto)
-                    except Produto.DoesNotExist:
-                        # Se não existir, não criar! Retornar erro
-                        return JsonResponse({
-                            'success': False,
-                            'message': f'Produto {ref_produto} não encontrado na tabela principal de produtos. '
-                                     f'É necessário cadastrá-lo primeiro na gestão de produtos.'
-                        })
-                    
-                    # Se o preço não foi informado, usar o preço do produto específico
-                    if preco_unitario == 0:
-                        preco_unitario = produto_especifico.preco
-            
-            if not produto:
-                raise ValueError("Produto não encontrado")
+            dados_especificos = _normalize_dados_especificos(data)
+
+            produto, preco_unitario = _resolve_produto_por_id(produto_id, preco_unitario)
             
             # Criar item
             item = OrcamentoItem.objects.create(
@@ -380,6 +472,7 @@ def adicionar_item(request, orcamento_pk):
             })
             
         except Exception as e:
+            logger.exception('Erro ao adicionar item no orçamento %s', orcamento_pk)
             return JsonResponse({
                 'success': False,
                 'message': f'Erro ao adicionar item: {str(e)}'
@@ -1061,6 +1154,7 @@ def obter_detalhes_produto(request):
                     'tipo': 'Cadeira',
                     'preco': float(cadeira.preco) if cadeira.preco else 0.00,
                     'tem_modulos': False,
+                    'imagem_principal': cadeira.imagem_principal.url if cadeira.imagem_principal else None,
                     'descricao': f'Cadeira {cadeira.nome} - Preço: R$ {cadeira.preco:.2f}'
                 }
             })
@@ -1079,6 +1173,7 @@ def obter_detalhes_produto(request):
                     'tipo': 'Banqueta',
                     'preco': float(banqueta.preco) if banqueta.preco else 0.00,
                     'tem_modulos': False,
+                    'imagem_principal': banqueta.imagem_principal.url if banqueta.imagem_principal else None,
                     'descricao': f'Banqueta {banqueta.nome} - Preço: R$ {banqueta.preco:.2f}'
                 }
             })
@@ -1097,6 +1192,7 @@ def obter_detalhes_produto(request):
                     'tipo': 'Poltrona',
                     'preco': float(poltrona.preco) if poltrona.preco else 0.00,
                     'tem_modulos': False,
+                    'imagem_principal': poltrona.imagem_principal.url if poltrona.imagem_principal else None,
                     'descricao': f'Poltrona {poltrona.nome} - Preço: R$ {poltrona.preco:.2f}'
                 }
             })
@@ -1115,6 +1211,7 @@ def obter_detalhes_produto(request):
                     'tipo': 'Pufe',
                     'preco': float(pufe.preco) if pufe.preco else 0.00,
                     'tem_modulos': False,
+                    'imagem_principal': pufe.imagem_principal.url if pufe.imagem_principal else None,
                     'descricao': f'Pufe {pufe.nome} - Preço: R$ {pufe.preco:.2f}'
                 }
             })
@@ -1133,6 +1230,7 @@ def obter_detalhes_produto(request):
                     'tipo': 'Almofada',
                     'preco': float(almofada.preco) if almofada.preco else 0.00,
                     'tem_modulos': False,
+                    'imagem_principal': almofada.imagem_principal.url if almofada.imagem_principal else None,
                     'descricao': f'Almofada {almofada.nome} - Preço: R$ {almofada.preco:.2f}'
                 }
             })

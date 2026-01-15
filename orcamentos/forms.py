@@ -7,9 +7,10 @@ from decimal import Decimal
 from .models import Orcamento, OrcamentoItem, FaixaPreco, FormaPagamento
 from clientes.models import Cliente
 from produtos.models import Produto
+from sistema_produtos.mixins import BootstrapValidationMixin
 
 
-class OrcamentoForm(forms.ModelForm):
+class OrcamentoForm(BootstrapValidationMixin, forms.ModelForm):
     """Formulário para criar/editar orçamento"""
     
     class Meta:
@@ -118,6 +119,9 @@ class OrcamentoForm(forms.ModelForm):
                 self.fields['data_validade'].initial = timezone.now().date() + timedelta(days=15)
             if not self.initial.get('data_entrega'):
                 self.fields['data_entrega'].initial = timezone.now().date() + timedelta(days=30)
+        
+        # Adicionar classe is-invalid aos campos com erro
+        self.add_invalid_classes()
     
     def clean_desconto_valor(self):
         value = self.cleaned_data.get('desconto_valor')
@@ -209,7 +213,7 @@ class OrcamentoForm(forms.ModelForm):
         return cleaned_data
 
 
-class OrcamentoItemForm(forms.ModelForm):
+class OrcamentoItemForm(BootstrapValidationMixin, forms.ModelForm):
     """Formulário para adicionar/editar item do orçamento"""
     
     class Meta:
@@ -249,6 +253,9 @@ class OrcamentoItemForm(forms.ModelForm):
         self.fields['quantidade'].label = 'Quantidade'
         self.fields['preco_unitario'].label = 'Preço Unitário (R$)'
         self.fields['observacoes'].label = 'Observações'
+        
+        # Adicionar classe is-invalid aos campos com erro
+        self.add_invalid_classes()
     
     def clean_quantidade(self):
         quantidade = self.cleaned_data.get('quantidade')
