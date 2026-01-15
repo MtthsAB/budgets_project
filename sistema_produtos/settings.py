@@ -211,6 +211,13 @@ LOGIN_URL = '/auth/login/'
 LOGIN_REDIRECT_URL = '/'
 LOGOUT_REDIRECT_URL = '/auth/login/'
 
+# Sessão expira ao fechar o navegador (best-effort no frontend)
+SESSION_EXPIRE_AT_BROWSER_CLOSE = True
+# Evitar cookies de sessão com duração exagerada
+SESSION_COOKIE_AGE = 60 * 60 * 8  # 8 horas
+# Garantir SameSite para reduzir riscos em chamadas cross-site
+SESSION_COOKIE_SAMESITE = 'Lax'
+
 # Custom User Model
 AUTH_USER_MODEL = 'authentication.CustomUser'
 

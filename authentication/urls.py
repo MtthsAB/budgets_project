@@ -4,6 +4,7 @@ from . import views
 urlpatterns = [
     path('login/', views.login_view, name='login'),
     path('logout/', views.logout_view, name='logout'),
+    path('logout-beacon/', views.logout_beacon, name='logout_beacon'),
     path('register/', views.register_view, name='register'),
     # URLs para gerenciamento de usuários
     path('usuarios/', views.usuarios_lista, name='usuarios_lista'),

@@ -1191,6 +1191,136 @@
         });
     </script>
     
+    {% if user.is_authenticated %}
+    <script>
+        (function() {
+            const logoutBeaconUrl = "{% url 'logout_beacon' %}";
+            const logoutUrl = "{% url 'logout' %}";
+            const reloadFlagKey = 'reloadLogoutArmed';
+            const internalNavKey = 'internalNav';
+            let logoutSent = false;
+
+            if (window.location.pathname.startsWith('/auth/')) {
+                return;
+            }
+
+            const getCookie = (name) => {
+                const value = `; ${document.cookie}`;
+                const parts = value.split(`; ${name}=`);
+                if (parts.length === 2) {
+                    return parts.pop().split(';').shift();
+                }
+                return null;
+            };
+
+            const getNavigationType = () => {
+                if (performance && performance.getEntriesByType) {
+                    const entries = performance.getEntriesByType('navigation');
+                    if (entries && entries.length > 0) {
+                        return entries[0].type;
+                    }
+                }
+                if (performance && performance.navigation) {
+                    if (performance.navigation.type === 1) return 'reload';
+                    if (performance.navigation.type === 2) return 'back_forward';
+                }
+                return 'navigate';
+            };
+
+            const maybeForceReloadLogout = () => {
+                try {
+                    if (getNavigationType() === 'reload' && sessionStorage.getItem(reloadFlagKey) === '1') {
+                        sessionStorage.removeItem(reloadFlagKey);
+                        window.location.replace(logoutUrl);
+                        return true;
+                    }
+                    sessionStorage.setItem(reloadFlagKey, '1');
+                } catch (e) {
+                    // sessionStorage pode falhar em alguns navegadores/modos
+                }
+                return false;
+            };
+
+            if (maybeForceReloadLogout()) {
+                return;
+            }
+
+            const markInternalNavigation = () => {
+                try {
+                    sessionStorage.setItem(internalNavKey, '1');
+                    setTimeout(() => {
+                        sessionStorage.removeItem(internalNavKey);
+                    }, 2000);
+                } catch (e) {
+                    // ignore
+                }
+            };
+
+            const isInternalNavigation = () => {
+                try {
+                    return sessionStorage.getItem(internalNavKey) === '1';
+                } catch (e) {
+                    return false;
+                }
+            };
+
+            const buildFormData = () => {
+                const data = new FormData();
+                const csrfToken = getCookie('csrftoken');
+                if (csrfToken) {
+                    data.append('csrfmiddlewaretoken', csrfToken);
+                }
+                return { data, csrfToken };
+            };
+
+            const sendLogout = () => {
+                if (logoutSent || isInternalNavigation()) return;
+                logoutSent = true;
+
+                const { data, csrfToken } = buildFormData();
+
+                if (navigator.sendBeacon) {
+                    const ok = navigator.sendBeacon(logoutBeaconUrl, data);
+                    if (ok) return;
+                }
+
+                const headers = {};
+                if (csrfToken) headers['X-CSRFToken'] = csrfToken;
+
+                fetch(logoutBeaconUrl, {
+                    method: 'POST',
+                    body: data,
+                    headers,
+                    credentials: 'same-origin',
+                    keepalive: true
+                }).catch(() => {});
+            };
+
+            document.addEventListener('click', (event) => {
+                const link = event.target.closest && event.target.closest('a');
+                if (link && link.origin === window.location.origin) {
+                    const target = link.getAttribute('target');
+                    if (!target || target === '_self') {
+                        markInternalNavigation();
+                    }
+                }
+            }, true);
+            document.addEventListener('submit', markInternalNavigation, true);
+
+            document.addEventListener('visibilitychange', () => {
+                if (document.visibilityState === 'hidden') {
+                    sendLogout();
+                }
+            });
+
+            window.addEventListener('pagehide', (event) => {
+                if (event.persisted) return;
+                sendLogout();
+            }, { capture: true });
+        })();
+    </script>
+    {% endif %}
+
     {% block extra_js %}{% endblock %}
 </body>
 </html>

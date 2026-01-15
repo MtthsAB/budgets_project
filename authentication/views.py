@@ -3,6 +3,8 @@ from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from django.views.decorators.csrf import csrf_protect
+from django.views.decorators.http import require_POST
+from django.http import HttpResponse
 from django.core.paginator import Paginator
 from django.db.models import Q
 from rest_framework import status
@@ -51,6 +53,15 @@ def logout_view(request):
     logout(request)
     messages.success(request, 'Logout realizado com sucesso.')
     return redirect('login')
+
+
+@csrf_protect
+@require_POST
+def logout_beacon(request):
+    """Logout rápido para uso em unload/reload via beacon/keepalive."""
+    if request.user.is_authenticated:
+        logout(request)
+    return HttpResponse(status=204)
 
 @csrf_protect
 def register_view(request):
