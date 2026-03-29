@@ -57,6 +57,9 @@ function toggleCamposEspecificos(tipoNome) {
     } else if (tipoNome === 'Acessórios') {
         if (camposAcessorio) camposAcessorio.style.display = 'flex';
         if (vinculacaoProdutos) vinculacaoProdutos.style.display = 'block';
+        if (typeof window.initAcessorioVinculos === 'function') {
+            window.initAcessorioVinculos();
+        }
     } else if (tipoNome === 'Banquetas') {
         if (camposBanqueta) camposBanqueta.style.display = 'flex';
         if (dimensoesBanqueta) dimensoesBanqueta.style.display = 'block';
@@ -553,5 +556,3 @@ function validacaoEspecifica(e) {
 }
 </script>
 
-<!-- JavaScript para gerenciar acessórios de sofás -->
-{% include 'produtos/includes/acessorios_sofa_js.html' %}

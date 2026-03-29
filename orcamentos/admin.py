@@ -36,7 +36,7 @@ class OrcamentoAdmin(admin.ModelAdmin):
         'numero', 'cliente', 'vendedor', 'status', 
         'get_total_final', 'data_entrega', 'created_at'
     ]
-    list_filter = ['status', 'faixa_preco', 'forma_pagamento', 'created_at']
+    list_filter = ['status', 'forma_pagamento', 'created_at']
     search_fields = ['numero', 'cliente__nome_empresa', 'vendedor__first_name', 'vendedor__last_name']
     readonly_fields = ['numero', 'get_subtotal', 'get_total_final', 'created_at', 'updated_at']
     inlines = [OrcamentoItemInline]
@@ -46,7 +46,7 @@ class OrcamentoAdmin(admin.ModelAdmin):
             'fields': ('numero', 'cliente', 'vendedor', 'status')
         }),
         ('Configurações', {
-            'fields': ('faixa_preco', 'forma_pagamento')
+            'fields': ('forma_pagamento',)
         }),
         ('Valores', {
             'fields': (
@@ -74,7 +74,7 @@ class OrcamentoAdmin(admin.ModelAdmin):
 
 @admin.register(OrcamentoItem)
 class OrcamentoItemAdmin(admin.ModelAdmin):
-    list_display = ['orcamento', 'produto', 'quantidade', 'preco_unitario', 'get_total']
+    list_display = ['orcamento', 'produto', 'faixa_preco', 'quantidade', 'preco_unitario', 'get_total']
     list_filter = ['orcamento__status', 'produto__id_tipo_produto']
     search_fields = ['orcamento__numero', 'produto__nome_produto', 'produto__ref_produto']
     

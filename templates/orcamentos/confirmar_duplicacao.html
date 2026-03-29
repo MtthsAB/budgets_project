@@ -57,9 +57,6 @@
                                     {% endif %}
                                 </div>
                                 <div class="col-md-6">
-                                    <strong>Faixa de Preço:</strong> {{ orcamento.faixa_preco.nome }}
-                                </div>
-                                <div class="col-md-6">
                                     <strong>Forma de Pagamento:</strong> {{ orcamento.forma_pagamento.nome }}
                                 </div>
                                 <div class="col-md-6">
@@ -98,9 +95,6 @@
                                     <strong>Status:</strong> <span class="badge bg-secondary">Rascunho</span>
                                 </div>
                                 <div class="col-md-6">
-                                    <strong>Faixa de Preço:</strong> {{ orcamento.faixa_preco.nome }} <span class="text-success">(mantida)</span>
-                                </div>
-                                <div class="col-md-6">
                                     <strong>Forma de Pagamento:</strong> {{ orcamento.forma_pagamento.nome }} <span class="text-success">(mantida)</span>
                                 </div>
                                 <div class="col-md-6">
@@ -131,6 +125,7 @@
                                     <thead>
                                         <tr>
                                             <th>Produto</th>
+                                            <th>Faixa</th>
                                             <th>Quantidade</th>
                                             <th>Preço Unit.</th>
                                             <th>Total</th>
@@ -148,6 +143,7 @@
                                                     <small class="text-info">{{ item.observacoes }}</small>
                                                 {% endif %}
                                             </td>
+                                            <td>{{ item.faixa_preco.nome|default:"—" }}</td>
                                             <td>{{ item.quantidade }}</td>
                                             <td>R$ {{ item.preco_unitario|floatformat:2 }}</td>
                                             <td>R$ {{ item.get_total|floatformat:2 }}</td>

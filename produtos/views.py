@@ -60,6 +60,9 @@ def produtos_list_view(request):
     poltronas = Poltrona.objects.filter(ativo=True).all()
     pufes = Pufe.objects.filter(ativo=True).all()
     almofadas = Almofada.objects.filter(ativo=True).all()
+    acessorios = Acessorio.objects.filter(ativo=True).all()
+    tipo_acessorio = TipoItem.objects.filter(nome__icontains='acessório').first()
+    tipo_acessorio_id = str(tipo_acessorio.id) if tipo_acessorio else None
     
     # Filtros
     tipo_filtro = request.GET.get('tipo')
@@ -81,30 +84,41 @@ def produtos_list_view(request):
             poltronas = Poltrona.objects.none()
             pufes = Pufe.objects.none()
             almofadas = Almofada.objects.none()
+            acessorios = Acessorio.objects.none()
         elif tipo_filtro == '3':  # Cadeiras
             produtos = Produto.objects.none()
             banquetas = Banqueta.objects.none()
             poltronas = Poltrona.objects.none()
             pufes = Pufe.objects.none()
             almofadas = Almofada.objects.none()
+            acessorios = Acessorio.objects.none()
         elif tipo_filtro == '5':  # Poltronas (assumindo ID 5)
             produtos = Produto.objects.none()
             banquetas = Banqueta.objects.none()
             cadeiras = Cadeira.objects.none()
             pufes = Pufe.objects.none()
             almofadas = Almofada.objects.none()
+            acessorios = Acessorio.objects.none()
         elif tipo_filtro == '6':  # Pufes (assumindo ID 6)
             produtos = Produto.objects.none()
             banquetas = Banqueta.objects.none()
             cadeiras = Cadeira.objects.none()
             poltronas = Poltrona.objects.none()
             almofadas = Almofada.objects.none()
+            acessorios = Acessorio.objects.none()
         elif tipo_filtro == '7':  # Almofadas (assumindo ID 7)
             produtos = Produto.objects.none()
             banquetas = Banqueta.objects.none()
             cadeiras = Cadeira.objects.none()
             poltronas = Poltrona.objects.none()
             pufes = Pufe.objects.none()
+            acessorios = Acessorio.objects.none()
+        elif tipo_acessorio_id and tipo_filtro == tipo_acessorio_id:
+            banquetas = Banqueta.objects.none()
+            cadeiras = Cadeira.objects.none()
+            poltronas = Poltrona.objects.none()
+            pufes = Pufe.objects.none()
+            almofadas = Almofada.objects.none()
         else:
             # Para outros tipos, não mostrar produtos das tabelas específicas
             banquetas = Banqueta.objects.none()
@@ -112,6 +126,7 @@ def produtos_list_view(request):
             poltronas = Poltrona.objects.none()
             pufes = Pufe.objects.none()
             almofadas = Almofada.objects.none()
+            acessorios = Acessorio.objects.none()
     
     if ativo_filtro:
         produtos = produtos.filter(ativo=ativo_filtro == 'true')
@@ -120,6 +135,7 @@ def produtos_list_view(request):
         poltronas = poltronas.filter(ativo=ativo_filtro == 'true')
         pufes = pufes.filter(ativo=ativo_filtro == 'true')
         almofadas = almofadas.filter(ativo=ativo_filtro == 'true')
+        acessorios = acessorios.filter(ativo=ativo_filtro == 'true')
     
     if busca:
         produtos = produtos.filter(
@@ -152,6 +168,11 @@ def produtos_list_view(request):
         ) | almofadas.filter(
             ref_almofada__icontains=busca
         )
+        acessorios = acessorios.filter(
+            nome__icontains=busca
+        ) | acessorios.filter(
+            ref_acessorio__icontains=busca
+        )
 
     # Evitar duplicação quando um produto existe também em tabela específica
     # (ex.: Produto + Banqueta/Cadeira/Poltrona/Pufe/Almofada com a mesma referência)
@@ -166,6 +187,11 @@ def produtos_list_view(request):
     ).exclude(
         ref_produto__in=models.Subquery(almofadas.values('ref_almofada'))
     )
+    # Evitar duplicação entre Produto (tipo acessório) e tabela Acessorio
+    produtos = produtos.exclude(
+        models.Q(id_tipo_produto__nome__icontains='acessório') &
+        models.Q(ref_produto__in=models.Subquery(acessorios.values('ref_acessorio')))
+    )
     
     # Aplicar ordenação
     # Mapeamento de campos para ordenação
@@ -176,7 +202,8 @@ def produtos_list_view(request):
             'Cadeira': 'ref_cadeira',
             'Poltrona': 'ref_poltrona',
             'Pufe': 'ref_pufe',
-            'Almofada': 'ref_almofada'
+            'Almofada': 'ref_almofada',
+            'Acessorio': 'ref_acessorio'
         },
         'nome': {
             'Produto': 'nome_produto',
@@ -184,7 +211,8 @@ def produtos_list_view(request):
             'Cadeira': 'nome', 
             'Poltrona': 'nome',
             'Pufe': 'nome',
-            'Almofada': 'nome'
+            'Almofada': 'nome',
+            'Acessorio': 'nome'
         },
         'tipo': {
             'Produto': 'id_tipo_produto__nome',
@@ -192,7 +220,8 @@ def produtos_list_view(request):
             'Cadeira': 'ref_cadeira',    # Para tipos específicos, ordenar por referência como fallback
             'Poltrona': 'ref_poltrona',  # Para tipos específicos, ordenar por referência como fallback
             'Pufe': 'ref_pufe',          # Para tipos específicos, ordenar por referência como fallback
-            'Almofada': 'ref_almofada'   # Para tipos específicos, ordenar por referência como fallback
+            'Almofada': 'ref_almofada',   # Para tipos específicos, ordenar por referência como fallback
+            'Acessorio': 'ref_acessorio'
         },
         'status': {
             'Produto': 'ativo',
@@ -200,7 +229,8 @@ def produtos_list_view(request):
             'Cadeira': 'ativo',
             'Poltrona': 'ativo', 
             'Pufe': 'ativo',
-            'Almofada': 'ativo'
+            'Almofada': 'ativo',
+            'Acessorio': 'ativo'
         }
     }
     
@@ -212,6 +242,7 @@ def produtos_list_view(request):
         campo_poltrona = campos_ordenacao[ordenar_por]['Poltrona']
         campo_pufe = campos_ordenacao[ordenar_por]['Pufe']
         campo_almofada = campos_ordenacao[ordenar_por]['Almofada']
+        campo_acessorio = campos_ordenacao[ordenar_por]['Acessorio']
         
         if direcao == 'desc':
             campo_produto = '-' + campo_produto
@@ -220,6 +251,7 @@ def produtos_list_view(request):
             campo_poltrona = '-' + campo_poltrona
             campo_pufe = '-' + campo_pufe
             campo_almofada = '-' + campo_almofada
+            campo_acessorio = '-' + campo_acessorio
         
         produtos = produtos.order_by(campo_produto)
         banquetas = banquetas.order_by(campo_banqueta)
@@ -227,6 +259,7 @@ def produtos_list_view(request):
         poltronas = poltronas.order_by(campo_poltrona)
         pufes = pufes.order_by(campo_pufe)
         almofadas = almofadas.order_by(campo_almofada)
+        acessorios = acessorios.order_by(campo_acessorio)
 
     def _normalize_sort_value(value):
         if value is None:
@@ -361,6 +394,22 @@ def produtos_list_view(request):
             'editar_url': reverse('almofada_editar', args=[almofada.id]),
             'excluir_url': reverse('almofada_excluir', args=[almofada.id]),
             'modal_id': f'deleteModal-almofada-{almofada.id}',
+        })
+
+    for acessorio in acessorios:
+        itens.append({
+            'id': acessorio.id,
+            'origem': 'acessorio',
+            'ref': acessorio.ref_acessorio,
+            'nome': acessorio.nome,
+            'tipo': 'Acessórios',
+            'tipo_singular': 'acessorio',
+            'ativo': acessorio.ativo,
+            'badge_class': 'tipo-acessorios',
+            'detalhe_url': reverse('acessorio_detalhes', args=[acessorio.id]),
+            'editar_url': reverse('acessorio_editar', args=[acessorio.id]),
+            'excluir_url': reverse('acessorio_excluir', args=[acessorio.id]),
+            'modal_id': f'deleteModal-acessorio-{acessorio.id}',
         })
 
     ordenar_por_normalizado = ordenar_por if ordenar_por in ['referencia', 'nome', 'tipo'] else 'referencia'

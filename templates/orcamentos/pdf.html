@@ -231,10 +231,6 @@
                 <span class="info-value">{{ orcamento.data_entrega|date:"d/m/Y" }}</span>
             </div>
             <div class="info-item">
-                <span class="info-label">Faixa de Preço:</span>
-                <span class="info-value">{{ orcamento.faixa_preco.nome }}</span>
-            </div>
-            <div class="info-item">
                 <span class="info-label">Data de Validade:</span>
                 <span class="info-value">{{ orcamento.data_validade|date:"d/m/Y" }}</span>
             </div>
@@ -267,6 +263,7 @@
                         <th>Item</th>
                         <th>Produto</th>
                         <th>Tipo</th>
+                        <th>Faixa</th>
                         <th class="text-center">Qtd</th>
                         <th class="text-right">Preço Unit.</th>
                         <th class="text-right">Total</th>
@@ -336,6 +333,7 @@
         <table>
             <tr>
                 <td>Subtotal:</td>
+                        <td class="text-center">{{ item.faixa_preco.nome|default:"—" }}</td>
                 <td class="text-right">R$ {{ orcamento.get_subtotal|floatformat:2 }}</td>
             </tr>
             {% if orcamento.get_total_desconto > 0 %}

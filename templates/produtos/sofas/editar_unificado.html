@@ -279,28 +279,6 @@
         </div>
     </div>
     
-    <!-- Vinculação de Produtos (apenas para acessórios) -->
-    <div class="row mb-4" id="vinculacao-produtos" style="display: none;">
-        <div class="col-12">
-            <div class="card border-success">
-                <div class="card-header bg-success text-white">
-                    <h6 class="mb-0">
-                        <i class="bi bi-link"></i> Produtos Vinculados
-                    </h6>
-                </div>
-                <div class="card-body">
-                    <div class="alert alert-info">
-                        <i class="bi bi-info-circle"></i> 
-                        <strong>Selecione os produtos:</strong> Marque os produtos aos quais este acessório pode ser vinculado.
-                    </div>
-                    <div class="row" id="produtos-disponiveis">
-                        <!-- Os produtos serão carregados via JavaScript -->
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-    
     <!-- Módulos (apenas para sofás) -->
     <div class="row mb-4" id="secao-modulos">
         <div class="col-12">
@@ -587,13 +565,9 @@
 {% block extra_js %}
 <script>
 let moduloCount = {{ modulos|length }};
-let produtosDisponiveis = [];
-let produtosVinculadosIds = {{ produtos_vinculados_ids|default:"[]"|safe }};
 let modulosColapsados = true;
 
-// Carregar produtos para vinculação
 document.addEventListener('DOMContentLoaded', function() {
-    carregarProdutosDisponiveis();
     toggleCamposPorTipo(); // Configurar campos iniciais
     
     // Configurar eventos para módulos existentes
@@ -650,54 +624,6 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 });
 
-// Função para carregar produtos disponíveis para vinculação
-function carregarProdutosDisponiveis() {
-    fetch('/api/produtos/')
-        .then(response => response.json())
-        .then(data => {
-            produtosDisponiveis = data;
-            console.log('Produtos disponíveis carregados:', produtosDisponiveis.length);
-            console.log('Produtos já vinculados:', produtosVinculadosIds);
-            renderizarProdutosDisponiveis();
-        })
-        .catch(error => {
-            console.log('Erro ao carregar produtos:', error);
-            produtosDisponiveis = [];
-            renderizarProdutosDisponiveis();
-        });
-}
-
-// Função para renderizar checkboxes de produtos
-function renderizarProdutosDisponiveis() {
-    const container = document.getElementById('produtos-disponiveis');
-    if (!container) return;
-    
-    container.innerHTML = '';
-    
-    if (produtosDisponiveis.length === 0) {
-        container.innerHTML = '<div class="col-12"><p class="text-muted">Nenhum produto disponível para vinculação.</p></div>';
-        return;
-    }
-    
-    produtosDisponiveis.forEach(produto => {
-        // Verificar se este produto já está vinculado
-        const isChecked = produtosVinculadosIds.includes(produto.id) ? 'checked' : '';
-        
-        const html = `
-            <div class="col-md-4 col-lg-3 mb-2">
-                <div class="form-check">
-                    <input class="form-check-input" type="checkbox" value="${produto.id}" 
-                           id="produto_${produto.id}" name="produtos_vinculados" ${isChecked}>
-                    <label class="form-check-label" for="produto_${produto.id}">
-                        ${produto.ref_produto} - ${produto.nome_produto}
-                    </label>
-                </div>
-            </div>
-        `;
-        container.insertAdjacentHTML('beforeend', html);
-    });
-}
-
 // Sincronizar checkboxes de ativo antes do submit
 document.addEventListener('DOMContentLoaded', function() {
     const form = document.getElementById('produtoForm');
@@ -745,14 +671,12 @@ function toggleCamposPorTipo() {
     const camposAcessorio = document.getElementById('campos-acessorio');
     const camposOutros = document.getElementById('campos-outros');
     const secaoModulos = document.getElementById('secao-modulos');
-    const vinculacaoProdutos = document.getElementById('vinculacao-produtos');
     
     // Esconder todos os campos específicos primeiro
     camposSofa.style.display = 'none';
     camposAcessorio.style.display = 'none';
     camposOutros.style.display = 'none';
     secaoModulos.style.display = 'none';
-    vinculacaoProdutos.style.display = 'none';
     
     if (!tipoNome) {
         return; // Nenhum tipo selecionado
@@ -782,28 +706,11 @@ function toggleCamposPorTipo() {
         if (checkboxAtivo) checkboxAtivo.checked = valorAtual;
     } else if (tipoNome === 'Acessórios') {
         camposAcessorio.style.display = 'flex';
-        vinculacaoProdutos.style.display = 'block';
         if (checkboxAtivoAcessorio) checkboxAtivoAcessorio.checked = valorAtual;
-        
-        // Carregar dados do acessório se estiver editando
-        carregarDadosAcessorio();
     } else {
         // Para outros tipos (Almofadas, Banquetas, Cadeiras, Poltronas, Pufes), mostrar apenas campos básicos
         camposOutros.style.display = 'flex';
         if (checkboxAtivoOutros) checkboxAtivoOutros.checked = valorAtual;
-    }
-}
-
-// Função para carregar dados do acessório na edição
-function carregarDadosAcessorio() {
-    // Se estamos editando um acessório, carregar os dados
-    const tipoSelect = document.getElementById('tipo_produto');
-    const selectedOption = tipoSelect.options[tipoSelect.selectedIndex];
-    const tipoNome = selectedOption.getAttribute('data-nome');
-    
-    if (tipoNome && tipoNome.toLowerCase() === 'acessórios') {
-        // Aqui você carregaria os dados do acessório via AJAX se necessário
-        // Por enquanto, vamos deixar em branco para simplificar
     }
 }
 

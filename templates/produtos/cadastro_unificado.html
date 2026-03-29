@@ -1,4 +1,5 @@
 {% extends 'produtos/includes/cadastro_base.html' %}
+{% load static %}
 
 {% block campos_especificos %}
 <!-- Incluir campos específicos para cada tipo -->
@@ -18,10 +19,6 @@
 {% endblock %}
 
 {% block extra_product_js %}
-{{ acessorios_disponiveis|json_script:"acessorios-data" }}
-<script>
-// Dados dos acessórios disponíveis injetados do backend
-window.acessoriosData = JSON.parse(document.getElementById('acessorios-data').textContent);
-</script>
+<script src="{% static 'js/acessorio_vinculos.js' %}?v=20260115"></script>
 {% include 'produtos/includes/cadastro_unificado_js.html' %}
 {% endblock %}

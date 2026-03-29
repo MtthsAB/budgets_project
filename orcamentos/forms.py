@@ -16,7 +16,7 @@ class OrcamentoForm(BootstrapValidationMixin, forms.ModelForm):
     class Meta:
         model = Orcamento
         fields = [
-            'cliente', 'faixa_preco', 'forma_pagamento',
+            'cliente', 'forma_pagamento',
             'desconto_valor', 'desconto_percentual',
             'acrescimo_valor', 'acrescimo_percentual',
             'data_entrega', 'data_validade', 'status', 'observacoes'
@@ -26,10 +26,6 @@ class OrcamentoForm(BootstrapValidationMixin, forms.ModelForm):
                 'class': 'form-select cliente-select',
                 'required': True,
                 'id': 'id_cliente'
-            }),
-            'faixa_preco': forms.Select(attrs={
-                'class': 'form-select',
-                'required': True
             }),
             'forma_pagamento': forms.Select(attrs={
                 'class': 'form-select',
@@ -89,12 +85,10 @@ class OrcamentoForm(BootstrapValidationMixin, forms.ModelForm):
         
         # Filtrar apenas faixas de preço e formas de pagamento ativas
         self.fields['cliente'].queryset = Cliente.objects.all().order_by('nome_empresa')
-        self.fields['faixa_preco'].queryset = FaixaPreco.objects.filter(ativo=True).order_by('nome')
         self.fields['forma_pagamento'].queryset = FormaPagamento.objects.filter(ativo=True).order_by('nome')
         
         # Personalizar labels
         self.fields['cliente'].label = 'Cliente'
-        self.fields['faixa_preco'].label = 'Faixa de Preço'
         self.fields['forma_pagamento'].label = 'Forma de Pagamento'
         self.fields['desconto_valor'].label = 'Desconto (R$)'
         self.fields['desconto_percentual'].label = 'Desconto (%)'
@@ -218,9 +212,13 @@ class OrcamentoItemForm(BootstrapValidationMixin, forms.ModelForm):
     
     class Meta:
         model = OrcamentoItem
-        fields = ['produto', 'quantidade', 'preco_unitario', 'observacoes']
+        fields = ['produto', 'faixa_preco', 'quantidade', 'preco_unitario', 'observacoes']
         widgets = {
             'produto': forms.Select(attrs={
+                'class': 'form-select',
+                'required': True
+            }),
+            'faixa_preco': forms.Select(attrs={
                 'class': 'form-select',
                 'required': True
             }),
@@ -247,9 +245,11 @@ class OrcamentoItemForm(BootstrapValidationMixin, forms.ModelForm):
         
         # Filtrar apenas produtos ativos
         self.fields['produto'].queryset = Produto.objects.filter(ativo=True).order_by('nome_produto')
+        self.fields['faixa_preco'].queryset = FaixaPreco.objects.filter(ativo=True).order_by('nome')
         
         # Personalizar labels
         self.fields['produto'].label = 'Produto'
+        self.fields['faixa_preco'].label = 'Faixa de Preço'
         self.fields['quantidade'].label = 'Quantidade'
         self.fields['preco_unitario'].label = 'Preço Unitário (R$)'
         self.fields['observacoes'].label = 'Observações'

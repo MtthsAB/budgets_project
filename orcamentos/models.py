@@ -82,7 +82,9 @@ class Orcamento(BaseModel):
     faixa_preco = models.ForeignKey(
         FaixaPreco,
         on_delete=models.PROTECT,
-        verbose_name="Faixa de Preço"
+        verbose_name="Faixa de Preço",
+        null=True,
+        blank=True
     )
     forma_pagamento = models.ForeignKey(
         FormaPagamento,
@@ -269,6 +271,13 @@ class OrcamentoItem(BaseModel):
         decimal_places=2,
         verbose_name="Preço Unitário",
         help_text="Preço unitário já com faixa de preço aplicada"
+    )
+    faixa_preco = models.ForeignKey(
+        FaixaPreco,
+        on_delete=models.PROTECT,
+        null=True,
+        blank=True,
+        verbose_name="Faixa de Preço"
     )
     observacoes = models.TextField(
         blank=True,

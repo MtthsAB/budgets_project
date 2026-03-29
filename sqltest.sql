@@ -1,2 +1,2 @@
 SELECT *
-FROM produtos_pufe
+FROM produtos_acessorio

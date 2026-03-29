@@ -66,10 +66,6 @@
                                     <p class="form-control-plaintext">{{ orcamento.data_validade|date:"d/m/Y" }}</p>
                                 </div>
                                 <div class="col-md-6">
-                                    <label class="form-label fw-bold">Faixa de Preço</label>
-                                    <p class="form-control-plaintext">{{ orcamento.faixa_preco.nome }}</p>
-                                </div>
-                                <div class="col-md-6">
                                     <label class="form-label fw-bold">Forma de Pagamento</label>
                                     <p class="form-control-plaintext">{{ orcamento.forma_pagamento.nome }}</p>
                                 </div>
@@ -141,6 +137,7 @@
                                                 <th>Produto</th>
                                                 <th>Referência</th>
                                                 <th>Tipo</th>
+                                                <th>Faixa</th>
                                                 <th>Qtd</th>
                                                 <th>Preço Unit.</th>
                                                 <th>Total</th>
@@ -190,6 +187,7 @@
                                                 <td>
                                                     <span class="badge bg-info">{{ item.produto.id_tipo_produto.nome }}</span>
                                                 </td>
+                                                <td>{{ item.faixa_preco.nome|default:"—" }}</td>
                                                 <td>{{ item.quantidade }}</td>
                                                 <td>R$ {{ item.preco_unitario|floatformat:2 }}</td>
                                                 <td><strong>R$ {{ item.get_total|floatformat:2 }}</strong></td>

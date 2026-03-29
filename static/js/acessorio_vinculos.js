@@ -4,14 +4,14 @@
     document.addEventListener('DOMContentLoaded', () => {
         const tipoSelect = document.getElementById('tipo_produto');
         const vincSection = document.getElementById('vinculacao-produtos');
+
         if (vincSection && !tipoSelect) {
             vincSection.style.display = 'block';
         }
 
-        document.querySelectorAll('[data-acessorio-vinculos]').forEach((root) => {
-            const manager = new AcessorioVinculosManager(root, csrftoken);
-            manager.init();
-        });
+        if (!tipoSelect) {
+            initManagers();
+        }
     });
 
     function getCookie(name) {
@@ -26,6 +26,17 @@
         }
         return null;
     }
+
+    function initManagers() {
+        document.querySelectorAll('[data-acessorio-vinculos]').forEach((root) => {
+            if (root.dataset.vinculosInitialized === 'true') return;
+            root.dataset.vinculosInitialized = 'true';
+            const manager = new AcessorioVinculosManager(root, csrftoken);
+            manager.init();
+        });
+    }
+
+    window.initAcessorioVinculos = initManagers;
 
     class AcessorioVinculosManager {
         constructor(root, csrftoken) {
@@ -44,11 +55,14 @@
             this.sofas = [];
             this.sofasMap = new Map();
             this.selected = new Map();
+            this.debounceTimer = null;
+            this.requestSeq = 0;
+            this.limit = 5;
         }
 
         init() {
             this.bindEvents();
-            this.loadSofas();
+            this.renderAvailable();
             if (this.acessorioId && this.vinculosEndpoint) {
                 this.loadVinculos();
             }
@@ -56,7 +70,14 @@
 
         bindEvents() {
             if (this.searchInput) {
-                this.searchInput.addEventListener('input', () => this.renderAvailable());
+                this.searchInput.addEventListener('input', () => this.queueSearch());
+            } else {
+                this.root.addEventListener('input', (event) => {
+                    if (event.target.matches('[data-role="sofa-search"]')) {
+                        this.searchInput = event.target;
+                        this.queueSearch();
+                    }
+                });
             }
 
             this.root.addEventListener('click', (event) => {
@@ -77,23 +98,61 @@
             });
         }
 
-        async loadSofas() {
+        queueSearch() {
+            if (this.debounceTimer) {
+                window.clearTimeout(this.debounceTimer);
+            }
+            this.debounceTimer = window.setTimeout(() => {
+                const termo = (this.searchInput?.value || '').trim();
+                if (!termo) {
+                    this.sofas = [];
+                    this.sofasMap = new Map();
+                    this.renderAvailable();
+                    return;
+                }
+                this.loadSofas(termo);
+            }, 250);
+        }
+
+        buildSofasUrl(query) {
+            const url = new URL(this.sofasEndpoint, window.location.origin);
+            if (query) {
+                url.searchParams.set('q', query);
+            } else {
+                url.searchParams.delete('q');
+            }
+            url.searchParams.set('limit', String(this.limit));
+            return url.toString();
+        }
+
+        async loadSofas(query) {
             if (!this.sofasEndpoint) {
                 this.showMessage('danger', 'Endpoint de sofás não configurado.');
                 return;
             }
 
+            const requestId = ++this.requestSeq;
+            const url = this.buildSofasUrl(query);
+
             try {
-                const response = await fetch(this.sofasEndpoint, { headers: { 'Accept': 'application/json' } });
+                const response = await fetch(url, { headers: { 'Accept': 'application/json' } });
                 const data = await response.json();
                 if (!response.ok) {
                     throw new Error(data.error || 'Erro ao carregar sofás.');
+                }
+
+                if (requestId !== this.requestSeq) {
+                    return;
                 }
 
                 this.sofas = Array.isArray(data.sofas) ? data.sofas : [];
                 this.sofasMap = new Map(this.sofas.map((sofa) => [String(sofa.id), sofa]));
                 this.renderAvailable();
             } catch (error) {
+                if (requestId !== this.requestSeq) {
+                    return;
+                }
+                console.error('Erro ao buscar sofás:', error);
                 this.sofas = [];
                 this.sofasMap = new Map();
                 this.renderAvailable();
@@ -125,20 +184,18 @@
         renderAvailable() {
             if (!this.listEl) return;
 
-            const termo = (this.searchInput?.value || '').trim().toLowerCase();
-            const sofasFiltrados = this.sofas.filter((sofa) => {
-                if (!termo) return true;
-                const ref = (sofa.ref_produto || '').toLowerCase();
-                const nome = (sofa.nome_produto || '').toLowerCase();
-                return ref.includes(termo) || nome.includes(termo);
-            });
+            const termo = (this.searchInput?.value || '').trim();
+            if (!termo) {
+                this.listEl.innerHTML = '';
+                return;
+            }
 
-            if (!sofasFiltrados.length) {
+            if (!this.sofas.length) {
                 this.listEl.innerHTML = '<div class="list-group-item text-muted">Nenhum sofá encontrado.</div>';
                 return;
             }
 
-            this.listEl.innerHTML = sofasFiltrados.map((sofa) => {
+            this.listEl.innerHTML = this.sofas.map((sofa) => {
                 const sofaId = String(sofa.id);
                 const isSelected = this.selected.has(sofaId);
                 const buttonLabel = isSelected ? 'Vinculado' : 'Vincular';
@@ -311,6 +368,7 @@
         if (tipoNome === 'Acessórios') {
             if (camposAcessorio) camposAcessorio.style.display = 'flex';
             if (vinculacaoProdutos) vinculacaoProdutos.style.display = 'block';
+            initManagers();
         }
     };
 

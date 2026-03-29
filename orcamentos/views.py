@@ -128,6 +128,15 @@ def _resolve_produto_por_id(produto_id, preco_unitario):
     return produto, preco_unitario
 
 
+def _resolve_faixa_preco(item, orcamento=None):
+    faixa_preco_id = item.get('faixa_preco_id') or item.get('faixa_preco')
+    if faixa_preco_id:
+        return FaixaPreco.objects.get(pk=faixa_preco_id)
+    if orcamento and getattr(orcamento, 'faixa_preco_id', None):
+        return orcamento.faixa_preco
+    return None
+
+
 @login_required
 @orcamentos_access_required
 def listar_orcamentos(request):
@@ -197,11 +206,16 @@ def novo_orcamento(request):
                             observacoes = item.get('observacoes', '')
                             dados_especificos = _normalize_dados_especificos(item)
 
+                            faixa_preco = _resolve_faixa_preco(item, orcamento)
+                            if not faixa_preco:
+                                raise ValueError('Faixa de preço é obrigatória para o item.')
+
                             produto, preco_unitario = _resolve_produto_por_id(produto_id, preco_unitario)
 
                             OrcamentoItem.objects.create(
                                 orcamento=orcamento,
                                 produto=produto,
+                                faixa_preco=faixa_preco,
                                 quantidade=quantidade,
                                 preco_unitario=preco_unitario,
                                 observacoes=observacoes,
@@ -228,6 +242,7 @@ def novo_orcamento(request):
     context = {
         'form': form,
         'titulo': 'Novo Orçamento',
+        'faixas_preco': FaixaPreco.objects.filter(ativo=True).order_by('nome'),
     }
     
     return render(request, 'orcamentos/form.html', context)
@@ -275,11 +290,16 @@ def editar_orcamento(request, pk):
                             observacoes = item.get('observacoes', '')
                             dados_especificos = _normalize_dados_especificos(item)
 
+                            faixa_preco = _resolve_faixa_preco(item, orcamento)
+                            if not faixa_preco:
+                                raise ValueError('Faixa de preço é obrigatória para o item.')
+
                             produto, preco_unitario = _resolve_produto_por_id(produto_id, preco_unitario)
 
                             novo_item = OrcamentoItem.objects.create(
                                 orcamento=orcamento,
                                 produto=produto,
+                                faixa_preco=faixa_preco,
                                 quantidade=quantidade,
                                 preco_unitario=preco_unitario,
                                 observacoes=observacoes,
@@ -300,7 +320,7 @@ def editar_orcamento(request, pk):
         form = OrcamentoForm(instance=orcamento)
     
     # Buscar itens do orçamento com produto e tipo
-    itens = orcamento.itens.select_related('produto', 'produto__id_tipo_produto').all()
+    itens = orcamento.itens.select_related('produto', 'produto__id_tipo_produto', 'faixa_preco').all()
     
     # Preparar itens existentes como JSON para injeção segura no JavaScript
     itens_existentes = []
@@ -313,6 +333,8 @@ def editar_orcamento(request, pk):
             'tipo': 'sofa' if is_sofa else (item.produto.id_tipo_produto.nome.lower() if item.produto.id_tipo_produto else 'outro'),
             'produto_id': f'produto_{item.produto.id}',
             'produto_nome': f'{item.produto.nome_produto} - {item.produto.ref_produto}',
+            'faixa_preco_id': item.faixa_preco_id or getattr(orcamento, 'faixa_preco_id', None),
+            'faixa_preco_nome': item.faixa_preco.nome if item.faixa_preco else (orcamento.faixa_preco.nome if getattr(orcamento, 'faixa_preco', None) else ''),
             'quantidade': item.quantidade,
             'preco_unitario': float(item.preco_unitario) if item.preco_unitario else 0,
             'observacoes': item.observacoes or '',
@@ -331,6 +353,7 @@ def editar_orcamento(request, pk):
         'itens': itens,
         'itens_existentes_json': itens_existentes,  # Lista Python para json_script
         'titulo': f'Editar Orçamento {orcamento.numero}',
+        'faixas_preco': FaixaPreco.objects.filter(ativo=True).order_by('nome'),
     }
     
     return render(request, 'orcamentos/form.html', context)
@@ -438,12 +461,20 @@ def adicionar_item(request, orcamento_pk):
             observacoes = data.get('observacoes', '')
             dados_especificos = _normalize_dados_especificos(data)
 
+            faixa_preco = _resolve_faixa_preco(data, orcamento)
+            if not faixa_preco:
+                return JsonResponse({
+                    'success': False,
+                    'message': 'Faixa de preço é obrigatória para o item.'
+                })
+
             produto, preco_unitario = _resolve_produto_por_id(produto_id, preco_unitario)
             
             # Criar item
             item = OrcamentoItem.objects.create(
                 orcamento=orcamento,
                 produto=produto,
+                faixa_preco=faixa_preco,
                 quantidade=quantidade,
                 preco_unitario=preco_unitario,
                 observacoes=observacoes,
@@ -512,6 +543,9 @@ def atualizar_item(request, orcamento_pk, item_pk):
             item.quantidade = int(data.get('quantidade', item.quantidade))
             item.preco_unitario = Decimal(data.get('preco_unitario', item.preco_unitario))
             item.observacoes = data.get('observacoes', item.observacoes)
+            faixa_preco = _resolve_faixa_preco(data, orcamento)
+            if faixa_preco:
+                item.faixa_preco = faixa_preco
             item.save()
             
             return JsonResponse({
@@ -576,6 +610,7 @@ def duplicar_orcamento(request, pk):
             OrcamentoItem.objects.create(
                 orcamento=novo_orcamento,
                 produto=item.produto,
+                faixa_preco=item.faixa_preco,
                 quantidade=item.quantidade,
                 preco_unitario=item.preco_unitario,
                 observacoes=item.observacoes,

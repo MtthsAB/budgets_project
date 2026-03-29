@@ -54,16 +54,17 @@
     
     /* Estilos para configuração de sofás */
     .modulo-card {
-        border: 1px solid #dee2e6;
-        border-radius: 0.375rem;
-        padding: 1rem;
-        margin-bottom: 1rem;
+        border: 1px solid var(--bs-border-color);
+        border-radius: 0.4rem;
+        padding: 0.25rem;
         transition: all 0.2s ease;
+        background-color: var(--bs-body-bg);
     }
     
-    .modulo-card:hover {
-        border-color: #0d6efd;
-        box-shadow: 0 2px 4px rgba(13, 110, 253, 0.1);
+    .modulo-card:hover,
+    .modulo-card:focus-visible {
+        border-color: var(--bs-primary);
+        box-shadow: 0 4px 10px rgba(13, 110, 253, 0.15);
     }
     
     .modulo-selecionado {
@@ -95,13 +96,56 @@
     }
     
     /* Melhorias no layout dos módulos */
-    .modulo-card .d-flex {
-        gap: 0.75rem;
+    .modulos-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(60px, 1fr));
+        gap: 0.35rem;
     }
     
-    .modulo-card .btn {
-        white-space: nowrap;
-        align-self: flex-start;
+    .modulo-card--clickable {
+        cursor: pointer;
+        outline: none;
+        height: 100%;
+        display: flex;
+        flex-direction: column;
+        gap: 0.2rem;
+    }
+    
+    .modulo-card__image-wrapper {
+        position: relative;
+        width: 100%;
+        padding-top: 70%;
+        border-radius: 0.35rem;
+        overflow: hidden;
+        border: 1px solid var(--bs-border-color);
+        background-color: var(--bs-tertiary-bg);
+    }
+    
+    .modulo-card__image {
+        position: absolute;
+        inset: 0;
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+    }
+    
+    .modulo-card__placeholder {
+        position: absolute;
+        inset: 0;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 0.15rem;
+        color: var(--bs-secondary-color);
+        font-size: 0.6rem;
+        text-align: center;
+    }
+    
+    .modulo-card__name {
+        font-weight: 600;
+        font-size: 0.65rem;
+        color: var(--bs-body-color);
     }
     
     .contador-caracteres {
@@ -190,17 +234,6 @@
                             <div class="col-md-6">
                                 <label class="form-label">Vendedor</label>
                                 <input type="text" class="form-control" value="{{ user.get_full_name }}" readonly>
-                            </div>
-
-                            <!-- Faixa de Preço -->
-                            <div class="col-md-4">
-                                <label for="{{ form.faixa_preco.id_for_label }}" class="form-label">
-                                    {{ form.faixa_preco.label }}
-                                </label>
-                                {{ form.faixa_preco }}
-                                {% if form.faixa_preco.errors %}
-                                    <div class="text-danger small">{{ form.faixa_preco.errors }}</div>
-                                {% endif %}
                             </div>
 
                             <!-- Forma de Pagamento -->
@@ -351,7 +384,7 @@
                             <option value="">Selecione o produto...</option>
                         </select>
                     </div>
-                    
+
                     <!-- Configuração específica para Sofás -->
                     <div class="mb-3" id="sofa-configuracao" style="display: none;">
                         <div class="card">
@@ -401,6 +434,17 @@
                                 </div>
                             </div>
                         </div>
+                    </div>
+
+                    <!-- Faixa de Preço -->
+                    <div class="mb-3" id="campo-faixa-preco" style="display: none;">
+                        <label for="faixa-preco-item" class="form-label">Faixa de Preço *</label>
+                        <select class="form-select" id="faixa-preco-item" required>
+                            <option value="">Selecione a faixa de preço...</option>
+                            {% for faixa in faixas_preco %}
+                                <option value="{{ faixa.id }}">{{ faixa.nome }}</option>
+                            {% endfor %}
+                        </select>
                     </div>
                     
                     <!-- Preview genérico para produtos simples (Banqueta, Cadeira, Poltrona, Pufe, Almofada) -->
@@ -499,6 +543,8 @@ document.addEventListener('DOMContentLoaded', function() {
     const tipoSelect = document.getElementById('tipo-produto');
     const produtoSelect = document.getElementById('produto');
     const selecaoProduto = document.getElementById('selecao-produto');
+    const campoFaixaPreco = document.getElementById('campo-faixa-preco');
+    const faixaPrecoSelect = document.getElementById('faixa-preco-item');
     const campoQuantidade = document.getElementById('campo-quantidade');
     const campoObservacoes = document.getElementById('campo-observacoes');
     const btnConfirmar = document.getElementById('btn-confirmar-item');
@@ -531,6 +577,7 @@ document.addEventListener('DOMContentLoaded', function() {
             if (tipo) {
                 // Mostrar campos básicos
                 selecaoProduto.style.display = 'block';
+                campoFaixaPreco.style.display = 'block';
                 campoQuantidade.style.display = 'block';
                 campoObservacoes.style.display = 'block';
                 
@@ -539,6 +586,7 @@ document.addEventListener('DOMContentLoaded', function() {
             } else {
                 // Ocultar todos os campos
                 selecaoProduto.style.display = 'none';
+                campoFaixaPreco.style.display = 'none';
                 campoQuantidade.style.display = 'none';
                 campoObservacoes.style.display = 'none';
             }
@@ -765,65 +813,58 @@ document.addEventListener('DOMContentLoaded', function() {
         const container = document.getElementById('modulos-disponiveis');
         
         let html = '<h6 class="mb-3">Módulos Disponíveis:</h6>';
+        html += '<div class="modulos-grid">';
         
         modulos.forEach(modulo => {
-            // Usar foto específica do módulo
-            let imagemHtml = '';
             const imagemModulo = modulo.imagem_principal || modulo.foto;
-            if (imagemModulo && imagemModulo.trim() !== '') {
-                imagemHtml = `
-                    <div class="me-3">
-                        <img src="${imagemModulo}" 
-                             alt="${modulo.nome}" 
-                             class="img-fluid rounded" 
-                             style="width: 80px; height: 80px; object-fit: cover;"
-                             onerror="this.parentElement.innerHTML='<div class=\\'d-flex align-items-center justify-content-center\\' style=\\'width: 80px; height: 80px; background-color: #f8f9fa; border: 1px solid #dee2e6; border-radius: 0.375rem;\\'><div class=\\'text-center text-muted\\'><i class=\\'bi bi-image\\'></i><br><small>Sem foto</small></div></div>';">
-                    </div>
-                `;
-            } else {
-                imagemHtml = `
-                    <div class="me-3">
-                        <div class="d-flex align-items-center justify-content-center" 
-                             style="width: 80px; height: 80px; background-color: #f8f9fa; border: 1px solid #dee2e6; border-radius: 0.375rem;">
-                            <div class="text-center text-muted">
-                                <i class="bi bi-image"></i><br>
-                                <small>Sem foto</small>
-                            </div>
-                        </div>
-                    </div>
-                `;
-            }
+            const temImagem = imagemModulo && imagemModulo.trim() !== '';
+            const moduloNomeEncoded = encodeURIComponent(modulo.nome || '');
             
             html += `
-                <div class="modulo-card" data-modulo-id="${modulo.id}">
-                    <div class="d-flex align-items-start">
-                        ${imagemHtml}
-                        <div class="flex-grow-1">
-                            <h6 class="mb-2">${modulo.nome}</h6>
-                            <p class="mb-2 text-muted small">
-                                Dimensões: ${modulo.largura || 'N/A'}cm x ${modulo.profundidade || 'N/A'}cm x ${modulo.altura || 'N/A'}cm
-                            </p>
-                            <div class="tamanhos-modulo" id="tamanhos-modulo-${modulo.id}">
-                                <small class="text-muted">Carregando tamanhos...</small>
-                            </div>
-                        </div>
-                        <div class="text-end ms-3">
-                            <button type="button" class="btn btn-outline-primary btn-sm" 
-                                    onclick="selecionarModulo(${modulo.id}, '${modulo.nome}')">
-                                <i class="bi bi-plus"></i> Selecionar
-                            </button>
+                <div class="modulo-card modulo-card--clickable" 
+                     role="button" 
+                     tabindex="0"
+                     data-modulo-id="${modulo.id}"
+                     data-modulo-nome="${moduloNomeEncoded}">
+                    <div class="modulo-card__image-wrapper">
+                        <img src="${temImagem ? imagemModulo : ''}" 
+                             alt="${modulo.nome}" 
+                             class="modulo-card__image"
+                             ${temImagem ? '' : 'style="display:none;"'}
+                             onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                        <div class="modulo-card__placeholder" style="display: ${temImagem ? 'none' : 'flex'};">
+                            <i class="bi bi-image"></i>
+                            <small>Sem foto</small>
                         </div>
                     </div>
+                    <div class="modulo-card__name">${modulo.nome}</div>
                 </div>
             `;
         });
         
+        html += '</div>';
         container.innerHTML = html;
         
-        // Carregar tamanhos para cada módulo
-        modulos.forEach(modulo => {
-            carregarTamanhosModulo(modulo.id);
-        });
+        if (!container.dataset.modulosBound) {
+            container.addEventListener('click', (event) => {
+                const card = event.target.closest('.modulo-card--clickable');
+                if (!card) return;
+                const moduloId = card.dataset.moduloId;
+                const moduloNome = decodeURIComponent(card.dataset.moduloNome || '');
+                if (!moduloId || !moduloNome) return;
+                selecionarModulo(Number(moduloId), moduloNome);
+            });
+            
+            container.addEventListener('keydown', (event) => {
+                if (event.key !== 'Enter' && event.key !== ' ') return;
+                const card = event.target.closest('.modulo-card--clickable');
+                if (!card) return;
+                event.preventDefault();
+                card.click();
+            });
+            
+            container.dataset.modulosBound = 'true';
+        }
     }
     
     // Função para carregar tamanhos de um módulo
@@ -1154,11 +1195,13 @@ document.addEventListener('DOMContentLoaded', function() {
             const tipo = tipoSelect.value;
             const produtoId = produtoSelect.value;
             const produtoTexto = produtoSelect.selectedOptions[0]?.textContent;
+            const faixaPrecoId = faixaPrecoSelect.value;
+            const faixaPrecoTexto = faixaPrecoSelect.selectedOptions[0]?.textContent;
             const quantidade = parseInt(document.getElementById('quantidade').value);
             const observacoes = document.getElementById('observacoes-item').value;
             
-            if (!tipo || !produtoId) {
-                alert('Por favor, selecione o tipo e o produto');
+            if (!tipo || !produtoId || !faixaPrecoId) {
+                alert('Por favor, selecione o tipo, o produto e a faixa de preço');
                 return;
             }
             
@@ -1175,6 +1218,8 @@ document.addEventListener('DOMContentLoaded', function() {
                     tipo: tipo,
                     produto_id: produtoId,
                     produto_nome: produtoTexto,
+                    faixa_preco_id: faixaPrecoId,
+                    faixa_preco_nome: faixaPrecoTexto,
                     quantidade: 1, // Para sofás, a quantidade está nos módulos
                     observacoes: observacoes,
                     eh_sofa: true,
@@ -1199,6 +1244,8 @@ document.addEventListener('DOMContentLoaded', function() {
                     tipo: tipo,
                     produto_id: produtoId,
                     produto_nome: produtoTexto,
+                    faixa_preco_id: faixaPrecoId,
+                    faixa_preco_nome: faixaPrecoTexto,
                     quantidade: quantidade,
                     observacoes: observacoes,
                     eh_sofa: false
@@ -1256,6 +1303,7 @@ document.addEventListener('DOMContentLoaded', function() {
                                 <i class="bi bi-grid-3x3 text-primary"></i> ${item.produto_nome}
                             </h6>
                             <p class="mb-2">Tipo: ${item.tipo}</p>
+                            <p class="mb-2">Faixa de Preço: ${item.faixa_preco_nome || '-'}</p>
                             ${item.observacoes ? `<p class="mb-2 text-muted small">Obs Gerais: ${item.observacoes}</p>` : ''}
                             <div class="mt-2">
                                 <h6 class="mb-2">Módulos:</h6>
@@ -1277,6 +1325,7 @@ document.addEventListener('DOMContentLoaded', function() {
                         <div>
                             <h6>${item.produto_nome}</h6>
                             <p class="mb-1">Tipo: ${item.tipo}</p>
+                            <p class="mb-1">Faixa de Preço: ${item.faixa_preco_nome || '-'}</p>
                             <p class="mb-1">Quantidade: ${item.quantidade}</p>
                             ${item.observacoes ? `<p class="mb-0 text-muted small">Obs: ${item.observacoes}</p>` : ''}
                         </div>
@@ -1296,11 +1345,13 @@ document.addEventListener('DOMContentLoaded', function() {
     function limparFormModal() {
         tipoSelect.value = '';
         produtoSelect.innerHTML = '<option value="">Selecione o produto...</option>';
+        faixaPrecoSelect.value = '';
         document.getElementById('quantidade').value = '1';
         document.getElementById('observacoes-item').value = '';
         
         // Ocultar campos
         selecaoProduto.style.display = 'none';
+        campoFaixaPreco.style.display = 'none';
         campoQuantidade.style.display = 'none';
         campoObservacoes.style.display = 'none';
         document.getElementById('sofa-configuracao').style.display = 'none';

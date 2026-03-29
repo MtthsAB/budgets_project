@@ -100,17 +100,6 @@
                                 <input type="text" class="form-control" value="{{ user.get_full_name }}" readonly>
                             </div>
 
-                            <!-- Faixa de Preço -->
-                            <div class="col-md-4">
-                                <label for="{{ form.faixa_preco.id_for_label }}" class="form-label">
-                                    {{ form.faixa_preco.label }}
-                                </label>
-                                {{ form.faixa_preco }}
-                                {% if form.faixa_preco.errors %}
-                                    <div class="text-danger small">{{ form.faixa_preco.errors }}</div>
-                                {% endif %}
-                            </div>
-
                             <!-- Forma de Pagamento -->
                             <div class="col-md-4">
                                 <label for="{{ form.forma_pagamento.id_for_label }}" class="form-label">
@@ -239,6 +228,17 @@
                             <option value="">Selecione o produto...</option>
                         </select>
                     </div>
+
+                    <!-- Faixa de Preço -->
+                    <div class="mb-3" id="campo-faixa-preco" style="display: none;">
+                        <label for="faixa-preco-item" class="form-label">Faixa de Preço *</label>
+                        <select class="form-select" id="faixa-preco-item" required>
+                            <option value="">Selecione a faixa de preço...</option>
+                            {% for faixa in faixas_preco %}
+                                <option value="{{ faixa.id }}">{{ faixa.nome }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
                     
                     <!-- Quantidade -->
                     <div class="mb-3" id="campo-quantidade" style="display: none;">
@@ -270,6 +270,8 @@ document.addEventListener('DOMContentLoaded', function() {
     const tipoSelect = document.getElementById('tipo-produto');
     const produtoSelect = document.getElementById('produto');
     const selecaoProduto = document.getElementById('selecao-produto');
+    const campoFaixaPreco = document.getElementById('campo-faixa-preco');
+    const faixaPrecoSelect = document.getElementById('faixa-preco-item');
     const campoQuantidade = document.getElementById('campo-quantidade');
     const campoObservacoes = document.getElementById('campo-observacoes');
     const btnConfirmar = document.getElementById('btn-confirmar-item');
@@ -288,6 +290,7 @@ document.addEventListener('DOMContentLoaded', function() {
             if (tipo) {
                 // Mostrar campos
                 selecaoProduto.style.display = 'block';
+                campoFaixaPreco.style.display = 'block';
                 campoQuantidade.style.display = 'block';
                 campoObservacoes.style.display = 'block';
                 
@@ -296,6 +299,7 @@ document.addEventListener('DOMContentLoaded', function() {
             } else {
                 // Ocultar campos
                 selecaoProduto.style.display = 'none';
+                campoFaixaPreco.style.display = 'none';
                 campoQuantidade.style.display = 'none';
                 campoObservacoes.style.display = 'none';
             }
@@ -384,10 +388,12 @@ document.addEventListener('DOMContentLoaded', function() {
             const tipo = tipoSelect.value;
             const produtoId = produtoSelect.value;
             const produtoTexto = produtoSelect.selectedOptions[0]?.textContent;
+            const faixaPrecoId = faixaPrecoSelect.value;
+            const faixaPrecoTexto = faixaPrecoSelect.selectedOptions[0]?.textContent;
             const quantidade = parseInt(document.getElementById('quantidade').value);
             const observacoes = document.getElementById('observacoes-item').value;
             
-            if (!tipo || !produtoId || !quantidade) {
+            if (!tipo || !produtoId || !faixaPrecoId || !quantidade) {
                 alert('Por favor, preencha todos os campos obrigatórios');
                 return;
             }
@@ -398,6 +404,8 @@ document.addEventListener('DOMContentLoaded', function() {
                 tipo: tipo,
                 produto_id: produtoId,
                 produto_nome: produtoTexto,
+                faixa_preco_id: faixaPrecoId,
+                faixa_preco_nome: faixaPrecoTexto,
                 quantidade: quantidade,
                 observacoes: observacoes
             };
@@ -426,6 +434,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     <div>
                         <h6>${item.produto_nome}</h6>
                         <p class="mb-1">Tipo: ${item.tipo}</p>
+                        <p class="mb-1">Faixa de Preço: ${item.faixa_preco_nome || '-'}</p>
                         <p class="mb-1">Quantidade: ${item.quantidade}</p>
                         ${item.observacoes ? `<p class="mb-0 text-muted small">Obs: ${item.observacoes}</p>` : ''}
                     </div>
@@ -443,9 +452,11 @@ document.addEventListener('DOMContentLoaded', function() {
     function limparFormModal() {
         tipoSelect.value = '';
         produtoSelect.innerHTML = '<option value="">Selecione o produto...</option>';
+        faixaPrecoSelect.value = '';
         document.getElementById('quantidade').value = '1';
         document.getElementById('observacoes-item').value = '';
         selecaoProduto.style.display = 'none';
+        campoFaixaPreco.style.display = 'none';
         campoQuantidade.style.display = 'none';
         campoObservacoes.style.display = 'none';
     }
