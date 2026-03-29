@@ -1,4 +1,0 @@
-]633;E;{   echo "== TEST =="\x3b   echo "date: $(date)"\x3b   echo "pwd: $(pwd)"\x3b   echo "echo_test"\x3b } > /home/matas/budgets_project/tmp_debug.txt;5c69fc2f-9147-4c11-b6b1-73e921d9ba22]633;C== TEST ==
-date: Thu Jan 15 03:11:24 -03 2026
-pwd: /home/matas/budgets_project
-echo_test

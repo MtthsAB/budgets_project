@@ -1,8 +1,0 @@
-]633;E;{   echo "== /static/js/acessorio_vinculos.js status =="\x3b   curl -m 5 -s -o "$STATIC_JS" -w "%{http_code}\\n" http://localhost/static/js/acessorio_vinculos.js\x3b   echo "lines: $(wc -l < "$STATIC_JS" 2>/dev/null || echo 0)"\x3b   echo "-- grep markers --"\x3b   grep -nE "AcessorioVinculosManager|data-role=\\"sofa-search\\"|api/sofas|toggleCamposEspecificos" "$STATIC_JS" || echo "(no matches)"\x3b } > "$DEBUG_FILE";5c69fc2f-9147-4c11-b6b1-73e921d9ba22]633;C== /static/js/acessorio_vinculos.js status ==
-200
-lines: 329
--- grep markers --
-12:            const manager = new AcessorioVinculosManager(root, csrftoken);
-30:    class AcessorioVinculosManager {
-38:            this.searchInput = root.querySelector('[data-role="sofa-search"]');
-304:    window.toggleCamposEspecificos = function toggleCamposEspecificos(tipoNome) {

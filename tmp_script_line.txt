@@ -1,1 +1,0 @@
-1385:<script src="/static/js/acessorio_vinculos.js"></script>
